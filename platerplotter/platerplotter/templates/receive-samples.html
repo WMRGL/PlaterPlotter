@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}
+    Import CSVs - {{ block.super }}
+{% endblock title %}
+
+
+{% block header %}<br>{% endblock header %}
+
+{% block content %}
+  <div class='container-fluid'>
+    <div class="form-group">
+      <form role="form" action="" method="post" class="form-horizontal">
+          {% csrf_token %}
+          {% bootstrap_form form %}
+          <tr>
+            <td>{% bootstrap_field form.A1 %}</td>
+            <td>{% bootstrap_field form.A2 %}</td>
+            <td>{% bootstrap_field form.A3 %}</td>
+            <td>{% bootstrap_field form.A4 %}</td>
+            <td>{% bootstrap_field form.A5 %}</td>
+            <td>{% bootstrap_field form.A6 %}</td>
+            <td>{% bootstrap_field form.A7 %}</td>
+            <td>{% bootstrap_field form.A8 %}</td>
+            <td>{% bootstrap_field form.A9 %}</td>
+            <td>{% bootstrap_field form.A10 %}</td>
+            <td>{% bootstrap_field form.A11 %}</td>
+            <td>{% bootstrap_field form.A12 %}</td>
+          </tr>
+
+          <button type="submit" class="btn btn-primary">Submit</button>
+      </form>
+    </div>
+  </div>
+
+{% endblock content %}

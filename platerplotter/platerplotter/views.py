@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from platerplotter.models import Gel1004csv
+from platerplotter.config.load_config import LoadConfig
+from platerplotter.forms import ReceivedSamplesForm
 import csv, os
 
 
@@ -9,7 +11,7 @@ def index(request):
 	Renders index page.
 	"""
 	if request.method == 'POST':
-		directory = '/home/estone/Projects/PlaterPlotter/GEL1004/'
+		directory = LoadConfig().load()['gel1004path']
 		for filename in os.listdir(directory):
 			if filename.endswith(".csv"):
 				path = directory + filename
@@ -43,3 +45,19 @@ def index(request):
 	gel1004 = Gel1004csv.objects.all()
 
 	return render(request, 'index.html', {"gel1004" : gel1004})
+
+def receive_samples(request):
+	"""
+	Renders receive samples form
+	"""
+	if request.method == 'POST':
+		form = ReceivedSamplesForm(request.POST)
+		if form.is_valid():
+			form.save()
+			return HttpResponseRedirect('/')
+	else:
+		form = ReceivedSamplesForm()
+	
+	form = ReceivedSamplesForm()
+
+	return render(request, 'receive-samples.html', {"form" : form})
