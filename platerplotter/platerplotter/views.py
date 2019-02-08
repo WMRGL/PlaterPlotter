@@ -35,9 +35,7 @@ def index(request):
 								platingOrganisation=row[10],
 								priority=row[11],
 								isProband=row[12])
-							print(row[0])
 							line_count += 1
-				print(path)
 				os.rename(path, directory + "processed/" + filename)
 		gel1004 = Gel1004csv.objects.all()
 		return render(request, 'index.html', {"gel1004" : gel1004})
