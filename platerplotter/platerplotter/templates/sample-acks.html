@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load static %}
+{% block title %}
+    Sample Acks - {{ block.super }}
+{% endblock title %}
+
+{% block content %}
+<div class='container-fluid'>
+    <form role='form' action='' method="POST" class='form-inline form-control-lg'>
+        {% csrf_token %}
+        <div class="form-group">
+          <div>
+            <button type="submit" class="btn btn-primary">Import</button>
+          </div>
+        </div>
+    </form>
+    <div class="tab-pane active">
+      <br>
+        <h4>Matches</h4>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>GEL1004 filename</th>
+              <th>Participant ID</th>
+              <th>Lab Sample ID</th>
+              <th>GMC Rack ID</th>
+              <th>GMC Rack Well</th>
+              <th>Sample Received</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for match in matches %}
+          <tr>
+            <td>{{ match.0.filename }}</td>
+            <td>{{ match.0.participantId }}</td>
+            <td>{{ match.0.laboratorySampleId }}</td>
+            <td>{{ match.0.gmcRackId }}</td>
+            <td>{{ match.0.gmcRackWell }}</td>
+            <td>{{ match.1.sampleReceivedDateTime }}</td>            
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+        <br>
+        <h4>Partial Matches</h4>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>GEL1004 filename</th>
+              <th>Participant ID</th>
+              <th>Lab Sample ID</th>
+              <th>GMC Rack ID</th>
+              <th>1004 GMC Rack Well</th>
+              <th>Sample Received</th>
+              <th>Sample GMC Rack Well</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for pmatch in partial_matches %}
+          <tr>
+            <td>{{ pmatch.0.filename }}</td>
+            <td>{{ pmatch.0.participantId }}</td>
+            <td>{{ pmatch.0.laboratorySampleId }}</td>
+            <td>{{ pmatch.0.gmcRackId }}</td>
+            <td>{{ pmatch.0.gmcRackWell }}</td>
+            <td>{{ pmatch.1.sampleReceivedDateTime }}</td>   
+            <td>{{ pmatch.1.gmcRackWell }}</td>              
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+        <br>
+        <h4>GEL1004 recieved, awaiting sample</h4>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>GEL1004 filename</th>
+              <th>Participant ID</th>
+              <th>Lab Sample ID</th>
+              <th>GMC Rack ID</th>
+              <th>GMC Rack Well</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for gel1004 in remaining_gel1004 %}
+          <tr>
+            <td>{{ gel1004.filename }}</td>
+            <td>{{ gel1004.participantId }}</td>
+            <td>{{ gel1004.laboratorySampleId }}</td>
+            <td>{{ gel1004.gmcRackId }}</td>
+            <td>{{ gel1004.gmcRackWell }}</td>     
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+        <br>
+        <h4>Sample recieved, awaiting GEL1004</h4>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Lab Sample ID</th>
+              <th>GMC Rack ID</th>
+              <th>GMC Rack Well</th>
+              <th>Sample Received</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for sample in remaining_samples %}
+          <tr>
+            <td>{{ sample.laboratorySampleId }}</td>
+            <td>{{ sample.gmcRackId }}</td>
+            <td>{{ sample.gmcRackWell }}</td>
+            <td>{{ sample.sampleReceivedDateTime}}</td>            
+          </tr>
+          {% endfor %}
+        </tbody>
+    </div>      
+
+
+
+</div>
+{% endblock content %}
