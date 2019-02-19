@@ -1,6 +1,6 @@
 from django.db import models
 
-
+# choice fields
 well_ids = (('A1', 'A1'), ('A2', 'A2'), ('A3', 'A3'), ('A4', 'A4'), ('A5', 'A5'), ('A6', 'A6'),
 	('A7', 'A7'), ('A8', 'A8'), ('A9', 'A9'), ('A10', 'A10'), ('A11', 'A11'), ('A12', 'A12'),
 	('B1', 'B1'), ('B2', 'B2'), ('B3', 'B3'), ('B4', 'B4'), ('B5', 'B5'), ('B6', 'B6'),
@@ -17,95 +17,77 @@ well_ids = (('A1', 'A1'), ('A2', 'A2'), ('A3', 'A3'), ('A4', 'A4'), ('A5', 'A5')
 	('G7', 'G7'), ('G8', 'G8'), ('G9', 'G9'), ('G10', 'G10'), ('G11', 'G11'), ('G12', 'G12'),
 	('H1', 'H1'), ('H2', 'H2'), ('H3', 'H3'), ('H4', 'H4'), ('H5', 'H5'), ('H6', 'H6'),
 	('H7', 'H7'), ('H8', 'H8'), ('H9', 'H9'), ('H10', 'H10'), ('H11', 'H11'), ('H12', 'H12'),)
+lab_ids = (("yne", "yne"), ("now", "now"), ("eme", "eme"), ("lnn", "lnn"), ("lns", "lns"), 
+	("wwm", "wwm"), ("sow", "sow"))
+sample_types = (("dna_blood_germline", "dna_blood_germline"), ("dna_saliva", "dna_saliva"),
+	("dna_fibroblast", "dna_fibroblast"), ("dna_ff_germline", "dna_ff_germline"),
+	("dna_ffpe_tumour", "dna_ffpe_tumour"), ("dna_ff_tumour", "dna_ff_tumour"),
+	("dna_blood_tumour", "dna_blood_tumour"),
+	("dna_bone_marrow_aspirate_tumour_sorted_cells", "dna_bone_marrow_aspirate_tumour_sorted_cells"),
+	("dna_bone_marrow_aspirate_tumour_cells", "dna_bone_marrow_aspirate_tumour_cells"),
+	("tumour_tissue_ffpe", "tumour_tissue_ffpe"), ("lysate_ffpe", "lysate_ffpe"),
+	("lysate_ff", "lysate_ff"), ("lysed_tumour_cells", "lysed_tumour_cells"), 
+	("buffy_coat", "buffy_coat"), ("streck_plasma", "streck_plasma"), ("edta_plasma", "edta_plasma"),
+	("lihep_plasma", "lihep_plasma"), ("serum", "serum"), ("rna_blood", "rna_blood"),
+	("tumour_tissue_ff", "tumour_tissue_ff"), ("bone_marrow_rna_gtc", "bone_marrow_rna_gtc"),
+	("blood_rna_gtc", "blood_rna_gtc"), ("dna_amniotic_fluid", "dna_amniotic_fluid"),
+	("dna_fresh_amniotic_fluid", "dna_fresh_amniotic_fluid"),
+	("dna_sorted_cd138_positive_cells", "dna_sorted_cd138_positive_cells"),
+	("dna_edta_blood", "dna_edta_blood"), ("dna_li_hep_blood", "dna_li_hep_blood"),
+	("dna_bone_marrow", "dna_bone_marrow"), ("dna_chorionic_villus_sample", "dna_chorionic_villus_sample"),
+	("dna_fresh_chronic_villus_sample", "dna_fresh_chronic_villus_sample"), ("dna_unknown", "dna_unknown"),
+	("dna_unkown_tumour", "dna_unkown_tumour"), ("dna_fetal_edta_blood", "dna_fetal_edta_blood"),
+	("dna_fibroblast_culture", "dna_fibroblast_culture"), 
+	("dna_fresh_fluid_sorted_other", "dna_fresh_fluid_sorted_other"), 
+	("dna_fresh_fluid_unsorted", "dna_fresh_fluid_unsorted"), ("dna_other", "dna_other"),
+	("dna_fresh_frozen_tissue", "dna_fresh_frozen_tissue"), 
+	("dna_fresh_tissue_in_culture_medium", "dna_fresh_tissue_in_culture_medium"),
+	("dna_fresh_fluid_tumour", "dna_fresh_fluid_tumour"), 
+	("dna_fresh_frozen_tumour", "dna_fresh_frozen_tumour"))
 
-# Create your models here.
-class ReceivedSample(models.Model):
-	gmcRackId = models.CharField(max_length=11)
-	sampleReceivedDateTime = models.DateTimeField()
-	laboratorySampleId = models.CharField(max_length=10)
-	gmcRackWell = models.CharField(max_length=3, choices=well_ids)
-
-class Gel1005csv(models.Model):
+class Gel1004Csv(models.Model):
 	filename = models.CharField(max_length=60)
-	participantId = models.CharField(max_length=20)
-	laboratoryId = models.CharField(max_length=3, choices= (("yne", "yne"), ("now", "now"), 
-		("eme", "eme"), ("lnn", "lnn"), ("lns", "lns"), ("wwm", "wwm"), ("sow", "sow")))
-	sampleReceived = models.BooleanField()
-	sampleReceivedDateTime = models.DateTimeField(null=True, blank=True)
-	reportGeneratedDateTime = models.DateTimeField()
-	laboratorySampleId = models.CharField(max_length=10)
+	plating_organisation = models.CharField(max_length=10, choices=lab_ids, default="wwm")
+	report_received_datetime = models.DateTimeField()
 
-class Gel1008csv(models.Model):
+class Gel1005Csv(models.Model):
 	filename = models.CharField(max_length=60)
-	participantId = models.CharField(max_length=20)
-	plateId = models.CharField(max_length=13)
-	normalisedBiorepositorySampleVolume = models.FloatField(null=True)
-	normalisedBiorepositoryConcentration = models.FloatField(null=True)
-	wellId = models.CharField(max_length=3, choices=well_ids)
-	plateConsignmentNumber = models.CharField(max_length=10)
-	plateDateOfDispatch = models.DateTimeField()
+	report_generated_datetime = models.DateTimeField()
 
-
-class Gel1004csv(models.Model):
+class Gel1008Csv(models.Model):
 	filename = models.CharField(max_length=60)
-	participantId = models.CharField(max_length=20)
-	groupId = models.CharField(max_length=20)
-	diseaseArea = models.CharField(max_length=12, choices = (
-			("Solid Tumour", "Solid Tumour"),
-			("Rare Disease", "Rare Disease")))
-	gmcRackId = models.CharField(max_length=11)
-	clinSampleType = models.CharField(max_length=44, choices = (
-		("dna_blood_germline", "dna_blood_germline"),
-		("dna_saliva", "dna_saliva"),
-		("dna_fibroblast", "dna_fibroblast"),
-		("dna_ff_germline", "dna_ff_germline"),
-		("dna_ffpe_tumour", "dna_ffpe_tumour"),
-		("dna_ff_tumour", "dna_ff_tumour"),
-		("dna_blood_tumour", "dna_blood_tumour"),
-		("dna_bone_marrow_aspirate_tumour_sorted_cells", "dna_bone_marrow_aspirate_tumour_sorted_cells"),
-		("dna_bone_marrow_aspirate_tumour_cells", "dna_bone_marrow_aspirate_tumour_cells"),
-		("tumour_tissue_ffpe", "tumour_tissue_ffpe"),
-		("lysate_ffpe", "lysate_ffpe"),
-		("lysate_ff", "lysate_ff"),
-		("lysed_tumour_cells", "lysed_tumour_cells"),
-		("buffy_coat", "buffy_coat"),
-		("streck_plasma", "streck_plasma"),
-		("edta_plasma", "edta_plasma"),
-		("lihep_plasma", "lihep_plasma"),
-		("serum", "serum"),
-		("rna_blood", "rna_blood"),
-		("tumour_tissue_ff", "tumour_tissue_ff"),
-		("bone_marrow_rna_gtc", "bone_marrow_rna_gtc"),
-		("blood_rna_gtc", "blood_rna_gtc"),
-		("dna_amniotic_fluid", "dna_amniotic_fluid"),
-		("dna_fresh_amniotic_fluid", "dna_fresh_amniotic_fluid"),
-		("dna_sorted_cd138_positive_cells", "dna_sorted_cd138_positive_cells"),
-		("dna_edta_blood", "dna_edta_blood"),
-		("dna_li_hep_blood", "dna_li_hep_blood"),
-		("dna_bone_marrow", "dna_bone_marrow"),
-		("dna_chorionic_villus_sample", "dna_chorionic_villus_sample"),
-		("dna_fresh_chronic_villus_sample", "dna_fresh_chronic_villus_sample"),
-		("dna_unknown", "dna_unknown"),
-		("dna_unkown_tumour", "dna_unkown_tumour"),
-		("dna_fetal_edta_blood", "dna_fetal_edta_blood"),
-		("dna_fibroblast_culture", "dna_fibroblast_culture"),
-		("dna_fresh_fluid_sorted_other", "dna_fresh_fluid_sorted_other"),
-		("dna_fresh_fluid_unsorted", "dna_fresh_fluid_unsorted"),
-		("dna_other", "dna_other"),
-		("dna_fresh_frozen_tissue", "dna_fresh_frozen_tissue"),
-		("dna_fresh_tissue_in_culture_medium", "dna_fresh_tissue_in_culture_medium"),
-		("dna_fresh_fluid_tumour", "dna_fresh_fluid_tumour"),
-		("dna_fresh_frozen_tumour", "dna_fresh_frozen_tumour")))
-	glhSampleConsignmentNumber = models.CharField(max_length=20)
-	laboratorySampleId = models.CharField(max_length=10)
-	laboratoryId = models.CharField(max_length=3, choices= (("yne", "yne"), ("now", "now"), 
-		("eme", "eme"), ("lnn", "lnn"), ("lns", "lns"), ("wwm", "wwm"), ("sow", "sow")))
-	laboratorySampleVolume = models.IntegerField()
-	gmcRackWell = models.CharField(max_length=3, choices=well_ids)
-	platingOrganisation = models.CharField(max_length=10, default="wwm")
+	report_generated_datetime = models.DateTimeField()
+
+class Rack(models.Model):
+	gel_1004_csv = models.ForeignKey(Gel1004Csv, on_delete=models.CASCADE)
+	gmc_rack_id = models.CharField(max_length=11)
+	laboratory_id = models.CharField(max_length=3, choices=lab_ids)
+
+class Plate(models.Model):
+	gel_1008_csv = models.ForeignKey(Gel1008Csv, on_delete=models.CASCADE, null=True, blank=True)
+	plate_id = models.CharField(max_length=13)
+	consignment_number = models.CharField(max_length=10)
+	date_of_dispatch = models.DateTimeField()
+
+class Sample(models.Model):
+	rack = models.ForeignKey(Rack, on_delete=models.CASCADE)
+	plate = models.ForeignKey(Plate, on_delete=models.CASCADE, null=True, blank=True)
+	gel_1005_csv = models.ForeignKey(Gel1005Csv, on_delete=models.CASCADE, null=True, blank=True)
+	participant_id = models.CharField(max_length=20)
+	group_id = models.CharField(max_length=20)
 	priority = models.CharField(max_length=7, choices=(("Routine", "Routine"),
 		("Urgent", "Urgent")), default="Routine")
-	isProband = models.BooleanField()
-	receivedSample = models.ForeignKey(ReceivedSample, on_delete=models.CASCADE, null=True, blank=True)
-	gel1005 = models.ForeignKey(Gel1005csv, on_delete=models.CASCADE, null=True, blank=True)
-	gel1008 = models.ForeignKey(Gel1008csv, on_delete=models.CASCADE, null=True, blank=True)
+	disease_area = models.CharField(max_length=12, choices = (
+			("Solid Tumour", "Solid Tumour"),
+			("Rare Disease", "Rare Disease")))
+	clin_sample_type = models.CharField(max_length=44, choices = sample_types)
+	glh_sample_consignment_number = models.CharField(max_length=20)
+	laboratory_sample_id = models.CharField(max_length=10)
+	laboratory_sample_volume = models.IntegerField()
+	gmc_rack_well = models.CharField(max_length=3, choices=well_ids)
+	is_proband = models.BooleanField()
+	sample_received = models.BooleanField()
+	sample_received_datetime = models.DateTimeField()
+	norm_biorep_sample_vol = models.FloatField(null=True)
+	norm_biorep_conc = models.FloatField(null=True)
+	plate_well_id = models.CharField(max_length=3, choices=well_ids)
