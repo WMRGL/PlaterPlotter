@@ -193,5 +193,14 @@ def sample_acks(request):
 							g.wellId, g.plateConsignmentNumber, g.plateDateOfDispatch])
 
 	all_gel1004 = Gel1004csv.objects.filter(receivedSample__isnull = True)
+	all_received_samples = ReceivedSample.objects.all()
+	for sample in all_received_samples:
+		try:
+			gel1004 = Gel1004csv.objects.get(gmcRackId=sample.gmcRackId, laboratorySampleId=sample.laboratorySampleId)
+			if gel1004.gmcRackWell == sample.gmcRackWell:
+				gel1004.receivedSample = sample
+				gel1004.save()
+		except:
+			print("no match")
 	return render(request, 'sample-acks.html', {
 		"remaining_gel1004" : all_gel1004})
