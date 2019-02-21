@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}
+    Acknowledge Samples - {{ block.super }}
+{% endblock title %}
+
+
+{% block content %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-10">
+        <h3>Acknowledge Receipt of Samples</h3>
+        <h4>Rack: {{ rack.gmc_rack_id }}</h4>
+        <p>Please acknowledge receipt of each sample in the rack.</p>
+      </div>
+      <div class="col-2">
+        <form role='form' action='' method="POST" class='form'>
+            {% csrf_token %}
+            <div class="form-group">
+              <div>
+                <button type="submit" name="rack-acked" class="btn btn-primary btn-block">Acknowledge Samples</button>
+              </div>
+            </div>
+        </form>
+      </div>
+    <div class="col-12">
+      <div class="tab-pane active">
+        <br>
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Participant ID</th>
+                <th>Group ID</th>
+                <th>Priority</th>
+                <th>Disease Area</th>
+                <th>Sample Type</th>
+                <th>Consignment Number</th>
+                <th>Lab Sample ID</th>
+                <th>Sample Volume</th>
+                <th>Rack Well</th>
+                <th>Is Proband?</th>
+                <th>Sample recieved</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for sample in samples %}
+            <tr>
+              <td>{{ sample.participant_id }}</td>
+              <td>{{ sample.group_id }}</td>
+              <td>{{ sample.priority }}</td>
+              <td>{{ sample.disease_area }}</td>
+              <td>{{ sample.clin_sample_type }}</td>
+              <td>{{ sample.glh_sample_consignment_number }}</td>
+              <td>{{ sample.laboratory_sample_id }}</td>
+              <td>{{ sample.laboratory_sample_volume }}</td>
+              <td>{{ sample.gmc_rack_well }}</td>
+              <td>{{ sample.is_proband }}</td>
+              <td style="text-align:center">
+                <form role='form' action='' method="POST" class='form'>
+                  {% csrf_token %}
+                  <div class="form-group">
+                    <div>
+                      <button class='btn btn-primary-outline btn-xsl' type="submit" name='sample-received' value='{{ sample.pk }}'>
+                        <label class="switch">
+                          <input type="checkbox" {% if sample.sample_received %} checked {% endif %}>
+                          <span class="slider round"></span>
+                        </label>
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div> 
+    </div>     
+  </div>
+
+{% endblock content %}

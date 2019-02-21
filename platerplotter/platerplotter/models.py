@@ -45,14 +45,15 @@ sample_types = (("dna_blood_germline", "dna_blood_germline"), ("dna_saliva", "dn
 	("dna_fresh_fluid_tumour", "dna_fresh_fluid_tumour"), 
 	("dna_fresh_frozen_tumour", "dna_fresh_frozen_tumour"))
 
-class Gel1004Csv(models.Model):
-	filename = models.CharField(max_length=60)
-	plating_organisation = models.CharField(max_length=10, choices=lab_ids, default="wwm")
-	report_received_datetime = models.DateTimeField()
-
 class Gel1005Csv(models.Model):
 	filename = models.CharField(max_length=60)
 	report_generated_datetime = models.DateTimeField()
+
+class Gel1004Csv(models.Model):
+	gel_1005_csv = models.ForeignKey(Gel1005Csv, on_delete=models.CASCADE, null=True, blank=True)
+	filename = models.CharField(max_length=60)
+	plating_organisation = models.CharField(max_length=10, choices=lab_ids, default="wwm")
+	report_received_datetime = models.DateTimeField()
 
 class Gel1008Csv(models.Model):
 	filename = models.CharField(max_length=60)
@@ -62,6 +63,7 @@ class Rack(models.Model):
 	gel_1004_csv = models.ForeignKey(Gel1004Csv, on_delete=models.CASCADE)
 	gmc_rack_id = models.CharField(max_length=11)
 	laboratory_id = models.CharField(max_length=3, choices=lab_ids)
+	rack_acknowledged = models.BooleanField(default=False)
 
 class Plate(models.Model):
 	gel_1008_csv = models.ForeignKey(Gel1008Csv, on_delete=models.CASCADE, null=True, blank=True)
@@ -72,7 +74,6 @@ class Plate(models.Model):
 class Sample(models.Model):
 	rack = models.ForeignKey(Rack, on_delete=models.CASCADE)
 	plate = models.ForeignKey(Plate, on_delete=models.CASCADE, null=True, blank=True)
-	gel_1005_csv = models.ForeignKey(Gel1005Csv, on_delete=models.CASCADE, null=True, blank=True)
 	participant_id = models.CharField(max_length=20)
 	group_id = models.CharField(max_length=20)
 	priority = models.CharField(max_length=7, choices=(("Routine", "Routine"),
@@ -86,8 +87,8 @@ class Sample(models.Model):
 	laboratory_sample_volume = models.IntegerField()
 	gmc_rack_well = models.CharField(max_length=3, choices=well_ids)
 	is_proband = models.BooleanField()
-	sample_received = models.BooleanField()
-	sample_received_datetime = models.DateTimeField()
+	sample_received = models.BooleanField(default=False)
+	sample_received_datetime = models.DateTimeField(null=True)
 	norm_biorep_sample_vol = models.FloatField(null=True)
 	norm_biorep_conc = models.FloatField(null=True)
-	plate_well_id = models.CharField(max_length=3, choices=well_ids)
+	plate_well_id = models.CharField(max_length=3, choices=well_ids, null=True)
