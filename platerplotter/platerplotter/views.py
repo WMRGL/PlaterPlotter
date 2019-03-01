@@ -4,29 +4,33 @@ from django.contrib import messages
 from django.urls import reverse
 from platerplotter.models import Gel1004Csv, Gel1005Csv, Gel1008Csv, Rack, Plate, Sample
 from platerplotter.config.load_config import LoadConfig
-#from platerplotter.forms import ReceivedSampleForm
+from platerplotter.forms import HoldingRackForm, SampleSelectForm #ReceivedSampleForm
 from datetime import datetime
+from django.core.exceptions import ValidationError
+from platerplotter.plate_manager import PlateManager
 import csv, os
 import pytz
 
-def ajax_change_sample_received_status(request):
-    sample_received = request.GET.get('sample_received', False)
-    sample_id = request.GET.get('sample_id', False)
-    # first you get your Job model
-    sample = Sample.objects.get(pk=sample_id)
-    try:
-        sample.sample_received = sample_received
-        sample.save()
-        return JsonResponse({"success": True})
-    except Exception as e:
-        return JsonResponse({"success": False})
-    return JsonResponse(data)
+# def ajax_change_sample_received_status(request):
+#     sample_received = request.GET.get('sample_received', False)
+#     sample_id = request.GET.get('sample_id', False)
+#     # first you get your Job model
+#     sample = Sample.objects.get(pk=sample_id)
+#     try:
+#         sample.sample_received = sample_received
+#         sample.save()
+#         return JsonResponse({"success": True})
+#     except Exception as e:
+#         return JsonResponse({"success": False})
+#     return JsonResponse(data)
 
 def import_acks(request):
 	"""
-	Renders index page.
+	Renders import acks page. Allows users to import new GEL1004 acks
+	and acknowledge receipt of samples.
 	"""
 	if request.method == 'POST':
+		# import new notifications from the storage location
 		if 'import-1004' in request.POST:
 			directory = LoadConfig().load()['gel1004path']
 			for filename in os.listdir(directory):
@@ -40,6 +44,7 @@ def import_acks(request):
 							if line_count == 0:
 								line_count += 1
 							else:
+								# gets exiting, or creates new objects
 								try:
 									gel_1004_csv = Gel1004Csv.objects.get(
 										filename = filename,
@@ -58,6 +63,8 @@ def import_acks(request):
 										gel_1004_csv = gel_1004_csv,
 										gmc_rack_id = row[3],
 										laboratory_id = row[7])
+								# creates new Sample object
+								# need to add regex error checking to input
 								sample = Sample.objects.create(
 									rack = rack,
 									participant_id = row[0],
@@ -72,11 +79,8 @@ def import_acks(request):
 									is_proband=row[12])
 								line_count += 1
 					os.rename(path, directory + "processed/" + filename)
-			unacked_gel_1004 = Gel1004Csv.objects.filter(gel_1005_csv__isnull = True)
-			unacked_racks_dict = {}
-			for gel_1004 in unacked_gel_1004:
-				unacked_racks_dict[gel_1004] = Rack.objects.filter(gel_1004_csv=gel_1004)
-			return render(request, 'import-acks.html', {"unacked_racks_dict" : unacked_racks_dict})
+			return HttpResponseRedirect('/')
+		# Generate GEL1005 acks for received samples
 		if 	'send-1005' in request.POST:
 			pk = request.POST['send-1005']
 			gel_1004 = Gel1004Csv.objects.get(pk=pk)
@@ -89,9 +93,6 @@ def import_acks(request):
 				report_generated_datetime=datetime_now)
 			gel_1004.gel_1005_csv = gel_1005
 			gel_1004.save()
-			print(filename)
-			#gel1004_with_matched_samples = Gel1004csv.objects.filter(receivedSample__isnull = False, gel1005__isnull = True)
-			#print(len(gel1004_with_matched_samples))
 			path = directory + filename
 			with open(path, 'w', newline='') as csvfile:
 				writer = csv.writer(csvfile, delimiter=',',
@@ -137,12 +138,90 @@ def acknowledge_samples(request, rack):
 				sample.sample_received = True
 				sample.sample_received_datetime = datetime.now(pytz.timezone('Europe/London'))
 			sample.save()
-			url = reverse('acknowledge-samples', kwargs={
+			url = reverse('acknowledge_samples', kwargs={
 				"rack" : rack.gmc_rack_id,
 				})
 			return HttpResponseRedirect(url)
 	return render(request, 'acknowledge-samples.html', {"rack" : rack,
 		"samples" : samples})
+
+def awaiting_plating(request):
+	unplated_samples = Sample.objects.filter(plate__isnull = True, 
+		rack__gel_1004_csv__gel_1005_csv__isnull = False,
+		sample_received = True)
+	unplated_racks_dict = {}
+	for sample in unplated_samples:
+		if sample.rack in unplated_racks_dict:
+			unplated_racks_dict[sample.rack].append(sample)
+		else:
+			unplated_racks_dict[sample.rack] = [sample] 
+	return render(request, 'awaiting-plating.html', {
+		"unplated_racks_dict" : unplated_racks_dict})
+
+def plate_samples(request, rack, plate_id=None):
+	rack = Rack.objects.get(gmc_rack_id=rack)
+	samples = Sample.objects.filter(rack=rack,
+		plate__isnull = True,
+		rack__gel_1004_csv__gel_1005_csv__isnull = False,
+		sample_received = True)
+	assigned_well_list = []
+	if plate_id:
+		plate = Plate.objects.get(holding_rack_id=plate_id)
+		plate_samples = Sample.objects.filter(plate=plate)
+		plate_manager = PlateManager(plate)
+		for sample in plate_samples:
+			assigned_well_list.append(sample.plate_well_id)
+	else:
+		plate = None
+		plate_samples = None
+	if request.method == 'POST':
+		if 'holding' in request.POST:
+			sample_select_form = SampleSelectForm()
+			holding_rack_form = HoldingRackForm(request.POST)
+			if holding_rack_form.is_valid():
+				holding_rack_id = holding_rack_form.cleaned_data.get('holding_rack_id')
+				if holding_rack_id == rack.gmc_rack_id:
+					messages.info(request, 'You have scanned the GMC Rack. Please scan the holding rack.')
+				else:
+					try:
+						plate = Plate.objects.get(holding_rack_id=holding_rack_id)
+					except:
+						plate = Plate.objects.create(holding_rack_id=holding_rack_id)
+				url = reverse('plate_samples', kwargs={
+						'rack' : rack.gmc_rack_id,
+						'plate_id' : plate.holding_rack_id,
+						})
+				return HttpResponseRedirect(url)
+		if 'sample' in request.POST:
+			holding_rack_form = HoldingRackForm()
+			sample_select_form = SampleSelectForm(request.POST)
+			if sample_select_form.is_valid():
+				lab_sample_id = sample_select_form.cleaned_data.get('lab_sample_id')
+				sample = None
+				for unassigned_sample in samples:
+					if unassigned_sample.laboratory_sample_id == lab_sample_id:
+						sample = unassigned_sample
+				if sample:
+					plate_manager.assign_well(sample)
+					messages.info(request, lab_sample_id + " assigned to well " + sample.plate_well_id)
+				else:
+					messages.info(request, lab_sample_id + " not found in GLH Rack " + rack.gmc_rack_id)
+				url = reverse('plate_samples', kwargs={
+							'rack' : rack.gmc_rack_id,
+							'plate_id' : plate.holding_rack_id,
+							})
+				return HttpResponseRedirect(url)
+	else:
+		holding_rack_form = HoldingRackForm()
+		sample_select_form = SampleSelectForm()
+	return render(request, 'plate-samples.html', {"rack" : rack,
+		"samples" : samples,
+		"holding_rack_form" : holding_rack_form,
+		"sample_select_form" : sample_select_form,
+		"plate" : plate,
+		"plate_samples" : plate_samples,
+		"assigned_well_list" : assigned_well_list})
+
 
 # def receive_samples(request):
 # 	"""

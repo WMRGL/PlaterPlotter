@@ -6,7 +6,26 @@ from datetime import datetime
 from platerplotter.models import Gel1004Csv, Rack, Plate, Sample
 from django.core.exceptions import ValidationError
 
+class HoldingRackForm(forms.Form):
+	holding_rack_id = forms.CharField(label='', widget=forms.TextInput(attrs={'autofocus': 'autofocus'}))
 
+	def clean_holding_rack_id(self):
+		holding_rack_id = self.cleaned_data['holding_rack_id']
+		if not re.match(r'^[a-zA-Z]{2}\d{8}$', holding_rack_id):
+			raise ValidationError("Invalid rack ID")
+		else:
+			return holding_rack_id.upper()
+
+class SampleSelectForm(forms.Form):
+	lab_sample_id = forms.CharField(label='', widget=forms.TextInput(attrs={'autofocus': 'autofocus'}))
+
+	def clean_lab_sample_id(self):
+		lab_sample_id = self.cleaned_data['lab_sample_id']
+		if not re.match(r'^\d{10}$', lab_sample_id):
+			print("error raised")
+			raise ValidationError("Invalid Laboratory Sample ID")
+		else:
+			return lab_sample_id
 
 # class ReceivedSampleForm(ModelForm):
 # 	class Meta:

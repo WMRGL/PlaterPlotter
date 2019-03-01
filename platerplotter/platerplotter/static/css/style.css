@@ -2,14 +2,22 @@ body {
   background-color: white;
 }
 
+.warning {
+  color: red;
+}
+
+.plate th {
+  text-align: center;
+  width: 40px;
+  height: 40px;
+}
+
 .plate td {
-  width: 75px;
-  height: 75px;
+  text-align: center;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background-color: #e9ecef;
-  padding-left: 10px;
-  padding-right: 10px;
-  padding-top: 15px;
 }
 
 .btn-primary-outline {

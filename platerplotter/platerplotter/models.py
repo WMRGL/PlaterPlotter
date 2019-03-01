@@ -67,9 +67,15 @@ class Rack(models.Model):
 
 class Plate(models.Model):
 	gel_1008_csv = models.ForeignKey(Gel1008Csv, on_delete=models.CASCADE, null=True, blank=True)
-	plate_id = models.CharField(max_length=13)
-	consignment_number = models.CharField(max_length=10)
-	date_of_dispatch = models.DateTimeField()
+	plate_id = models.CharField(max_length=13, null=True, blank=True)
+	consignment_number = models.CharField(max_length=10, null=True, blank=True)
+	date_of_dispatch = models.DateTimeField(null=True, blank=True)
+	holding_rack_id = models.CharField(max_length=11)
+	plate_type = models.CharField(max_length=15, choices=(("Proband", "Proband"),
+		("Parent", "Parent"), ("Cancer Germline", "Cancer Germline"),
+		("Tumour", "Tumour"), ("Unassigned", "Unassigned")), default="Unassigned")
+	half_full = models.BooleanField(default=False)
+	full = models.BooleanField(default=False)
 
 class Sample(models.Model):
 	rack = models.ForeignKey(Rack, on_delete=models.CASCADE)
