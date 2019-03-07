@@ -17,7 +17,13 @@
     </div>
     <div class="col-4">
       <div align='center'>
-        <a class="btn btn-primary btn-lg" href="/plate-samples/{{rack.gmc_rack_id}}" role="button">Change Holding Rack</a>
+        <form role='form' action='' method="POST", class='justify-content-center'>
+          {% csrf_token %}
+          <div class="form-group">
+            <a class="btn btn-primary btn-lg" href="/plate-samples/{{rack.gmc_rack_id}}" role="button">Change Holding Rack</a>
+            <button type="submit" name='ready' value='{{ plate.pk }}' class="btn btn-success btn-lg">Ready to Plate</button>
+          </div>
+        </form>
       </div>
     </div>
       <div class="col-4">
@@ -42,567 +48,571 @@
         {% endif %}
     </div>
   </div>
-  <div class="row">
-    <div class="col-4">
-      <div class="tab-pane active">
-          <table class="plate">
+  {% if plate.ready_to_plate %}
+    <p>Holding rack ready to plate.</p>
+  {% else %}
+    <div class="row">
+      <div class="col-4">
+        <div class="tab-pane active">
+            <table class="plate">
+              <tbody>
+                <tr>
+                  <th></th>
+                  <th>1</th>
+                  <th>2</th>
+                  <th>3</th>
+                  <th>4</th>
+                  <th>5</th>
+                  <th>6</th>
+                  <th>7</th>
+                  <th>8</th>
+                  <th>9</th>
+                  <th>10</th>
+                  <th>11</th>
+                  <th>12</th>
+                </tr>
+                <tr>
+                  <th>A</th>
+                  {% if "A1" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "A2" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "A3" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "A4" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "A5" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "A6" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "A7" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "A8" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "A9" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "A10" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "A11" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "A12" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                </tr>
+                <tr>
+                  <th>B</th>
+                  {% if "B1" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "B2" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "B3" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "B4" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "B5" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "B6" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "B7" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "B8" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "B9" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "B10" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "B11" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "B12" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                </tr>
+                <tr>
+                  <th>C</th>
+                  {% if "C1" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "C2" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "C3" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "C4" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "C5" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "C6" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "C7" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "C8" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "C9" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "C10" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "C11" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "C12" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                </tr>
+                <tr>
+                  <th>D</th>
+                  {% if "D1" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "D2" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "D3" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "D4" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "D5" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "D6" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "D7" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "D8" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "D9" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "D10" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "D11" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "D12" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                </tr>
+                <tr>
+                  <th>E</th>
+                  {% if "E1" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "E2" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "E3" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "E4" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "E5" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "E6" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "E7" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "E8" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "E9" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "E10" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "E11" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "E12" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                </tr>
+                <tr>
+                  <th>F</th>
+                  {% if "F1" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "F2" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "F3" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "F4" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "F5" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "F6" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "F7" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "F8" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "F9" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "F10" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "F11" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "F12" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                </tr>
+                <tr>
+                  <th>G</th>
+                  {% if "G1" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "G2" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "G3" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "G4" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "G5" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "G6" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "G7" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "G8" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "G9" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "G10" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "G11" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "G12" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                </tr>
+                <tr>
+                  <th>H</th>
+                  {% if "H1" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "H2" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "H3" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "H4" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "H5" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "H6" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "H7" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "H8" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "H9" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "H10" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "H11" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                  {% if "H12" in assigned_well_list %}
+                    <td style="background-color: blue"></td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                </tr>
+              </tbody>
+            </table>
+        </div> 
+      </div> 
+      <div class='col-8' style="height: 350px; overflow-y:scroll;">
+        <div class="tab-pane active">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Holding Rack Well</th>
+                <th>Lab Sample ID</th>  
+                <th>Participant ID</th>
+                <th>Group ID</th>
+                <th>Priority</th>
+                <th>Disease Area</th>
+                <th>Sample Type</th>          
+                <th>Is Proband?</th>
+              </tr>
+            </thead>
             <tbody>
+              {% for sample in plate_samples %}
               <tr>
-                <th></th>
-                <th>1</th>
-                <th>2</th>
-                <th>3</th>
-                <th>4</th>
-                <th>5</th>
-                <th>6</th>
-                <th>7</th>
-                <th>8</th>
-                <th>9</th>
-                <th>10</th>
-                <th>11</th>
-                <th>12</th>
+                <td>{{ sample.plate_well_id }}</td>
+                <td>{{ sample.laboratory_sample_id }}</td>
+                <td>{{ sample.participant_id }}</td>
+                <td>{{ sample.group_id }}</td>
+                <td>{{ sample.priority }}</td>
+                <td>{{ sample.disease_area }}</td>
+                <td>{{ sample.clin_sample_type }}</td>
+                <td>{{ sample.is_proband }}</td>
               </tr>
-              <tr>
-                <th>A</th>
-                {% if "A1" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "A2" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "A3" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "A4" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "A5" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "A6" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "A7" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "A8" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "A9" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "A10" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "A11" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "A12" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-              </tr>
-              <tr>
-                <th>B</th>
-                {% if "B1" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "B2" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "B3" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "B4" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "B5" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "B6" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "B7" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "B8" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "B9" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "B10" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "B11" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "B12" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-              </tr>
-              <tr>
-                <th>C</th>
-                {% if "C1" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "C2" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "C3" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "C4" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "C5" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "C6" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "C7" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "C8" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "C9" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "C10" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "C11" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "C12" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-              </tr>
-              <tr>
-                <th>D</th>
-                {% if "D1" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "D2" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "D3" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "D4" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "D5" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "D6" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "D7" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "D8" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "D9" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "D10" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "D11" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "D12" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-              </tr>
-              <tr>
-                <th>E</th>
-                {% if "E1" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "E2" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "E3" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "E4" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "E5" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "E6" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "E7" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "E8" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "E9" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "E10" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "E11" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "E12" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-              </tr>
-              <tr>
-                <th>F</th>
-                {% if "F1" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "F2" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "F3" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "F4" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "F5" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "F6" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "F7" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "F8" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "F9" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "F10" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "F11" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "F12" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-              </tr>
-              <tr>
-                <th>G</th>
-                {% if "G1" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "G2" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "G3" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "G4" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "G5" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "G6" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "G7" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "G8" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "G9" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "G10" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "G11" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "G12" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-              </tr>
-              <tr>
-                <th>H</th>
-                {% if "H1" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "H2" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "H3" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "H4" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "H5" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "H6" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "H7" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "H8" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "H9" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "H10" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "H11" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-                {% if "H12" in assigned_well_list %}
-                  <td style="background-color: blue"></td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-              </tr>
+              {% endfor %}
             </tbody>
           </table>
-      </div> 
-    </div> 
-    <div class='col-8'>
-      <div class="tab-pane active">
-        <table class="table table-bordered">
-          <thead>
-            <tr>
-              <th>Holding Rack Well</th>
-              <th>Lab Sample ID</th>  
-              <th>Participant ID</th>
-              <th>Group ID</th>
-              <th>Priority</th>
-              <th>Disease Area</th>
-              <th>Sample Type</th>          
-              <th>Is Proband?</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for sample in plate_samples %}
-            <tr>
-              <td>{{ sample.plate_well_id }}</td>
-              <td>{{ sample.laboratory_sample_id }}</td>
-              <td>{{ sample.participant_id }}</td>
-              <td>{{ sample.group_id }}</td>
-              <td>{{ sample.priority }}</td>
-              <td>{{ sample.disease_area }}</td>
-              <td>{{ sample.clin_sample_type }}</td>
-              <td>{{ sample.is_proband }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div> 
-    </div>    
-  </div>
+        </div> 
+      </div>    
+    </div>
+  {% endif %}
   {% else %}
   <div class="row">
     <div class="col-6">
@@ -624,9 +634,9 @@
       </form>
       {% if messages %}
         <ul class="messages warning">
-            {% for message in messages %}
-            <strong><p>{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p></strong>
-            {% endfor %}
+          {% for message in messages %}
+          <strong><p{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p></strong>
+          {% endfor %}
         </ul>
       {% endif %}
     </div>

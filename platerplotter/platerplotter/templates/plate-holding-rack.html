@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}
+    Acknowledge Samples - {{ block.super }}
+{% endblock title %}
+{% load bootstrap4 %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-6">
+        <h3>Plate samples</h3>
+        <h4>Holding Rack: {{ plate.holding_rack_id }}</h4>
+        {% if plate.plate_id %}
+          <h4>Plate ID: {{ plate.plate_id }}</h4>
+        {% else %}
+          <p>Please plate samples and assign plate ID</p>
+        {% endif %}
+      </div>
+      <div class="col-6">
+        <br><br>
+        <form role='form' method="POST" class='form-inline float-right' enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="col-lg-6">
+              {% bootstrap_field plating_form.plate_id %}
+            </div>
+            <div class="col-lg-6">
+              <br>
+              <button type="submit" name="gel1008" class="btn btn-primary btn-block">Assign Plate</button>
+          </div>
+        </form>
+      </div>
+    <div class="col-12">
+      <div class="tab-pane active">
+        <br>
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Holding Rack Well</th>
+                <th>Lab Sample ID</th>  
+                <th>Participant ID</th>
+                <th>Group ID</th>
+                <th>Priority</th>
+                <th>Disease Area</th>
+                <th>Sample Type</th>          
+                <th>Is Proband?</th>
+                <th>Plate ID</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for sample in samples %}
+            <tr>
+              <td>{{ sample.plate_well_id }}</td>
+              <td>{{ sample.laboratory_sample_id }}</td>
+              <td>{{ sample.participant_id }}</td>
+              <td>{{ sample.group_id }}</td>
+              <td>{{ sample.priority }}</td>
+              <td>{{ sample.disease_area }}</td>
+              <td>{{ sample.clin_sample_type }}</td>
+              <td>{{ sample.is_proband }}</td>
+              <td>{{ sample.plate.plate_id }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div> 
+    </div>     
+  </div>
+
+{% endblock content %}

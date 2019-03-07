@@ -4,12 +4,13 @@ from django.contrib import messages
 from django.urls import reverse
 from platerplotter.models import Gel1004Csv, Gel1005Csv, Gel1008Csv, Rack, Plate, Sample
 from platerplotter.config.load_config import LoadConfig
-from platerplotter.forms import HoldingRackForm, SampleSelectForm #ReceivedSampleForm
+from platerplotter.forms import HoldingRackForm, SampleSelectForm, PlatingForm, Gel1008Form #ReceivedSampleForm
 from datetime import datetime
 from django.core.exceptions import ValidationError
 from platerplotter.plate_manager import PlateManager
 import csv, os
 import pytz
+
 
 # def ajax_change_sample_received_status(request):
 #     sample_received = request.GET.get('sample_received', False)
@@ -167,7 +168,9 @@ def plate_samples(request, rack, plate_id=None):
 	assigned_well_list = []
 	if plate_id:
 		plate = Plate.objects.get(holding_rack_id=plate_id)
-		plate_samples = Sample.objects.filter(plate=plate)
+		plate_samples = sorted(Sample.objects.filter(plate=plate), 
+			key=lambda x: (x.plate_well_id[0], int(x.plate_well_id[1:])), 
+			reverse=True)
 		plate_manager = PlateManager(plate)
 		for sample in plate_samples:
 			assigned_well_list.append(sample.plate_well_id)
@@ -181,17 +184,32 @@ def plate_samples(request, rack, plate_id=None):
 			if holding_rack_form.is_valid():
 				holding_rack_id = holding_rack_form.cleaned_data.get('holding_rack_id')
 				if holding_rack_id == rack.gmc_rack_id:
-					messages.info(request, 'You have scanned the GMC Rack. Please scan the holding rack.')
+					messages.info(request, "You have scanned the GMC Rack. Please scan the holding rack.")
 				else:
 					try:
 						plate = Plate.objects.get(holding_rack_id=holding_rack_id)
 					except:
 						plate = Plate.objects.create(holding_rack_id=holding_rack_id)
-				url = reverse('plate_samples', kwargs={
-						'rack' : rack.gmc_rack_id,
-						'plate_id' : plate.holding_rack_id,
-						})
+				if plate:
+					url = reverse('plate_samples', kwargs={
+							'rack' : rack.gmc_rack_id,
+							'plate_id' : plate.holding_rack_id,
+							})
+				else:
+					url = reverse('plate_samples', kwargs={
+							'rack' : rack.gmc_rack_id,
+							})
 				return HttpResponseRedirect(url)
+		if 'ready' in request.POST:
+			holding_rack_form = HoldingRackForm()
+			sample_select_form = SampleSelectForm()
+			print(request.POST['ready'])
+			pk = request.POST['ready']
+			plate = Plate.objects.get(pk=pk)
+			print(plate)
+			print(plate.holding_rack_id)
+			plate.ready_to_plate = True
+			plate.save()
 		if 'sample' in request.POST:
 			holding_rack_form = HoldingRackForm()
 			sample_select_form = SampleSelectForm(request.POST)
@@ -222,159 +240,79 @@ def plate_samples(request, rack, plate_id=None):
 		"plate_samples" : plate_samples,
 		"assigned_well_list" : assigned_well_list})
 
+def ready_to_plate(request):
+	"""
+	Renders page displaying holding racks that are ready for plating
+	"""
+	ready_to_plate = Plate.objects.filter(ready_to_plate=True, plate_id__isnull=True)
+	for plate in ready_to_plate:
+		plate.sample_count = Sample.objects.filter(plate=plate).count
+	return render(request, 'ready-to-plate.html', {"ready_to_plate" : ready_to_plate})
 
-# def receive_samples(request):
-# 	"""
-# 	Renders receive samples form
-# 	"""
-# 	if request.method == 'POST':
-# 		form = ReceivedSampleForm(request.POST)
-# 		if form.is_valid():
-# 			form.save()
-# 			return HttpResponseRedirect('/receive-samples/')
-# 	else:
-# 		form = ReceivedSampleForm()
-# 	return render(request, 'receive-samples.html', {"form" : form})
+def plate_holding_rack(request, plate_pk):
+	plate = Plate.objects.get(pk=plate_pk)
+	samples = sorted(Sample.objects.filter(plate=plate), 
+			key=lambda x: (x.plate_well_id[0], int(x.plate_well_id[1:])))
+	if request.method == 'POST':
+		plating_form = PlatingForm(request.POST)
+		if plating_form.is_valid():
+			plate_id = plating_form.cleaned_data.get('plate_id')
+			plate.plate_id = plate_id
+			plate.save()
+	else:
+		plating_form = PlatingForm()
+	return render(request, 'plate-holding-rack.html', {
+		"plate" : plate,
+		"samples" : samples,
+		"plating_form" : plating_form})
 
-# def sample_acks(request):
-# 	"""
-# 	Renders receive samples form
-# 	"""
-# 	if request.method == 'POST':
-# 		if 'gel1004' in request.POST:
-# 			directory = LoadConfig().load()['gel1004path']
-# 			for filename in os.listdir(directory):
-# 				if filename.endswith(".csv"):
-# 					path = directory + filename
-# 					with open(path) as csv_file:
-# 						csv_reader = csv.reader(csv_file, delimiter=',')
-# 						line_count=0
-# 						for row in csv_reader:
-# 							if line_count == 0:
-# 								line_count += 1
-# 							else:
-# 								Gel1004csv.objects.create(
-# 									filename=filename,
-# 									participantId=row[0],
-# 									groupId=row[1],
-# 									diseaseArea=row[2],
-# 									gmcRackId=row[3],
-# 									clinSampleType=row[4],
-# 									glhSampleConsignmentNumber=row[5],
-# 									laboratorySampleId=row[6],
-# 									laboratoryId=row[7],
-# 									laboratorySampleVolume=row[8],
-# 									gmcRackWell=row[9],
-# 									platingOrganisation=row[10],
-# 									priority=row[11],
-# 									isProband=row[12])
-# 								line_count += 1
-# 					os.rename(path, directory + "processed/" + filename)
-# 			gel1004 = Gel1004csv.objects.all()
-# 			return render(request, 'index.html', {"gel1004" : gel1004})
-# 		if 'gel1005' in request.POST:
-# 			directory = LoadConfig().load()['gel1005path']
-# 			datetime_now = datetime.now(pytz.timezone('Europe/London'))
-# 			filename = "ngis_bio_to_gel_samples_received_" + datetime.now(pytz.timezone('Europe/London')).strftime("%y%m%d_%H%M%S") + ".csv"
-# 			print(filename)
-# 			gel1004_with_matched_samples = Gel1004csv.objects.filter(receivedSample__isnull = False, gel1005__isnull = True)
-# 			print(len(gel1004_with_matched_samples))
-# 			gel1005s = []
-# 			received_racks = set()
-# 			for g in gel1004_with_matched_samples:
-# 				received_racks.add(g.gmcRackId)
-# 				gel1005csv = Gel1005csv.objects.create(
-# 					filename=filename,
-# 					participantId = g.participantId,
-# 					laboratoryId = g.laboratoryId,
-# 					sampleReceived = True,
-# 					sampleReceivedDateTime = g.receivedSample.sampleReceivedDateTime,
-# 					reportGeneratedDateTime = datetime_now,
-# 					laboratorySampleId = g.laboratorySampleId)
-# 				g.gel1005 = gel1005csv
-# 				g.save()
-# 				gel1005s.append(gel1005csv)
-# 				print(g.participantId)
-# 			print(received_racks)
-# 			for rack in received_racks:
-# 				rack_received_missing_sample = Gel1004csv.objects.filter(gmcRackId = rack, receivedSample__isnull = True, gel1005__isnull = True)
-# 				for g in rack_received_missing_sample:
-# 					gel1005csv = Gel1005csv.objects.create(
-# 						filename=filename,
-# 						participantId = g.participantId,
-# 						laboratoryId = g.laboratoryId,
-# 						sampleReceived = False,
-# 						sampleReceivedDateTime = None,
-# 						reportGeneratedDateTime = datetime_now,
-# 						laboratorySampleId = g.laboratorySampleId)
-# 					g.gel1005 = gel1005csv
-# 					g.save()
-# 					gel1005s.append(gel1005csv)
-# 					print(g.participantId)
-# 			if gel1005s:
-# 				path = directory + filename
-# 				with open(path, 'w', newline='') as csvfile:
-# 					writer = csv.writer(csvfile, delimiter=',',
-# 						quotechar=',', quoting=csv.QUOTE_MINIMAL)
-# 					writer.writerow(['Participant ID', 'Laboratory ID',
-# 						'Sample Received', 'Sample Received DateTime',
-# 						'DateTime Report Generated', 'Laboratory Sample ID'])
-# 					for g in gel1005s:
-# 						writer.writerow([g.participantId, g.laboratoryId,
-# 							g.sampleReceived, g.sampleReceivedDateTime,
-# 							g.reportGeneratedDateTime, g.laboratorySampleId])
-# 		if 'gel1008' in request.POST:
-# 			rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
-# 			columns = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
-# 			wells = []
-# 			for row in rows:
-# 				for column in columns:
-# 					wells.append(row + column)
-# 			print(wells)	
-# 			directory = LoadConfig().load()['gel1008path']
-# 			datetime_now = datetime.now(pytz.timezone('Europe/London'))
-# 			filename = "ngis_bio_to_gel_sample_dispatch_" + datetime.now(pytz.timezone('Europe/London')).strftime("%y%m%d_%H%M%S") + ".csv"
-# 			print(filename)
-# 			unplated_samples = Gel1004csv.objects.filter(receivedSample__isnull = False, gel1008__isnull = True)
-# 			print(len(unplated_samples))
-# 			well_count = 0
-# 			gel1008s = []
-# 			for g in unplated_samples:
-# 				gel1008csv = Gel1008csv.objects.create(
-# 							filename = filename,
-# 							participantId = g.participantId,
-# 							plateId = 'plateID-input',
-# 							normalisedBiorepositorySampleVolume = None,
-# 							normalisedBiorepositoryConcentration = None,
-# 							wellId = wells[well_count],
-# 							plateConsignmentNumber = '0000000001',
-# 							plateDateOfDispatch = datetime_now)
-# 				g.gel1008 = gel1008csv
-# 				g.save()
-# 				gel1008s.append(gel1008csv)
-# 				well_count += 1
-# 			if gel1008s:
-# 				path = directory + filename
-# 				with open(path, 'w', newline='') as csvfile:
-# 					writer = csv.writer(csvfile, delimiter=',',
-# 						quotechar=',', quoting=csv.QUOTE_MINIMAL)
-# 					writer.writerow(['Participant ID', 'Plate ID',
-# 						'Normalised Biorepository Sample Volume', 'Normalised Biorepository Concentration',
-# 						'Well ID', 'Plate Consignment Number', 'Plate Date of Dispatch'])
-# 					for g in gel1008s:
-# 						writer.writerow([g.participantId, g.plateId,
-# 							g.normalisedBiorepositorySampleVolume, g.normalisedBiorepositoryConcentration,
-# 							g.wellId, g.plateConsignmentNumber, g.plateDateOfDispatch])
-
-# 	all_gel1004 = Gel1004csv.objects.filter(receivedSample__isnull = True)
-# 	all_received_samples = ReceivedSample.objects.all()
-# 	for sample in all_received_samples:
-# 		try:
-# 			gel1004 = Gel1004csv.objects.get(gmcRackId=sample.gmcRackId, laboratorySampleId=sample.laboratorySampleId)
-# 			if gel1004.gmcRackWell == sample.gmcRackWell:
-# 				gel1004.receivedSample = sample
-# 				gel1004.save()
-# 		except:
-# 			print("no match")
-# 	return render(request, 'sample-acks.html', {
-# 		"remaining_gel1004" : all_gel1004})
+def ready_to_dispatch(request):
+	"""
+	Renders page displaying plates that are ready for dispatch
+	"""
+	ready_to_dispatch = Plate.objects.filter(ready_to_plate=True, plate_id__isnull=False, gel_1008_csv__isnull=True)
+	for plate in ready_to_dispatch:
+		plate.sample_count = Sample.objects.filter(plate=plate).count
+	if request.method == 'POST':
+		gel1008_form = Gel1008Form(request.POST)
+		if gel1008_form.is_valid():
+			if request.POST.getlist('selected_plate'):
+				plate_pks = request.POST.getlist('selected_plate')
+				consignment_number = gel1008_form.cleaned_data.get('consignment_number')
+				date_of_dispatch = gel1008_form.cleaned_data.get('date_of_dispatch')
+				directory = LoadConfig().load()['gel1008path']
+				datetime_now = datetime.now(pytz.timezone('Europe/London'))
+				filename = "ngis_bio_to_gel_sample_dispatch_" + datetime.now(pytz.timezone('Europe/London')).strftime("%y%m%d_%H%M%S") + ".csv"
+				gel_1008_csv = Gel1008Csv.objects.create(
+					filename = filename,
+					report_generated_datetime = datetime_now,
+					consignment_number = consignment_number,
+					date_of_dispatch = date_of_dispatch)
+				plates = []
+				for pk in plate_pks:
+					plate = Plate.objects.get(pk=pk)
+					plate.gel_1008_csv = gel_1008_csv
+					plate.save()
+					plates.append(plate)
+				path = directory + filename
+				with open(path, 'w', newline='') as csvfile:
+					writer = csv.writer(csvfile, delimiter=',',
+						quotechar=',', quoting=csv.QUOTE_MINIMAL)
+					writer.writerow(['Participant ID', 'Plate ID',
+						'Normalised Biorepository Sample Volume', 'Normalised Biorepository Concentration',
+						'Well ID', 'Plate Consignment Number', 'Plate Date of Dispatch'])
+					for plate in plates:
+						samples = Sample.objects.filter(plate=plate)
+						for sample in samples:
+							writer.writerow([sample.participant_id, plate.plate_id,
+								sample.norm_biorep_sample_vol, sample.norm_biorep_conc,
+								sample.plate_well_id, gel_1008_csv.consignment_number, gel_1008_csv.date_of_dispatch])
+				messages.info(request, "GEL1008 csv produced.")
+			else:
+				messages.info(request, "No plates selected!")
+			return HttpResponseRedirect('/ready-to-dispatch/')
+	else:
+		gel1008_form = Gel1008Form()
+	return render(request, 'ready-to-dispatch.html', {
+		"ready_to_dispatch" : ready_to_dispatch,
+		"gel1008_form" : gel1008_form})

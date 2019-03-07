@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}
+    Acknowledge Samples - {{ block.super }}
+{% endblock title %}
+
+
+{% block content %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <h3>Samples ready for plating</h3>
+        <p>Click on holding rack ID to plate samples and assign plate ID</p>
+      </div>
+    <div class="col-12">
+      <div class="tab-pane active">
+        <br>
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Holding Rack ID</th>
+                <th>Sample Type</th>
+                <th>Half Plate</th>
+                <th>Full Plate</th>
+                <th>Number of Samples</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for rack in ready_to_plate %}
+            <tr>
+              <td><a href="/plate-holding-rack/{{ rack.pk }}">{{ rack.holding_rack_id }}</a></td>
+              <td>{{ rack.plate_type }}</td>
+              <td>{{ rack.half_full }}</td>
+              <td>{{ rack.full }}</td>
+              <td>{{ rack.sample_count }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div> 
+    </div>     
+  </div>
+
+{% endblock content %}

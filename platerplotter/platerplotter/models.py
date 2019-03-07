@@ -58,6 +58,8 @@ class Gel1004Csv(models.Model):
 class Gel1008Csv(models.Model):
 	filename = models.CharField(max_length=60)
 	report_generated_datetime = models.DateTimeField()
+	consignment_number = models.CharField(max_length=10, null=True, blank=True)
+	date_of_dispatch = models.DateTimeField(null=True, blank=True)
 
 class Rack(models.Model):
 	gel_1004_csv = models.ForeignKey(Gel1004Csv, on_delete=models.CASCADE)
@@ -68,14 +70,13 @@ class Rack(models.Model):
 class Plate(models.Model):
 	gel_1008_csv = models.ForeignKey(Gel1008Csv, on_delete=models.CASCADE, null=True, blank=True)
 	plate_id = models.CharField(max_length=13, null=True, blank=True)
-	consignment_number = models.CharField(max_length=10, null=True, blank=True)
-	date_of_dispatch = models.DateTimeField(null=True, blank=True)
 	holding_rack_id = models.CharField(max_length=11)
 	plate_type = models.CharField(max_length=15, choices=(("Proband", "Proband"),
 		("Parent", "Parent"), ("Cancer Germline", "Cancer Germline"),
 		("Tumour", "Tumour"), ("Unassigned", "Unassigned")), default="Unassigned")
 	half_full = models.BooleanField(default=False)
 	full = models.BooleanField(default=False)
+	ready_to_plate = models.BooleanField(default=False)
 
 class Sample(models.Model):
 	rack = models.ForeignKey(Rack, on_delete=models.CASCADE)
