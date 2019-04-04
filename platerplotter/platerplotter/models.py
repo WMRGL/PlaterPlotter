@@ -71,9 +71,16 @@ class Plate(models.Model):
 	gel_1008_csv = models.ForeignKey(Gel1008Csv, on_delete=models.CASCADE, null=True, blank=True)
 	plate_id = models.CharField(max_length=13, null=True, blank=True)
 	holding_rack_id = models.CharField(max_length=11)
+	disease_area = models.CharField(max_length=12, choices = (
+			("Solid Tumour", "Solid Tumour"),
+			("Rare Disease", "Rare Disease"),
+			("Unassigned", "Unassigned")), default="Unassigned")
 	plate_type = models.CharField(max_length=15, choices=(("Proband", "Proband"),
 		("Parent", "Parent"), ("Cancer Germline", "Cancer Germline"),
 		("Tumour", "Tumour"), ("Unassigned", "Unassigned")), default="Unassigned")
+	priority = models.CharField(max_length=10, choices=(("Routine", "Routine"),
+		("Urgent", "Urgent"),
+		("Unassigned", "Unassigned")), default="Unassigned")
 	half_full = models.BooleanField(default=False)
 	full = models.BooleanField(default=False)
 	ready_to_plate = models.BooleanField(default=False)
@@ -88,6 +95,9 @@ class Sample(models.Model):
 	disease_area = models.CharField(max_length=12, choices = (
 			("Solid Tumour", "Solid Tumour"),
 			("Rare Disease", "Rare Disease")))
+	sample_type = models.CharField(max_length=15, choices=(("Proband", "Proband"),
+		("Parent", "Parent"), ("Cancer Germline", "Cancer Germline"),
+		("Tumour", "Tumour"), ("Unassigned", "Unassigned")), default="Unassigned")
 	clin_sample_type = models.CharField(max_length=44, choices = sample_types)
 	glh_sample_consignment_number = models.CharField(max_length=20)
 	laboratory_sample_id = models.CharField(max_length=10)

@@ -2,26 +2,57 @@
 {% block title %}
     Acknowledge Samples - {{ block.super }}
 {% endblock title %}
+{% load crispy_forms_tags %}
 
 
 {% block content %}
   <div class="container-fluid">
     <div class="row">
-      <div class="col-10">
+      <div class="col-8">
         <h3>Acknowledge Receipt of Samples</h3>
         <h4>Rack: {{ rack.gmc_rack_id }}</h4>
-        <p>Please acknowledge receipt of each sample in the rack.</p>
+      </div>
+      <div class="col-4">
+        <div align='right'>
+          <h4>Scan or type sample ID</h4>
+        </div>
+        <form role='form' action='' method="POST", class='form-inline float-right'>
+          {% csrf_token %}
+          {{ sample_select_form|crispy }}
+          <div class="form-group">
+            <div class="col-lg-5 col-sm-offset-5">
+              <button type="submit" name='sample-scanned' class="btn btn-primary">Go</button>
+            </div>
+          </div>
+        </form>
+        {% if messages %}
+          <ul class="messages warning">
+              {% for message in messages %}
+              <strong><p{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p></strong>
+              {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-10">
+        <p>Please acknowledge receipt of each sample in the rack by scanning each sample and then click "Acknowledge Samples" button once <em>all</em> samples have been scanned.</p>
       </div>
       <div class="col-2">
         <form role='form' action='' method="POST" class='form'>
             {% csrf_token %}
             <div class="form-group">
               <div>
-                <button type="submit" name="rack-acked" class="btn btn-primary btn-block">Acknowledge Samples</button>
+                {% if all_samples_received %}
+                  <button type="submit" name="rack-acked" class="btn btn-success btn-block">Acknowledge Samples</button>
+                {% else %}
+                  <button type="submit" onclick="return confirm('Are you sure? Not all samples have been marked as received.')" name="rack-acked" class="btn btn-warning btn-block">Acknowledge Samples</button>  
+                {% endif %}
               </div>
             </div>
         </form>
       </div>
+    </div>
     <div class="col-12">
       <div class="tab-pane active">
         <br>
@@ -76,5 +107,7 @@
       </div> 
     </div>     
   </div>
+
+
 
 {% endblock content %}

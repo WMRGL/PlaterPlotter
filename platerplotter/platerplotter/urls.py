@@ -11,4 +11,5 @@ urlpatterns = [
     path('ready-to-plate/', views.ready_to_plate, name='ready_to_plate'),
     path('plate-holding-rack/<str:plate_pk>', views.plate_holding_rack, name='plate_holding_rack'),
     path('ready-to-dispatch/', views.ready_to_dispatch, name='ready_to_dispatch'),
+    path('audit/', views.audit, name='audit'),
 ]
