@@ -261,7 +261,8 @@ def plate_samples(request, rack, plate_id=None):
 						plate.priority = sample.priority
 						plate.save()
 					if sample.sample_type == plate.plate_type and sample.priority == plate.priority:
-						plate_manager.assign_well(sample)
+						well = request.POST['well']
+						plate_manager.assign_well(sample=sample, well=well)
 						messages.info(request, lab_sample_id + " assigned to well " + sample.plate_well_id)
 					else:
 						messages.info(request, "Sample does not match holding rack type! Unable to add to this rack.")

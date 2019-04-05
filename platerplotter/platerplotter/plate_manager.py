@@ -32,24 +32,32 @@ class PlateManager():
 		print(self.well_labels)
 		print(self.well_contents)
 
-	def assign_well(self, sample):
+	def assign_well(self, sample, well):
 		'''
 		Finds next available free well and assigns sample to this
 		'''
 		print("assigning well for sample " + str(sample))
 		print("len: " + str(len(self.well_contents)))
-		well_index = 0
-		for well_content in self.well_contents:
-			print
-			print("index count: " + str(well_index))
-			if well_content:
-				well_index += 1
-			else:
-				print(sample)
-				sample.plate = self.plate
-				sample.plate_well_id = self.well_labels[well_index]
-				sample.save()
-				print(sample.plate_well_id)
-				break
+		if well:
+			well_index = self.well_labels.index(well)
+			print(sample)
+			sample.plate = self.plate
+			sample.plate_well_id = self.well_labels[well_index]
+			sample.save()
+			print(sample.plate_well_id)
+		else:
+			well_index = 0
+			for well_content in self.well_contents:
+				print
+				print("index count: " + str(well_index))
+				if well_content:
+					well_index += 1
+				else:
+					print(sample)
+					sample.plate = self.plate
+					sample.plate_well_id = self.well_labels[well_index]
+					sample.save()
+					print(sample.plate_well_id)
+					break
 
 

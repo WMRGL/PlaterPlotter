@@ -12,8 +12,10 @@
   <div class="row">
     <div class="col-4">
       <h3>Holding rack</h3>
-      <strong>Holding Rack ID:</strong> {{plate.holding_rack_id}} <br>
-      <strong>Holding Rack Type:</strong> {{plate.plate_type}}    
+      <strong>ID:</strong> {{plate.holding_rack_id}} &nbsp|&nbsp
+      <strong>Area:</strong> {{plate.disease_area}} <br>
+      <strong>Type:</strong> {{plate.plate_type}} &nbsp|&nbsp
+      <strong>Priority:</strong> {{plate.priority}}    
     </div>
     <div class="col-4">
       <div align='center'>
@@ -32,6 +34,7 @@
         </div>
         <form role='form' action='' method="POST", class='form-inline float-right'>
           {% csrf_token %}
+          <input type="hidden" id="well" name="well">
           {{ sample_select_form|crispy }}
           <div class="form-group">
             <div class="col-lg-5 col-sm-offset-5">
@@ -57,7 +60,7 @@
             <table class="plate">
               <tbody>
                 <tr>
-                  <th>
+                  <th onclick="myFunction('reset')">X</th>
                   {% for column in plate_columns %}
                     <th>{{ column }}</th>
                   {% endfor %}
@@ -69,7 +72,7 @@
                       {% if row|add:column in assigned_well_list %}
                         <td style="background-color: blue"></td>
                       {% else %}
-                        <td id="{{row|add:column}}" onclick="myFunction('{{row|add:column}}')"></td>
+                        <td class='unassigned' id="{{row|add:column}}" onclick="myFunction('{{row|add:column}}')"></td>
                       {% endif %}
                     {% endfor %}
                   </tr>
@@ -235,10 +238,22 @@
 </div>
 
 <script>
-function myFunction(position) {
+var form = document.getElementById('well');
+form.value = '';
 
-  document.getElementById(position).style.backgroundColor = "red";
-  console.log(position);
+function myFunction(position) {
+  var unassignedWells = document.getElementsByClassName('unassigned')
+  var form = document.getElementById('well');
+  for (var i = 0; i < unassignedWells.length; i++) {
+    unassignedWells[i].style.backgroundColor = '#e9ecef'
+  }
+  if (position === 'reset'){
+    form.value = '';
+  } else {
+    form.value = position;
+    document.getElementById(position).style.backgroundColor = "red";
+    console.log(position);
+  }
 }
 </script>
 
