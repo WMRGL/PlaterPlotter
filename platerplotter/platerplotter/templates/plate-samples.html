@@ -5,6 +5,7 @@
     Determine wells - {{ block.super }}
 {% endblock title %}
 {% load crispy_forms_tags %}
+{% load plate_extras %}
 
 {% block content %}
 <div class='container-fluid'>
@@ -60,7 +61,7 @@
             <table class="plate">
               <tbody>
                 <tr>
-                  <th onclick="myFunction('reset')">X</th>
+                  <th></th>
                   {% for column in plate_columns %}
                     <th>{{ column }}</th>
                   {% endfor %}
@@ -70,7 +71,14 @@
                     <th>{{ row }}</th>
                     {% for column in plate_columns %}
                       {% if row|add:column in assigned_well_list %}
-                        <td style="background-color: blue"></td>
+                        {% for sample in plate_samples %}
+                          {% if row|add:column == sample.plate_well_id %}
+                            <td title='Position:             {{row|add:column}} 
+Laboratory ID:    {{sample.laboratory_sample_id}}
+Participant ID:     {{sample.participant_id}}
+Group ID:            {{sample.group_id}}' style="background-color: blue"><div class="tooltip hidden">Some text</div></td>
+                          {% endif %}
+                        {% endfor %}
                       {% else %}
                         <td class='unassigned' id="{{row|add:column}}" onclick="myFunction('{{row|add:column}}')"></td>
                       {% endif %}
@@ -240,14 +248,13 @@
 <script>
 var form = document.getElementById('well');
 form.value = '';
-
 function myFunction(position) {
   var unassignedWells = document.getElementsByClassName('unassigned')
   var form = document.getElementById('well');
   for (var i = 0; i < unassignedWells.length; i++) {
     unassignedWells[i].style.backgroundColor = '#e9ecef'
   }
-  if (position === 'reset'){
+  if (position === form.value){
     form.value = '';
   } else {
     form.value = position;
