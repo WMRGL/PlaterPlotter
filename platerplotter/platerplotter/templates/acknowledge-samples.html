@@ -8,9 +8,19 @@
 {% block content %}
   <div class="container-fluid">
     <div class="row">
-      <div class="col-8">
+      <div class="col-4">
         <h3>Acknowledge Receipt of Samples</h3>
         <h4>Rack: {{ rack.gmc_rack_id }}</h4>
+      </div>
+      <div class="col-4" align='center'>
+        <form role='form' action='' method="POST" class='form'>
+            {% csrf_token %}
+            <div class="form-group">
+              <div>
+                  <button type="submit" name="rack-scanner" class="btn btn-success">Check Rack Scanner</button>
+              </div>
+            </div>
+        </form>
       </div>
       <div class="col-4">
         <div align='right'>

@@ -44,6 +44,7 @@ sample_types = (("dna_blood_germline", "dna_blood_germline"), ("dna_saliva", "dn
 	("dna_fresh_tissue_in_culture_medium", "dna_fresh_tissue_in_culture_medium"),
 	("dna_fresh_fluid_tumour", "dna_fresh_fluid_tumour"), 
 	("dna_fresh_frozen_tumour", "dna_fresh_frozen_tumour"))
+workflow_positions = (("received_rack", "received_rack"), ("plated_rack", "plated_rack"))
 
 class Gel1005Csv(models.Model):
 	filename = models.CharField(max_length=60)
@@ -109,3 +110,23 @@ class Sample(models.Model):
 	norm_biorep_sample_vol = models.FloatField(null=True)
 	norm_biorep_conc = models.FloatField(null=True)
 	plate_well_id = models.CharField(max_length=3, choices=well_ids, null=True)
+
+class RackScanner(models.Model):
+	filename = models.CharField(max_length=60)
+	scanned_id = models.CharField(max_length=13)
+	date_modified = models.DateTimeField()
+	acknowledged = models.BooleanField(default=False)
+	workflow_position = models.CharField(max_length=13, choices=workflow_positions)
+
+	class Meta:
+		unique_together = (('filename', 'scanned_id', 'date_modified'),)
+
+
+class RackScannerSample(models.Model):
+	rack_scanner = models.ForeignKey(RackScanner, on_delete=models.CASCADE)
+	sample_id = models.CharField(max_length=10)
+	position = models.CharField(max_length=3, choices=well_ids)
+	in_gel1004 = models.BooleanField(default=False) 
+
+	class Meta:
+		unique_together = (('rack_scanner', 'sample_id', 'position'))

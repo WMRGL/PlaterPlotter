@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib import messages
 from django.urls import reverse
-from platerplotter.models import Gel1004Csv, Gel1005Csv, Gel1008Csv, Rack, Plate, Sample
+from platerplotter.models import Gel1004Csv, Gel1005Csv, Gel1008Csv, Rack, Plate, Sample, RackScanner, RackScannerSample
 from platerplotter.config.load_config import LoadConfig
 from platerplotter.forms import HoldingRackForm, SampleSelectForm, PlatingForm, Gel1008Form, ParticipantIdForm
 from datetime import datetime
@@ -134,6 +134,54 @@ def acknowledge_samples(request, rack):
 	samples = Sample.objects.filter(rack=rack)
 	sample_select_form = SampleSelectForm()
 	if request.method == 'POST':
+		if 'rack-scanner' in request.POST:
+			directory = LoadConfig().load()['rack_scanner_received_path']
+			for filename in os.listdir(directory):
+				if filename.endswith(".csv"):
+					path = directory + filename
+					date_modified = datetime.fromtimestamp(os.path.getmtime(path))
+					with open(path, 'r') as csvFile:
+						reader = csv.reader(csvFile, delimiter=',', skipinitialspace=True)
+						for row in reader:
+							if row[1] != 'NO READ':
+								rack_scanner, created = RackScanner.objects.get_or_create(
+									filename=filename,
+									scanned_id=row[3],
+									date_modified=date_modified,
+									workflow_position='received_rack')
+								RackScannerSample.objects.get_or_create(rack_scanner=rack_scanner,
+									sample_id=row[1],
+									position=row[0])
+					os.rename(path, directory + "processed/" + filename)
+			rack_scanner = RackScanner.objects.filter(scanned_id=rack.gmc_rack_id,
+				workflow_position='received_rack',
+				acknowledged=False)
+			if rack_scanner:
+				rack_scanner_samples = RackScannerSample.objects.filter(rack_scanner=rack_scanner[0])
+				samples_received_wrong_position = []
+				extra_samples = []
+				for sample in samples:
+					for rack_scanner_sample in rack_scanner_samples:
+						if sample.laboratory_sample_id == rack_scanner_sample.sample_id:
+							print("sample found")
+							if sample.gmc_rack_well == rack_scanner_sample.position:
+								print("correct position")
+								sample.sample_received = True
+								sample.sample_received_datetime = datetime.now(pytz.timezone('Europe/London'))
+								sample.save()
+								rack_scanner_sample.in_gel1004 = True
+								rack_scanner_sample.save()
+							else:
+								samples_received_wrong_position.append(sample)
+								print("incorrect position")
+				for rack_scanner_sample in rack_scanner_samples:
+					if not rack_scanner_sample.in_gel1004:
+						extra_samples.append(rack_scanner_sample)
+				if samples_received_wrong_position or extra_samples:
+					messages.info(request, "Rack contains extra samples not listed in the GEL1004 or samples were in the wrong positions")
+			else:
+				messages.info(request, "Rack " + rack.gmc_rack_id + " not found in Plate/Rack scanner CSV. Has the rack been scanned?")
+				print("Rack ID not found in Rack Scanner CSVs. Has the rack been scanned?")		
 		if 'rack-acked' in request.POST:
 			rack.rack_acknowledged = True
 			rack.save()

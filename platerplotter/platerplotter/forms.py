@@ -87,7 +87,6 @@ class Gel1008Form(ModelForm):
 			raise ValidationError("Required field.")
 
 
-
 # class ReceivedSampleForm(ModelForm):
 # 	class Meta:
 # 		model = ReceivedSample

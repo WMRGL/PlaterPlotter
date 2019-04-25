@@ -1,5 +1,5 @@
 from django.contrib import admin
-from platerplotter.models import Gel1004Csv, Gel1005Csv, Gel1008Csv, Rack, Plate, Sample
+from platerplotter.models import Gel1004Csv, Gel1005Csv, Gel1008Csv, Rack, Plate, Sample, RackScanner, RackScannerSample
 
 class Gel1004CsvAdmin(admin.ModelAdmin):
 	model = Gel1004Csv
@@ -19,6 +19,12 @@ class PlateAdmin(admin.ModelAdmin):
 class SampleAdmin(admin.ModelAdmin):
 	model = Sample
 
+class RackScannerAdmin(admin.ModelAdmin):
+	model = RackScanner
+
+class RackScannerSampleAdmin(admin.ModelAdmin):
+	model = RackScannerSample
+
 
 admin.site.register(Gel1004Csv, Gel1004CsvAdmin)
 admin.site.register(Gel1005Csv, Gel1005CsvAdmin)
@@ -26,3 +32,5 @@ admin.site.register(Gel1008Csv, Gel1008CsvAdmin)
 admin.site.register(Rack, RackAdmin)
 admin.site.register(Plate, PlateAdmin)
 admin.site.register(Sample, SampleAdmin)
+admin.site.register(RackScanner, RackScannerAdmin)
+admin.site.register(RackScannerSample, RackScannerSampleAdmin)
