@@ -25,6 +25,14 @@ import pytz
 #         return JsonResponse({"success": False})
 #     return JsonResponse(data)
 
+def remove_padded_zeros(position):
+	letter = position[0]
+	number = position[1:]
+	if number[0] == '0':
+		number = number[1]
+	return letter + number
+
+
 def import_acks(request):
 	"""
 	Renders import acks page. Allows users to import new GEL1004 acks
@@ -76,7 +84,7 @@ def import_acks(request):
 									glh_sample_consignment_number = row[5],
 									laboratory_sample_id = row[6],
 									laboratory_sample_volume = row[8],
-									gmc_rack_well = row[9],
+									gmc_rack_well = remove_padded_zeros(row[9]),
 									is_proband=row[12])
 								sample = Sample.objects.get(pk=sample.pk)
 								if sample.disease_area == 'Rare Disease':
@@ -84,8 +92,12 @@ def import_acks(request):
 										sample.sample_type = 'Proband'
 									else:
 										sample.sample_type = 'Parent'
-									sample.save()
-									print(sample.is_proband, sample.sample_type)
+								elif sample.disease_area == 'Solid Tumour':
+									if 'tumour' in sample.clin_sample_type:
+										sample.sample_type = 'Tumour'
+									else:
+										sample.sample_type = 'Cancer Germline'
+								sample.save()
 								line_count += 1
 					os.rename(path, directory + "processed/" + filename)
 			return HttpResponseRedirect('/')
@@ -163,25 +175,21 @@ def acknowledge_samples(request, rack):
 				for sample in samples:
 					for rack_scanner_sample in rack_scanner_samples:
 						if sample.laboratory_sample_id == rack_scanner_sample.sample_id:
-							print("sample found")
 							if sample.gmc_rack_well == rack_scanner_sample.position:
-								print("correct position")
 								sample.sample_received = True
 								sample.sample_received_datetime = datetime.now(pytz.timezone('Europe/London'))
 								sample.save()
-								rack_scanner_sample.in_gel1004 = True
+								rack_scanner_sample.matched = True
 								rack_scanner_sample.save()
 							else:
 								samples_received_wrong_position.append(sample)
-								print("incorrect position")
 				for rack_scanner_sample in rack_scanner_samples:
-					if not rack_scanner_sample.in_gel1004:
+					if not rack_scanner_sample.matched:
 						extra_samples.append(rack_scanner_sample)
 				if samples_received_wrong_position or extra_samples:
-					messages.info(request, "Rack contains extra samples not listed in the GEL1004 or samples were in the wrong positions")
+					messages.error(request, "Rack contains extra samples not listed in the GEL1004 or samples were in the wrong positions")
 			else:
-				messages.info(request, "Rack " + rack.gmc_rack_id + " not found in Plate/Rack scanner CSV. Has the rack been scanned?")
-				print("Rack ID not found in Rack Scanner CSVs. Has the rack been scanned?")		
+				messages.error(request, "Rack " + rack.gmc_rack_id + " not found in Plate/Rack scanner CSV. Has the rack been scanned?")
 		if 'rack-acked' in request.POST:
 			rack.rack_acknowledged = True
 			rack.save()
@@ -194,7 +202,7 @@ def acknowledge_samples(request, rack):
 				try:
 					sample = Sample.objects.get(rack=rack, laboratory_sample_id=lab_sample_id)
 				except:
-					messages.info(request, "Sample " + lab_sample_id + " does not exist")
+					messages.error(request, "Sample " + lab_sample_id + " does not exist")
 				if sample:
 					sample.sample_received = True
 					sample.sample_received_datetime = datetime.now(pytz.timezone('Europe/London'))
@@ -216,10 +224,10 @@ def acknowledge_samples(request, rack):
 			return HttpResponseRedirect(url)
 	all_samples_received = True
 	for sample in samples:
-		print(sample.laboratory_sample_id, sample.sample_received)
 		if not sample.sample_received:
 			all_samples_received = False
-	print(all_samples_received)
+	if all_samples_received:
+		messages.info(request, "All samples received")
 	return render(request, 'acknowledge-samples.html', {"rack" : rack,
 		"samples" : samples,
 		"sample_select_form" : sample_select_form,
@@ -239,13 +247,14 @@ def awaiting_plating(request):
 		"unplated_racks_dict" : unplated_racks_dict})
 
 def plate_samples(request, rack, plate_id=None):
-	plate_rows=['A','B','C','D','E','F','G','H']
-	plate_columns=['1','2','3','4','5','6','7','8','9','10','11','12']
+	plate_rows = ['A','B','C','D','E','F','G','H']
+	plate_columns = ['1','2','3','4','5','6','7','8','9','10','11','12']
 	rack = Rack.objects.get(gmc_rack_id=rack)
 	samples = Sample.objects.filter(rack=rack,
 		plate__isnull = True,
 		rack__gel_1004_csv__gel_1005_csv__isnull = False,
 		sample_received = True)
+	samples = sorted(samples, key=lambda x: (x.gmc_rack_well[0], int(x.gmc_rack_well[1:])))
 	current_holding_racks = Plate.objects.filter(plate_id__isnull=True)
 	current_holding_racks_dict = {}
 	for current_holding_rack in current_holding_racks:
@@ -269,7 +278,7 @@ def plate_samples(request, rack, plate_id=None):
 			if holding_rack_form.is_valid():
 				holding_rack_id = holding_rack_form.cleaned_data.get('holding_rack_id')
 				if holding_rack_id == rack.gmc_rack_id:
-					messages.info(request, "You have scanned the GMC Rack. Please scan the holding rack.")
+					messages.error(request, "You have scanned the GMC Rack. Please scan the holding rack.")
 				else:
 					try:
 						plate = Plate.objects.get(holding_rack_id=holding_rack_id, plate_id__isnull=True)
@@ -310,12 +319,11 @@ def plate_samples(request, rack, plate_id=None):
 						plate.save()
 					if sample.sample_type == plate.plate_type and sample.priority == plate.priority:
 						well = request.POST['well']
-						plate_manager.assign_well(sample=sample, well=well)
-						messages.info(request, lab_sample_id + " assigned to well " + sample.plate_well_id)
+						plate_manager.assign_well(request=request, sample=sample, well=well)
 					else:
-						messages.info(request, "Sample does not match holding rack type! Unable to add to this rack.")
+						messages.error(request, "Sample does not match holding rack type! Unable to add to this rack.")
 				else:
-					messages.info(request, lab_sample_id + " not found in GLH Rack " + rack.gmc_rack_id)
+					messages.error(request, lab_sample_id + " not found in GLH Rack " + rack.gmc_rack_id)
 				url = reverse('plate_samples', kwargs={
 							'rack' : rack.gmc_rack_id,
 							'plate_id' : plate.holding_rack_id,
@@ -349,11 +357,65 @@ def plate_holding_rack(request, plate_pk):
 	samples = sorted(Sample.objects.filter(plate=plate), 
 			key=lambda x: (x.plate_well_id[0], int(x.plate_well_id[1:])))
 	if request.method == 'POST':
-		plating_form = PlatingForm(request.POST)
-		if plating_form.is_valid():
-			plate_id = plating_form.cleaned_data.get('plate_id')
-			plate.plate_id = plate_id
-			plate.save()
+		if "rack-scanner" in request.POST:
+			plating_form = PlatingForm()
+			directory = LoadConfig().load()['rack_scanner_plated_path']
+			for filename in os.listdir(directory):
+				if filename.endswith(".csv"):
+					path = directory + filename
+					date_modified = datetime.fromtimestamp(os.path.getmtime(path))
+					with open(path, 'r') as csvFile:
+						reader = csv.reader(csvFile, delimiter=',', skipinitialspace=True)
+						for row in reader:
+							if row[1] != 'NO READ':
+								rack_scanner, created = RackScanner.objects.get_or_create(
+									filename=filename,
+									scanned_id=row[3],
+									date_modified=date_modified,
+									workflow_position='plated_rack')
+								RackScannerSample.objects.get_or_create(rack_scanner=rack_scanner,
+									sample_id=row[1],
+									position=row[0])
+					os.rename(path, directory + "processed/" + filename)
+			rack_scanner = RackScanner.objects.filter(scanned_id=plate.holding_rack_id,
+				workflow_position='plated_rack',
+				acknowledged=False)
+			if rack_scanner:
+				rack_scanner_samples = RackScannerSample.objects.filter(rack_scanner=rack_scanner[0])
+				samples_in_wrong_position = []
+				extra_samples = []
+				missing_samples = []
+				for sample in samples:
+					found = False
+					for rack_scanner_sample in rack_scanner_samples:
+						if sample.laboratory_sample_id == rack_scanner_sample.sample_id:
+							found = True
+							if sample.plate_well_id == rack_scanner_sample.position:
+								sample.sample_matched = True
+								sample.save()
+								rack_scanner_sample.matched = True
+								rack_scanner_sample.save()
+							else:
+								samples_in_wrong_position.append(sample)
+					if not found:
+						missing_samples.append(sample)
+				for rack_scanner_sample in rack_scanner_samples:
+					if not rack_scanner_sample.matched:
+						extra_samples.append(rack_scanner_sample)
+				if samples_in_wrong_position or extra_samples or missing_samples:
+					messages.error(request, "Scanned rack does not match with assigned rack wells for this rack!")
+				else:
+					plate.positions_confirmed = True
+					plate.save()
+					messages.info(request, "Positions confirmed and correct. Please plate samples and assign plate ID.")
+			else:
+				messages.error(request, "Rack " + plate.holding_rack_id + " not found in Plate/Rack scanner CSV. Has the rack been scanned?")
+		if "assign-plate" in request.POST:
+			plating_form = PlatingForm(request.POST)
+			if plating_form.is_valid():
+				plate_id = plating_form.cleaned_data.get('plate_id')
+				plate.plate_id = plate_id
+				plate.save()
 	else:
 		plating_form = PlatingForm()
 	return render(request, 'plate-holding-rack.html', {
@@ -404,7 +466,7 @@ def ready_to_dispatch(request):
 								sample.plate_well_id, gel_1008_csv.consignment_number, gel_1008_csv.date_of_dispatch])
 				messages.info(request, "GEL1008 csv produced.")
 			else:
-				messages.info(request, "No plates selected!")
+				messages.warning(request, "No plates selected!")
 			return HttpResponseRedirect('/ready-to-dispatch/')
 	else:
 		gel1008_form = Gel1008Form()
@@ -425,6 +487,6 @@ def audit(request):
 			try:
 				sample = Sample.objects.get(laboratory_sample_id=lab_sample_id)
 			except:
-				messages.info(request, "No samples found with laboratory ID " + lab_sample_id)
+				messages.error(request, "No samples found with laboratory ID " + lab_sample_id)
 	return render(request, 'audit.html', {"sample_select_form" : sample_select_form,
 		"sample" : sample})

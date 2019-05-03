@@ -42,7 +42,7 @@ class PlatingForm(ModelForm):
 		model = Plate
 		fields = ('plate_id',)
 		labels = {
-			'plate_id': "Plate ID",
+			'plate_id': "",
 		}
 
 	def clean_plate_id(self):

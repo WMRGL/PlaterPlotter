@@ -85,6 +85,7 @@ class Plate(models.Model):
 	half_full = models.BooleanField(default=False)
 	full = models.BooleanField(default=False)
 	ready_to_plate = models.BooleanField(default=False)
+	positions_confirmed = models.BooleanField(default=False)
 
 class Sample(models.Model):
 	rack = models.ForeignKey(Rack, on_delete=models.CASCADE)
@@ -106,6 +107,7 @@ class Sample(models.Model):
 	gmc_rack_well = models.CharField(max_length=3, choices=well_ids)
 	is_proband = models.BooleanField()
 	sample_received = models.BooleanField(default=False)
+	sample_matched = models.BooleanField(default=False)
 	sample_received_datetime = models.DateTimeField(null=True)
 	norm_biorep_sample_vol = models.FloatField(null=True)
 	norm_biorep_conc = models.FloatField(null=True)
@@ -126,7 +128,7 @@ class RackScannerSample(models.Model):
 	rack_scanner = models.ForeignKey(RackScanner, on_delete=models.CASCADE)
 	sample_id = models.CharField(max_length=10)
 	position = models.CharField(max_length=3, choices=well_ids)
-	in_gel1004 = models.BooleanField(default=False) 
+	matched = models.BooleanField(default=False) 
 
 	class Meta:
 		unique_together = (('rack_scanner', 'sample_id', 'position'))

@@ -43,7 +43,20 @@
     	</nav> <br>
 
 	</div>
-	<div align="right">
+	<div class="container-fluid">
+	    {% if messages %}
+	      {% for message in messages %}
+	        {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+	          <div class="alert alert-danger" role="alert"><strong>{{ message }}</strong></div>
+	        {% endif %}
+	        {% if message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
+	          <div class="alert alert-warning" role="alert"><strong>{{ message }}</strong></div>
+	        {% endif %}
+	        {% if message.level == DEFAULT_MESSAGE_LEVELS.INFO %}
+	          <div class="alert alert-success" role="alert"><strong>{{ message }}</strong></div>
+	        {% endif %}
+	      {% endfor %}
+	    {% endif %}
 	</div>
 	<div>
 		{% block content %}{% endblock content %}
