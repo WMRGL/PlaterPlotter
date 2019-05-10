@@ -24,14 +24,6 @@
             <div class="col-lg-4">
               <br>
               <button type="submit" name="gel1008" class="btn btn-primary btn-block">Send GEL1008</button>
-              {% if messages %}
-                <br>
-                <ul class="messages warning">
-                    {% for message in messages %}
-                    <strong><p{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p></strong>
-                    {% endfor %}
-                </ul>
-              {% endif %}
             </div>
       </div>
     <div class="col-12">

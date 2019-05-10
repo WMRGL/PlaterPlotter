@@ -134,13 +134,6 @@ Group ID:            {{sample.group_id}}' style="background-color: blue"><div cl
           </div>
         </div>
       </form>
-      {% if messages %}
-        <ul class="messages warning">
-          {% for message in messages %}
-          <strong><p{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p></strong>
-          {% endfor %}
-        </ul>
-      {% endif %}
     </div>
   </div>
   <div class="row">

@@ -6,15 +6,15 @@ class PlateManager():
 	def __init__(self, plate):
 		self.plate = plate
 		self.plate_rows = ['A','B','C','D','E','F','G','H']
-		self.plate_columns = ['1','2','3','4','5','6','7','8','9','10','11','12']
-		self.well_labels = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'A10', 'A11', 'A12', 
-							'B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10', 'B11', 'B12',
-							'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10', 'C11', 'C12',
-							'D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10', 'D11', 'D12',
-							'E1', 'E2', 'E3', 'E4', 'E5', 'E6', 'E7', 'E8', 'E9', 'E10', 'E11', 'E12',
-							'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12',
-							'G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10', 'G11', 'G12',
-							'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8', 'H9', 'H10', 'H11', 'H12',]
+		self.plate_columns = ['01','02','03','04','05','06','07','08','09','10','11','12']
+		self.well_labels = ['A01', 'A02', 'A03', 'A04', 'A05', 'A06', 'A07', 'A08', 'A09', 'A10', 'A11', 'A12', 
+							'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09', 'B10', 'B11', 'B12',
+							'C01', 'C02', 'C03', 'C04', 'C05', 'C06', 'C07', 'C08', 'C09', 'C10', 'C11', 'C12',
+							'D01', 'D02', 'D03', 'D04', 'D05', 'D06', 'D07', 'D08', 'D09', 'D10', 'D11', 'D12',
+							'E01', 'E02', 'E03', 'E04', 'E05', 'E06', 'E07', 'E08', 'E09', 'E10', 'E11', 'E12',
+							'F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10', 'F11', 'F12',
+							'G01', 'G02', 'G03', 'G04', 'G05', 'G06', 'G07', 'G08', 'G09', 'G10', 'G11', 'G12',
+							'H01', 'H02', 'H03', 'H04', 'H05', 'H06', 'H07', 'H08', 'H09', 'H10', 'H11', 'H12',]
 		self.well_contents = [None, None, None, None, None, None, None, None, None, None, None, None, 
 					None, None, None, None, None, None, None, None, None, None, None, None,
 					None, None, None, None, None, None, None, None, None, None, None, None,
@@ -35,6 +35,56 @@ class PlateManager():
 		print(self.well_labels)
 		print(self.well_contents)
 
+	def determine_indices_to_avoid(self, index):
+		'''
+		Determines which well positions should be avoided based on the plating rules
+		'''
+		row = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+		col_dict = {0:[0,1,2], 1:[0,1,2,3], 2:[0,1,2,3,4], 3:[1,2,3,4,5],
+			4:[2,3,4,5,6], 5:[3,4,5,6,7], 6:[4,5,6,7,8], 7:[5,6,7,8,9],
+			8:[6,7,8,9,10], 9:[7,8,9,10,11], 10:[8,9,10,11], 11:[9,10,11]}
+		dict_lookup = col_dict[index%12]
+		indices_to_avoid = [item + ((index//12)*12) for item in row]
+		well_num = index//12
+		if well_num == 0: # index in top row
+			indices_to_avoid += [(item + ((index//12)*12)) + 12 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) + 12*2 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) + 12*3 for item in dict_lookup]
+		elif well_num == 1: # index in 2nd row
+			indices_to_avoid += [(item + ((index//12)*12)) + 12 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) + 12*2 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) + 12*3 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) - 12 for item in dict_lookup]
+		elif well_num == 2: # index in 3rd row
+			indices_to_avoid += [(item + ((index//12)*12)) + 12 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) + 12*2 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) + 12*3 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) - 12 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) - 12*2 for item in dict_lookup]
+		elif 2 < well_num < 5: # index in a middle rows
+			indices_to_avoid += [(item + ((index//12)*12)) + 12 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) + 12*2 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) + 12*3 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) - 12 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) - 12*2 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) - 12*3 for item in dict_lookup]
+		elif well_num == 5: # index in 6th row
+			indices_to_avoid += [(item + ((index//12)*12)) + 12 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) + 12*2 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) - 12 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) - 12*2 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) - 12*3 for item in dict_lookup]
+		elif well_num == 6: # index in 7th row
+			indices_to_avoid += [(item + ((index//12)*12)) + 12 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) - 12 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) - 12*2 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) - 12*3 for item in dict_lookup]	
+		elif well_num == 7: # index in bottom row
+			indices_to_avoid += [(item + ((index//12)*12)) - 12 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) - 12*2 for item in dict_lookup]
+			indices_to_avoid += [(item + ((index//12)*12)) - 12*3 for item in dict_lookup]
+		return indices_to_avoid
+
 	def assign_well(self, request, sample, well):
 		'''
 		Finds next available free well and assigns sample to this
@@ -48,45 +98,99 @@ class PlateManager():
 				if well_content:
 					if well_content.participant_id == sample.participant_id:
 						no_samples_with_same_participant_id = False
-						messages.error(request, "Unable to add sample " + sample.laboratory_sample_id + " to this rack as a sample with the same participant ID is already assigned to this rack.")
+						messages.error(request, "Unable to add sample " + sample.laboratory_sample_id + 
+							" to this rack as a sample with the same participant ID is already assigned to this rack.")
 					if well_content.group_id == sample.group_id:
 						no_family_members_on_same_plate = False
-						messages.error(request, "Unable to add sample " + sample.laboratory_sample_id + " to this rack as a sample from the same family is already assigned to this rack.")
+						messages.error(request, "Unable to add sample " + sample.laboratory_sample_id + 
+							" to this rack as a sample from the same family is already assigned to this rack.")
 			if no_samples_with_same_participant_id and no_family_members_on_same_plate:
 				if well:
 					well_index = self.well_labels.index(well)
-					print(sample)
 					sample.plate = self.plate
 					sample.plate_well_id = self.well_labels[well_index]
 					sample.save()
-					print(sample.plate_well_id)
 					messages.info(request, sample.laboratory_sample_id + " assigned to well " + sample.plate_well_id)
 				else:
+					sample_assigned = False
 					well_index = 0
 					for well_content in self.well_contents:
-						print
-						print("index count: " + str(well_index))
 						if well_content:
 							well_index += 1
 						else:
-							print(sample)
 							sample.plate = self.plate
 							sample.plate_well_id = self.well_labels[well_index]
 							sample.save()
-							print(sample.plate_well_id)
 							messages.info(request, sample.laboratory_sample_id + " assigned to well " + sample.plate_well_id)
+							sample_assigned = True
 							break
+					if not sample_assigned:
+						messages.error(request, "No more valid positions available in this rack. Please assign " + 
+							sample.laboratory_sample_id + " to a new rack.")
 		elif self.plate.plate_type == "Parent":
 			matching_proband_sample_found = False
-			matching_proband_sample = Sample.objects.filter(sample_type = "Proband", group_id = sample.group_id)
+			matching_proband_sample = Sample.objects.filter(sample_type = "Proband", group_id = sample.group_id, plate__isnull = True)
+			if matching_proband_sample:
+				matching_proband_sample_found = True
+				messages.warning(request, "Matching proband sample found in GMC rack: " +
+					matching_proband_sample[0].rack.gmc_rack_id + " in well " + 
+					matching_proband_sample[0].gmc_rack_well + " but not yet assigned to holding rack. These samples must be sent in the same consignment.")
+			else:
+				matching_proband_sample = Sample.objects.filter(sample_type = "Proband", group_id = sample.group_id, plate__gel_1008_csv__isnull = True)
+				if matching_proband_sample:
+					matching_proband_sample_found = True
+					if matching_proband_sample[0].plate.plate_id:	
+						messages.info(request, "Matching proband sample found and has already been plated on plate: " +
+							matching_proband_sample[0].plate.plate_id + " in well " + 
+							matching_proband_sample[0].plate_well_id + ". These samples must be sent in the same consignment.")
+					else:
+						messages.info(request, "Matching proband sample found and has been assigned to holding rack: " +
+							matching_proband_sample[0].plate.holding_rack_id + " in well " + 
+							matching_proband_sample[0].plate_well_id + ". These samples must be sent in the same consignment.")
+			if not matching_proband_sample_found:
+				messages.error(request, "No matching proband sample found for this sample. Unable to assign to holding rack.")
 			no_samples_with_same_participant_id = True
+			well_indices_to_avoid = []
+			index_count = 0
 			for well_content in self.well_contents:
 				if well_content:
 					if well_content.participant_id == sample.participant_id:
 						no_samples_with_same_participant_id = False
-						messages.error(request, "Unable to add sample " + sample.laboratory_sample_id + " to this rack as a sample with the same participant ID is already assigned to this rack.")
-
-			pass
+						messages.error(request, "Unable to add sample " + sample.laboratory_sample_id + 
+							" to this rack as a sample with the same participant ID is already assigned to this rack.")
+					elif well_content.group_id == sample.group_id:
+						well_indices_to_avoid += self.determine_indices_to_avoid(index_count)
+				index_count += 1
+			if matching_proband_sample_found and no_samples_with_same_participant_id:
+				for index in well_indices_to_avoid:
+					if not self.well_contents[index]:
+						self.well_contents[index] = 'X'
+				print(self.well_contents)
+				if well:
+					well_index = self.well_labels.index(well)
+					if self.well_contents[well_index] == 'X':
+						messages.error(request, "Selected well is too close to another sample from the same family. Unable to assigned to this well.")
+					else:
+						sample.plate = self.plate
+						sample.plate_well_id = self.well_labels[well_index]
+						sample.save()
+						messages.info(request, sample.laboratory_sample_id + " assigned to well " + sample.plate_well_id)
+				else:
+					sample_assigned = False
+					well_index = 0
+					for well_content in self.well_contents:
+						if well_content:
+							well_index += 1
+						else:
+							sample.plate = self.plate
+							sample.plate_well_id = self.well_labels[well_index]
+							sample.save()
+							messages.info(request, sample.laboratory_sample_id + " assigned to well " + sample.plate_well_id)
+							sample_assigned = True
+							break
+					if not sample_assigned:
+						messages.error(request, "No more valid positions available in this rack. Please assign " + 
+							sample.laboratory_sample_id + " to a new rack.")
 		elif self.plate.plate_type == "Tumour":
 			pass
 		elif self.plate.plate_type == "Cancer Germline":

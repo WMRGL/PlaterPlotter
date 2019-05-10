@@ -25,13 +25,18 @@ import pytz
 #         return JsonResponse({"success": False})
 #     return JsonResponse(data)
 
-def remove_padded_zeros(position):
-	letter = position[0]
-	number = position[1:]
-	if number[0] == '0':
-		number = number[1]
-	return letter + number
+# def remove_padded_zeros(position):
+# 	letter = position[0]
+# 	number = position[1:]
+# 	if number[0] == '0':
+# 		number = number[1]
+# 	return letter + number
 
+def pad_zeros(well):
+	if len(well) == 2:
+		return well[0] + '0' + well[1]
+	else: 
+		return well
 
 def import_acks(request):
 	"""
@@ -44,7 +49,7 @@ def import_acks(request):
 			directory = LoadConfig().load()['gel1004path']
 			for filename in os.listdir(directory):
 				if filename.endswith(".csv"):
-					datetime_now = datetime.now(pytz.timezone('Europe/London'))
+					datetime_now = datetime.now(pytz.timezone('UTC'))
 					path = directory + filename
 					with open(path) as csv_file:
 						csv_reader = csv.reader(csv_file, delimiter=',')
@@ -84,7 +89,7 @@ def import_acks(request):
 									glh_sample_consignment_number = row[5],
 									laboratory_sample_id = row[6],
 									laboratory_sample_volume = row[8],
-									gmc_rack_well = remove_padded_zeros(row[9]),
+									gmc_rack_well = row[9],
 									is_proband=row[12])
 								sample = Sample.objects.get(pk=sample.pk)
 								if sample.disease_area == 'Rare Disease':
@@ -107,8 +112,8 @@ def import_acks(request):
 			gel_1004 = Gel1004Csv.objects.get(pk=pk)
 			racks = Rack.objects.filter(gel_1004_csv=gel_1004)
 			directory = LoadConfig().load()['gel1005path']
-			datetime_now = datetime.now(pytz.timezone('Europe/London'))
-			filename = "ngis_bio_to_gel_samples_received_" + datetime.now(pytz.timezone('Europe/London')).strftime("%y%m%d_%H%M%S") + ".csv"
+			datetime_now = datetime.now(pytz.timezone('UTC'))
+			filename = "ngis_bio_to_gel_samples_received_" + datetime.now(pytz.timezone('UTC')).strftime("%y%m%d_%H%M%S") + ".csv"
 			gel_1005 = Gel1005Csv.objects.create(
 				filename=filename,
 				report_generated_datetime=datetime_now)
@@ -125,8 +130,8 @@ def import_acks(request):
 					samples = Sample.objects.filter(rack=rack)
 					for sample in samples:
 						writer.writerow([sample.participant_id, rack.laboratory_id,
-							sample.sample_received, sample.sample_received_datetime,
-							gel_1005.report_generated_datetime, sample.laboratory_sample_id])
+							sample.sample_received, sample.sample_received_datetime.replace(microsecond=0).isoformat().replace('+00:00', 'Z'),
+							gel_1005.report_generated_datetime.replace(microsecond=0).isoformat().replace('+00:00', 'Z'), sample.laboratory_sample_id])
 			return HttpResponseRedirect('/')
 	unacked_gel_1004 = Gel1004Csv.objects.filter(gel_1005_csv__isnull = True)
 	unacked_racks_dict = {}
@@ -151,7 +156,7 @@ def acknowledge_samples(request, rack):
 			for filename in os.listdir(directory):
 				if filename.endswith(".csv"):
 					path = directory + filename
-					date_modified = datetime.fromtimestamp(os.path.getmtime(path))
+					date_modified = datetime.fromtimestamp(os.path.getmtime(path), pytz.timezone('UTC'))
 					with open(path, 'r') as csvFile:
 						reader = csv.reader(csvFile, delimiter=',', skipinitialspace=True)
 						for row in reader:
@@ -163,7 +168,7 @@ def acknowledge_samples(request, rack):
 									workflow_position='received_rack')
 								RackScannerSample.objects.get_or_create(rack_scanner=rack_scanner,
 									sample_id=row[1],
-									position=row[0])
+									position=pad_zeros(row[0]))
 					os.rename(path, directory + "processed/" + filename)
 			rack_scanner = RackScanner.objects.filter(scanned_id=rack.gmc_rack_id,
 				workflow_position='received_rack',
@@ -177,7 +182,7 @@ def acknowledge_samples(request, rack):
 						if sample.laboratory_sample_id == rack_scanner_sample.sample_id:
 							if sample.gmc_rack_well == rack_scanner_sample.position:
 								sample.sample_received = True
-								sample.sample_received_datetime = datetime.now(pytz.timezone('Europe/London'))
+								sample.sample_received_datetime = datetime.now(pytz.timezone('UTC'))
 								sample.save()
 								rack_scanner_sample.matched = True
 								rack_scanner_sample.save()
@@ -205,7 +210,7 @@ def acknowledge_samples(request, rack):
 					messages.error(request, "Sample " + lab_sample_id + " does not exist")
 				if sample:
 					sample.sample_received = True
-					sample.sample_received_datetime = datetime.now(pytz.timezone('Europe/London'))
+					sample.sample_received_datetime = datetime.now(pytz.timezone('UTC'))
 					sample.save()
 			sample_select_form = SampleSelectForm()
 		if 'sample-received' in request.POST:
@@ -216,7 +221,7 @@ def acknowledge_samples(request, rack):
 				sample.sample_received_datetime = None
 			else:
 				sample.sample_received = True
-				sample.sample_received_datetime = datetime.now(pytz.timezone('Europe/London'))
+				sample.sample_received_datetime = datetime.now(pytz.timezone('UTC'))
 			sample.save()
 			url = reverse('acknowledge_samples', kwargs={
 				"rack" : rack.gmc_rack_id,
@@ -248,7 +253,7 @@ def awaiting_plating(request):
 
 def plate_samples(request, rack, plate_id=None):
 	plate_rows = ['A','B','C','D','E','F','G','H']
-	plate_columns = ['1','2','3','4','5','6','7','8','9','10','11','12']
+	plate_columns = ['01','02','03','04','05','06','07','08','09','10','11','12']
 	rack = Rack.objects.get(gmc_rack_id=rack)
 	samples = Sample.objects.filter(rack=rack,
 		plate__isnull = True,
@@ -375,7 +380,7 @@ def plate_holding_rack(request, plate_pk):
 									workflow_position='plated_rack')
 								RackScannerSample.objects.get_or_create(rack_scanner=rack_scanner,
 									sample_id=row[1],
-									position=row[0])
+									position=pad_zeros(row[0]))
 					os.rename(path, directory + "processed/" + filename)
 			rack_scanner = RackScanner.objects.filter(scanned_id=plate.holding_rack_id,
 				workflow_position='plated_rack',
@@ -438,8 +443,8 @@ def ready_to_dispatch(request):
 				consignment_number = gel1008_form.cleaned_data.get('consignment_number')
 				date_of_dispatch = gel1008_form.cleaned_data.get('date_of_dispatch')
 				directory = LoadConfig().load()['gel1008path']
-				datetime_now = datetime.now(pytz.timezone('Europe/London'))
-				filename = "ngis_bio_to_gel_sample_dispatch_" + datetime.now(pytz.timezone('Europe/London')).strftime("%y%m%d_%H%M%S") + ".csv"
+				datetime_now = datetime.now(pytz.timezone('UTC'))
+				filename = "ngis_bio_to_gel_sample_dispatch_" + datetime.now(pytz.timezone('UTC')).strftime("%y%m%d_%H%M%S") + ".csv"
 				gel_1008_csv = Gel1008Csv.objects.create(
 					filename = filename,
 					report_generated_datetime = datetime_now,
@@ -463,7 +468,7 @@ def ready_to_dispatch(request):
 						for sample in samples:
 							writer.writerow([sample.participant_id, plate.plate_id,
 								sample.norm_biorep_sample_vol, sample.norm_biorep_conc,
-								sample.plate_well_id, gel_1008_csv.consignment_number, gel_1008_csv.date_of_dispatch])
+								sample.plate_well_id, gel_1008_csv.consignment_number, gel_1008_csv.date_of_dispatch.replace(microsecond=0).isoformat().replace('+00:00', 'Z')])
 				messages.info(request, "GEL1008 csv produced.")
 			else:
 				messages.warning(request, "No plates selected!")
