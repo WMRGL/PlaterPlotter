@@ -29,7 +29,7 @@
             <tbody>
             {% for rack, samples in unplated_racks_dict.items %}
             <tr>
-              <td><a href="/plate-samples/{{ rack.gmc_rack_id }}">{{ rack.gmc_rack_id }}</a></td>
+              <td><a href="/plate-samples/{{ rack.gel_1004_csv.pk }}/{{ rack.gmc_rack_id }}">{{ rack.gmc_rack_id }}</a></td>
               <td>{{ rack.laboratory_id }}</td>
               <td>{{ samples|length }}</td>
             </tr>

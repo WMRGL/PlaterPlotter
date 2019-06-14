@@ -124,7 +124,7 @@ class PlateManager():
 					if not sample_assigned:
 						messages.error(request, "No more valid positions available in this rack. Please assign " + 
 							sample.laboratory_sample_id + " to a new rack.")
-		elif self.plate.plate_type == "Parent":
+		elif self.plate.plate_type == "Family":
 			matching_proband_sample_found = False
 			matching_proband_samples = Sample.objects.filter(sample_type = "Proband", group_id = sample.group_id, plate__isnull = True)
 			if matching_proband_samples:

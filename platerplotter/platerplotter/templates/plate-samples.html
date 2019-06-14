@@ -10,25 +10,26 @@
 <div class='container-fluid'>
   {% if plate %}
   <div class="row">
-    <div class="col-4">
+    <div class="col-3">
       <h3>Holding rack</h3>
       <strong>ID:</strong> {{plate.holding_rack_id}} &nbsp|&nbsp
       <strong>Area:</strong> {{plate.disease_area}} <br>
       <strong>Type:</strong> {{plate.plate_type}} &nbsp|&nbsp
       <strong>Priority:</strong> {{plate.priority}}    
     </div>
-    <div class="col-4">
+    <div class="col-6">
       <div align='center'>
         <form role='form' action='' method="POST", class='justify-content-center'>
           {% csrf_token %}
           <div class="form-group">
-            <a class="btn btn-primary btn-lg" href="/plate-samples/{{rack.gmc_rack_id}}" role="button">Change Holding Rack</a>
+            <a class="btn btn-primary btn-lg" href="/plate-samples/{{rack.gel_1004_csv.pk}}/{{rack.gmc_rack_id}}" role="button">Change Holding Rack</a>
+            <button type="submit" name='rack-scanner' value='{{ plate.pk }}' class="btn btn-success btn-lg">Rack Scanner</button> 
             <button type="submit" name='ready' value='{{ plate.pk }}' class="btn btn-success btn-lg">Ready to Plate</button>
           </div>
         </form>
       </div>
     </div>
-      <div class="col-4">
+      <div class="col-3">
         <div align='right'>
           <h4>Scan or type sample ID</h4>
         </div>
@@ -155,7 +156,7 @@ Group ID:            {{sample.group_id}}' style="background-color: blue"><div cl
               <tbody>
               {% for holding_rack, count in current_holding_racks_dict.items %}
               <tr>
-                <td><a href="/plate-samples/{{rack.gmc_rack_id}}/{{ holding_rack.holding_rack_id }}">{{ holding_rack.holding_rack_id }}</a></td>
+                <td><a href="/plate-samples/{{ rack.gel_1004_csv.pk }}/{{rack.gmc_rack_id}}/{{ holding_rack.holding_rack_id }}">{{ holding_rack.holding_rack_id }}</a></td>
                 <td>{{ holding_rack.disease_area }}</td>
                 <td>{{ holding_rack.plate_type }}</td>
                 <td>{{ holding_rack.priority }}</td>

@@ -26,15 +26,15 @@ class SampleSelectForm(forms.Form):
 		else:
 			return lab_sample_id
 
-class ParticipantIdForm(forms.Form):
-	participant_id = forms.CharField(label='', widget=forms.TextInput(attrs={'autofocus': 'autofocus'}))
+# class ParticipantIdForm(forms.Form):
+# 	participant_id = forms.CharField(label='', widget=forms.TextInput(attrs={'autofocus': 'autofocus'}))
 
-	def clean_participant_id(self):
-		participant_id = self.cleaned_data['participant_id'].lower()
-		if not re.match(r'^[p,P]\d{2}-\d*$', participant_id):
-			raise ValidationError("Invalid Participant ID")
-		else:
-			return participant_id
+# 	def clean_participant_id(self):
+# 		participant_id = self.cleaned_data['participant_id'].lower()
+# 		if not re.match(r'^[p,P]\d{2}-\d*$', participant_id):
+# 			raise ValidationError("Invalid Participant ID")
+# 		else:
+# 			return participant_id
 
 
 class PlatingForm(ModelForm):

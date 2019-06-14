@@ -4,12 +4,14 @@ from django.contrib import messages
 from django.urls import reverse
 from platerplotter.models import Gel1004Csv, Gel1005Csv, Gel1008Csv, Rack, Plate, Sample, RackScanner, RackScannerSample
 from platerplotter.config.load_config import LoadConfig
-from platerplotter.forms import HoldingRackForm, SampleSelectForm, PlatingForm, Gel1008Form, ParticipantIdForm
+from platerplotter.forms import HoldingRackForm, SampleSelectForm, PlatingForm, Gel1008Form
 from datetime import datetime
 from django.core.exceptions import ValidationError
 from platerplotter.plate_manager import PlateManager
-import csv, os
+import csv
+import os
 import pytz
+import re
 
 
 # def ajax_change_sample_received_status(request):
@@ -38,6 +40,134 @@ def pad_zeros(well):
 	else: 
 		return well
 
+def check_plating_organisation(plating_organisation):
+	if plating_organisation != 'wwm':
+		raise ValueError('Plating orgnaisation entered as {}. Expected "wmm".'.format(plating_organisation.lower()))
+	else:
+		return plating_organisation.lower()
+
+def check_rack_id(rack_id):
+	if not re.match(r'^[a-zA-Z]{2}\d{8}$', rack_id):
+		raise ValueError('Incorrect rack ID. Received {} which does not match the required specification.'.format(rack_id))
+	else:
+		return rack_id.upper()
+
+def check_laboratory_id(laboratory_id):
+	accepted_ids = ["yne", "now", "eme", "lnn", "lns", "wwm", "sow"]
+	if laboratory_id not in accepted_ids:
+		raise ValueError('Incorrect laboratory ID. Received {} which is not on the list of accepted laboratory IDs.'.format(laboratory_id))
+	else:
+		return laboratory_id
+
+def check_participant_id(participant_id):
+	if not re.match(r'^[p,P]\d{11}$', participant_id):
+		raise ValueError('Incorrect participant ID. Received {} which does not match the required specification.'.format(participant_id))
+	else:
+		return participant_id
+
+def check_group_id(group_id):
+	if not re.match(r'^[r,R]\d{11}$', group_id):
+		raise ValueError('Incorrect group ID. Received {} which does not match the required specification.'.format(group_id))
+	else:
+		return group_id
+
+def check_priority(priority):
+	accepted_values = ['URGENT', 'ROUTINE']
+	if priority.upper() not in accepted_values:
+		raise ValueError('Incorrect priority. Received {}. Must be either routine or urgent.'.format(priority))
+	else:
+		return priority
+
+def check_disease_area(disease_area):
+	accepted_values = ['CANCER', 'RARE DISEASE']
+	if disease_area.upper() not in accepted_values:
+		raise ValueError('Incorrect disease area. Received {}. Must be either cancer or rare disease.'.format(priority))
+	else:
+		return disease_area
+
+def check_clinical_sample_type(clin_sample_type):
+	accepted_values = ["dna_blood_germline","dna_saliva","dna_fibroblast","dna_ff_germline",
+		"dna_ffpe_tumour","dna_ff_tumour","dna_blood_tumour","dna_bone_marrow_aspirate_tumour_sorted_cells",
+		"dna_bone_marrow_aspirate_tumour_cells","tumour_tissue_ffpe","lysate_ffpe","lysate_ff",
+		"lysed_tumour_cells","buffy_coat","streck_plasma","edta_plasma","lihep_plasma","serum",
+		"rna_blood","tumour_tissue_ff","bone_marrow_rna_gtc","blood_rna_gtc","dna_amniotic_fluid",
+		"dna_fresh_amniotic_fluid","dna_sorted_cd138_positive_cells","dna_edta_blood","dna_li_hep_blood",
+		"dna_bone_marrow","dna_chorionic_villus_sample","dna_fresh_chronic_villus_sample","dna_unknown",
+		"dna_unkown_tumour","dna_fetal_edta_blood","dna_fibroblast_culture","dna_fresh_fluid_sorted_other",
+		"dna_fresh_fluid_unsorted","dna_other","dna_fresh_frozen_tissue","dna_fresh_tissue_in_culture_medium",
+		"dna_fresh_fluid_tumour","dna_fresh_frozen_tumour"]
+	if clin_sample_type.lower() not in accepted_values:
+		raise ValueError('Clinical sample type not in list of accepted values. Received {}.'.format(clin_sample_type))
+	else:
+		return clin_sample_type.lower()
+
+def check_glh_sample_consignment_number(glh_sample_consignment_number):
+	if not re.match(r'^[a-z,A-Z]{3}-\d{4}-\d{2}-\d{2}-\d{2}-[1,2]$', glh_sample_consignment_number):
+		raise ValueError('Incorrect GLH sample consignment number. Received {} which does not match the required specification.'.format(glh_sample_consignment_number))
+	else:
+		return glh_sample_consignment_number
+
+def check_laboratory_sample_id(laboratory_sample_id):
+	if not re.match(r'^\d{10}$', laboratory_sample_id):
+		raise ValueError('Incorrect laboratory sample ID. Received {}. Should be 10 digits'.format(laboratory_sample_id))
+	else:
+		return laboratory_sample_id
+
+def check_laboratory_sample_volume(laboratory_sample_volume):
+	if not re.match(r'^\d*$', laboratory_sample_volume):
+		raise ValueError('Incorrect laboratory sample volume. Received {}. Should be all digits'.format(laboratory_sample_volume))
+	else:
+		return laboratory_sample_volume
+
+def check_rack_well(rack_well):
+	if not re.match(r'^[A-H][0,1][0-9]$', rack_well):
+		raise ValueError('Invalid rack well for a 96 well rack. Received {}.'.format(rack_well))
+	else:
+		return rack_well
+
+def check_is_proband(is_proband):
+	if is_proband == "TRUE":
+		return True
+	if is_proband == "FALSE":
+		return False
+	if type(is_proband) == type(True):
+		return is_proband
+	else:
+		raise ValueError('Invalid value for Is Proband. Received {} but expected a boolean value'.format(is_proband))
+
+def check_is_repeat(is_repeat):
+	accepted_values = ['New', 'Retrospective', 'Repeat New', 'Repeat Retrospective']
+	if is_repeat not in accepted_values:
+		raise ValueError('Is repeat field not in list of accepted values. Received {}.'.format(is_repeat))
+	else:
+		return is_repeat
+
+def check_tissue_type(tissue_type):
+	accepted_values = ["Normal or Germline sample", "Liquid tumour sample", "Solid tumour sample", "Abnormal tissue sample", "Omics sample"]
+	if tissue_type not in accepted_values:
+		raise ValueError('Tissue type not in list of accepted values. Received {}.'.format(tissue_type))
+	else:
+		return tissue_type
+
+def rack_scan():
+	directory = LoadConfig().load()['rack_scanner_path']
+	for filename in os.listdir(directory):
+		if filename.endswith(".csv"):
+			path = directory + filename
+			date_modified = datetime.fromtimestamp(os.path.getmtime(path), pytz.timezone('UTC'))
+			with open(path, 'r') as csvFile:
+				reader = csv.reader(csvFile, delimiter=',', skipinitialspace=True)
+				for row in reader:
+					if row[1] != 'NO READ':
+						rack_scanner, created = RackScanner.objects.get_or_create(
+							filename=filename,
+							scanned_id=row[3].strip(),
+							date_modified=date_modified)
+						RackScannerSample.objects.get_or_create(rack_scanner=rack_scanner,
+							sample_id=row[1].strip(),
+							position=pad_zeros(row[0].strip()))
+			os.rename(path, directory + "processed/" + filename)
+
 def import_acks(request):
 	"""
 	Renders import acks page. Allows users to import new GEL1004 acks
@@ -62,43 +192,46 @@ def import_acks(request):
 								try:
 									gel_1004_csv = Gel1004Csv.objects.get(
 										filename = filename,
-										plating_organisation=row[10])
+										plating_organisation=check_plating_organisation(row[10].strip()))
 								except:
 									gel_1004_csv = Gel1004Csv.objects.create(
 										filename = filename,
-										plating_organisation=row[10],
+										plating_organisation=check_plating_organisation(row[10].strip()),
 										report_received_datetime = datetime_now)
 								try:
 									rack = Rack.objects.get(
-										gmc_rack_id = row[3],
-										laboratory_id = row[7])
+										gel_1004_csv = gel_1004_csv,
+										gmc_rack_id = check_rack_id(row[3].strip()),
+										laboratory_id = check_laboratory_id(row[7].strip()))
 								except:
 									rack = Rack.objects.create(
 										gel_1004_csv = gel_1004_csv,
-										gmc_rack_id = row[3],
-										laboratory_id = row[7])
+										gmc_rack_id = check_rack_id(row[3].strip()),
+										laboratory_id = check_laboratory_id(row[7].strip()))
 								# creates new Sample object
 								# need to add regex error checking to input
 								sample = Sample.objects.create(
 									rack = rack,
-									participant_id = row[0],
-									group_id = row[1],
-									priority = row[11],
-									disease_area = row[2],
-									clin_sample_type = row[4],
-									glh_sample_consignment_number = row[5],
-									laboratory_sample_id = row[6],
-									laboratory_sample_volume = row[8],
-									gmc_rack_well = row[9],
-									is_proband=row[12])
+									participant_id = check_participant_id(row[0].strip()),
+									group_id = check_group_id(row[1].strip()),
+									priority = check_priority(row[11].strip()),
+									disease_area = check_disease_area(row[2].strip()),
+									clin_sample_type = check_clinical_sample_type(row[4].strip()),
+									glh_sample_consignment_number = check_glh_sample_consignment_number(row[5].strip()),
+									laboratory_sample_id = check_laboratory_sample_id(row[6].strip()),
+									laboratory_sample_volume = check_laboratory_sample_volume(row[8].strip()),
+									gmc_rack_well = check_rack_well(row[9].strip()),
+									is_proband=check_is_proband(row[12].strip()),
+									is_repeat = check_is_repeat(row[13].strip()),
+									tissue_type=check_tissue_type(row[14].strip()))
 								sample = Sample.objects.get(pk=sample.pk)
 								if sample.disease_area == 'Rare Disease':
 									if sample.is_proband:
 										sample.sample_type = 'Proband'
 									else:
-										sample.sample_type = 'Parent'
-								elif sample.disease_area == 'Solid Tumour':
-									if 'tumour' in sample.clin_sample_type:
+										sample.sample_type = 'Family'
+								elif sample.disease_area == 'Cancer':
+									if 'tumour' in sample.tissue_type:
 										sample.sample_type = 'Tumour'
 									else:
 										sample.sample_type = 'Cancer Germline'
@@ -129,8 +262,11 @@ def import_acks(request):
 				for rack in racks:
 					samples = Sample.objects.filter(rack=rack)
 					for sample in samples:
+						received_datetime = ''
+						if sample.sample_received_datetime:
+							received_datetime = sample.sample_received_datetime.replace(microsecond=0).isoformat().replace('+00:00', 'Z')
 						writer.writerow([sample.participant_id, rack.laboratory_id,
-							sample.sample_received, sample.sample_received_datetime.replace(microsecond=0).isoformat().replace('+00:00', 'Z'),
+							sample.sample_received, received_datetime,
 							gel_1005.report_generated_datetime.replace(microsecond=0).isoformat().replace('+00:00', 'Z'), sample.laboratory_sample_id])
 			return HttpResponseRedirect('/')
 	unacked_gel_1004 = Gel1004Csv.objects.filter(gel_1005_csv__isnull = True)
@@ -146,33 +282,15 @@ def import_acks(request):
 			gel_1004.all_racks_acked = all_racks_acked
 	return render(request, 'import-acks.html', {"unacked_racks_dict" : unacked_racks_dict})
 
-def acknowledge_samples(request, rack):
-	rack = Rack.objects.get(gmc_rack_id=rack)
+def acknowledge_samples(request, gel1004, rack):
+	rack = Rack.objects.get(gel_1004_csv=gel1004, gmc_rack_id=rack)
 	samples = Sample.objects.filter(rack=rack)
 	sample_select_form = SampleSelectForm()
 	if request.method == 'POST':
 		if 'rack-scanner' in request.POST:
-			directory = LoadConfig().load()['rack_scanner_received_path']
-			for filename in os.listdir(directory):
-				if filename.endswith(".csv"):
-					path = directory + filename
-					date_modified = datetime.fromtimestamp(os.path.getmtime(path), pytz.timezone('UTC'))
-					with open(path, 'r') as csvFile:
-						reader = csv.reader(csvFile, delimiter=',', skipinitialspace=True)
-						for row in reader:
-							if row[1] != 'NO READ':
-								rack_scanner, created = RackScanner.objects.get_or_create(
-									filename=filename,
-									scanned_id=row[3],
-									date_modified=date_modified,
-									workflow_position='received_rack')
-								RackScannerSample.objects.get_or_create(rack_scanner=rack_scanner,
-									sample_id=row[1],
-									position=pad_zeros(row[0]))
-					os.rename(path, directory + "processed/" + filename)
+			rack_scan()
 			rack_scanner = RackScanner.objects.filter(scanned_id=rack.gmc_rack_id,
-				workflow_position='received_rack',
-				acknowledged=False)
+				acknowledged=False).order_by('-date_modified')
 			if rack_scanner:
 				rack_scanner_samples = RackScannerSample.objects.filter(rack_scanner=rack_scanner[0])
 				samples_received_wrong_position = []
@@ -224,6 +342,7 @@ def acknowledge_samples(request, rack):
 				sample.sample_received_datetime = datetime.now(pytz.timezone('UTC'))
 			sample.save()
 			url = reverse('acknowledge_samples', kwargs={
+				"gel1004" : gel1004,
 				"rack" : rack.gmc_rack_id,
 				})
 			return HttpResponseRedirect(url)
@@ -251,10 +370,10 @@ def awaiting_plating(request):
 	return render(request, 'awaiting-plating.html', {
 		"unplated_racks_dict" : unplated_racks_dict})
 
-def plate_samples(request, rack, plate_id=None):
+def plate_samples(request, gel1004, rack, plate_id=None):
 	plate_rows = ['A','B','C','D','E','F','G','H']
 	plate_columns = ['01','02','03','04','05','06','07','08','09','10','11','12']
-	rack = Rack.objects.get(gmc_rack_id=rack)
+	rack = Rack.objects.get(gel_1004_csv=gel1004, gmc_rack_id=rack)
 	samples = Sample.objects.filter(rack=rack,
 		plate__isnull = True,
 		rack__gel_1004_csv__gel_1005_csv__isnull = False,
@@ -266,7 +385,7 @@ def plate_samples(request, rack, plate_id=None):
 		current_holding_racks_dict[current_holding_rack] = Sample.objects.filter(plate=current_holding_rack).count()
 	assigned_well_list = []
 	if plate_id:
-		plate = Plate.objects.get(holding_rack_id=plate_id)
+		plate = Plate.objects.get(holding_rack_id=plate_id, plate_id__isnull=True)
 		plate_samples = sorted(Sample.objects.filter(plate=plate), 
 			key=lambda x: (x.plate_well_id[0], int(x.plate_well_id[1:])), 
 			reverse=True)
@@ -291,14 +410,50 @@ def plate_samples(request, rack, plate_id=None):
 						plate = Plate.objects.create(holding_rack_id=holding_rack_id)
 				if plate:
 					url = reverse('plate_samples', kwargs={
+							'gel1004' : rack.gel_1004_csv.pk,
 							'rack' : rack.gmc_rack_id,
 							'plate_id' : plate.holding_rack_id,
 							})
 				else:
 					url = reverse('plate_samples', kwargs={
+							'gel1004' : rack.gel_1004_csv.pk,
 							'rack' : rack.gmc_rack_id,
 							})
 				return HttpResponseRedirect(url)
+		if 'rack-scanner' in request.POST:
+			holding_rack_form = HoldingRackForm()
+			sample_select_form = SampleSelectForm()
+			rack_scan()
+			rack_scanner = RackScanner.objects.filter(scanned_id=plate.holding_rack_id,
+				acknowledged=False).order_by('-date_modified')
+			if rack_scanner:
+				rack_scanner_samples = RackScannerSample.objects.filter(rack_scanner=rack_scanner[0])
+				samples_in_wrong_position = []
+				extra_samples = []
+				missing_samples = []
+				for sample in plate_samples:
+					found = False
+					for rack_scanner_sample in rack_scanner_samples:
+						if sample.laboratory_sample_id == rack_scanner_sample.sample_id:
+							found = True
+							if sample.plate_well_id == rack_scanner_sample.position:
+								sample.sample_matched = True
+								sample.save()
+								rack_scanner_sample.matched = True
+								rack_scanner_sample.save()
+							else:
+								samples_in_wrong_position.append(sample)
+					if not found:
+						missing_samples.append(sample)
+				for rack_scanner_sample in rack_scanner_samples:
+					if not rack_scanner_sample.matched:
+						extra_samples.append(rack_scanner_sample)
+				if samples_in_wrong_position or extra_samples or missing_samples:
+					messages.error(request, "Scanned rack does not match with assigned rack wells for this rack!")
+				else:
+					messages.info(request, "Positions confirmed and correct.")
+			else:
+				messages.error(request, "Rack " + plate.holding_rack_id + " not found in Rack scanner CSV. Has the rack been scanned?")
 		if 'ready' in request.POST:
 			holding_rack_form = HoldingRackForm()
 			sample_select_form = SampleSelectForm()
@@ -330,6 +485,7 @@ def plate_samples(request, rack, plate_id=None):
 				else:
 					messages.error(request, lab_sample_id + " not found in GLH Rack " + rack.gmc_rack_id)
 				url = reverse('plate_samples', kwargs={
+							'gel1004' : rack.gel_1004_csv.pk,
 							'rack' : rack.gmc_rack_id,
 							'plate_id' : plate.holding_rack_id,
 							})
@@ -364,27 +520,9 @@ def plate_holding_rack(request, plate_pk):
 	if request.method == 'POST':
 		if "rack-scanner" in request.POST:
 			plating_form = PlatingForm()
-			directory = LoadConfig().load()['rack_scanner_plated_path']
-			for filename in os.listdir(directory):
-				if filename.endswith(".csv"):
-					path = directory + filename
-					date_modified = datetime.fromtimestamp(os.path.getmtime(path))
-					with open(path, 'r') as csvFile:
-						reader = csv.reader(csvFile, delimiter=',', skipinitialspace=True)
-						for row in reader:
-							if row[1] != 'NO READ':
-								rack_scanner, created = RackScanner.objects.get_or_create(
-									filename=filename,
-									scanned_id=row[3],
-									date_modified=date_modified,
-									workflow_position='plated_rack')
-								RackScannerSample.objects.get_or_create(rack_scanner=rack_scanner,
-									sample_id=row[1],
-									position=pad_zeros(row[0]))
-					os.rename(path, directory + "processed/" + filename)
+			rack_scan()
 			rack_scanner = RackScanner.objects.filter(scanned_id=plate.holding_rack_id,
-				workflow_position='plated_rack',
-				acknowledged=False)
+				acknowledged=False).order_by('-date_modified')
 			if rack_scanner:
 				rack_scanner_samples = RackScannerSample.objects.filter(rack_scanner=rack_scanner[0])
 				samples_in_wrong_position = []
