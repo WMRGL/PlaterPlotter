@@ -101,7 +101,7 @@ class Plate(models.Model):
 
 	def __str__(self):
 		if self.plate_id:
-			return "Plate ID: " + self.gmc_rack_id
+			return "Plate ID: " + self.plate_id
 		else:
 			return "Holding Rack ID: " + self.holding_rack_id
 

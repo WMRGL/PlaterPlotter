@@ -12,7 +12,9 @@ import csv
 import os
 import pytz
 import re
-
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import Flowable, Paragraph, SimpleDocTemplate, Table, TableStyle
+from reportlab.lib import colors
 
 # def ajax_change_sample_received_status(request):
 #     sample_received = request.GET.get('sample_received', False)
@@ -602,6 +604,13 @@ def ready_to_dispatch(request):
 					plate.save()
 					plates.append(plate)
 				path = directory + filename
+				doc = SimpleDocTemplate(path[:-3] + 'pdf')
+				elements = []
+				data = [['Participant ID', 'Plate ID', 'Well ID', 
+						'Plate Consignment Number', 'Plate Date of Dispatch']]
+				#c = canvas.Canvas(path[:-3] + 'pdf')
+				#c.drawString(100,750,"Sample summary for consignment: " + str(consignment_number))
+				#c.save()
 				with open(path, 'w', newline='') as csvfile:
 					writer = csv.writer(csvfile, delimiter=',',
 						quotechar=',', quoting=csv.QUOTE_MINIMAL)
@@ -613,7 +622,24 @@ def ready_to_dispatch(request):
 						for sample in samples:
 							writer.writerow([sample.participant_id, plate.plate_id,
 								sample.norm_biorep_sample_vol, sample.norm_biorep_conc,
-								sample.plate_well_id, gel_1008_csv.consignment_number, gel_1008_csv.date_of_dispatch.replace(microsecond=0).isoformat().replace('+00:00', 'Z')])
+								sample.plate_well_id, gel_1008_csv.consignment_number, 
+								gel_1008_csv.date_of_dispatch.replace(microsecond=0).isoformat().replace('+00:00', 'Z')])
+							data.append([sample.participant_id, plate.plate_id,
+								sample.plate_well_id, gel_1008_csv.consignment_number, 
+								gel_1008_csv.date_of_dispatch.replace(microsecond=0).isoformat().replace('+00:00', 'Z')])
+				flowObjects = list()
+				styles=getSampleStyleSheet()
+				table_header = "Sample summary for consignment: " + str(consignment_number)
+				flowObjects.append(Paragraph(table_header,styles["h4"]))
+				t1=Table(data,hAlign="LEFT")
+				t1.setStyle(TableStyle([('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
+							('BOX', (0,0), (-1,-1), 0.25, colors.black),
+							('BACKGROUND',(0,0),(-1,0),colors.gray),
+							('TEXTCOLOR',(0,0),(-1,0),colors.black),
+							]))
+				flowObjects.append(t1)
+				doc.build(flowObjects)
+
 				messages.info(request, "GEL1008 csv produced.")
 			else:
 				messages.warning(request, "No plates selected!")
