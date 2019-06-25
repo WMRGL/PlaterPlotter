@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load static %}
+{% block title %}
+    Audit - {{ block.super }}
+{% endblock title %}
+{% load crispy_forms_tags %}
+
+
+{% block content %}
+<div class='container-fluid'>
+ <div class="row">
+  <div class="col-6">
+    <h3>Audit</h3>
+    <p>Search for sample</p>
+  </div>
+  <div class="col-6">
+  	<div align='right'>
+      <h5>Search for Laboratory ID</h5>
+    </div>
+    <form role='form' action='' method="POST", class='form-inline float-right'>
+      {% csrf_token %}
+      {{ sample_select_form|crispy }}
+      <div class="form-group">
+        <div class="col-lg-5 col-sm-offset-5">
+          <button type="submit" name='sample-scanned' class="btn btn-primary">Go</button>
+        </div>
+      </div>
+    </form>
+    {% if messages %}
+      <ul class="messages warning">
+          {% for message in messages %}
+          <strong><p{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p></strong>
+          {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+   	{% if sample %}
+   	<div class="col-12">
+   		<h5>Results for {{ sample.laboratory_sample_id }}</h5>
+ 	 <div class="tab-pane active">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+              	<th>Participant ID</th>
+              	<th>Group ID</th>
+              	<th>Disease Area</th>
+              	<th>Receiving Rack, Well</th>
+              	<th>Sent by</th>
+                <th>Received</th>
+                <th>GEL1005 sent</th>  
+                <th>Holding Rack, Well</th>          
+                <th>Plate ID</th>
+                <th>GEL1008 sent</th>
+                <th>Consignment Number</th>
+                <th>Date of Dispatch</th>
+              </tr>
+            </thead>
+            <tbody>
+            <tr>
+              <td>{{ sample.participant_id }}</td>
+              <td>{{ sample.group_id }}</td>
+              <td>{{ sample.disease_area }}</td>
+              <td>{{ sample.rack.gmc_rack_id }}, {{ sample.gmc_rack_well }}</td>
+              <td>{{ sample.rack.laboratory_id }}</td>
+              <td>{{ sample.sample_received_datetime }}</td>
+              <td>{{ sample.rack.gel_1004_csv.gel_1005_csv.report_generated_datetime }}</td>
+              <td>{{ sample.plate.holding_rack_id }}, {{ sample.plate_well_id }}</td>
+              <td>{{ sample.plate.plate_id }}</td>
+              <td>{{ sample.plate.gel_1008_csv.report_generated_datetime }}</td>
+              <td>{{ sample.plate.gel_1008_csv.consignment_number }}</td>
+              <td>{{ sample.plate.gel_1008_csv.date_of_dispatch }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div> 
+ 	</div>
+ 	{% endif %}
+ </div>
+</div>
+
+{% endblock content %}

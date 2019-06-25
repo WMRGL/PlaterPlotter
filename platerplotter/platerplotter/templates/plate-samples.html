@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load static %}
+{% block title %}
+    Determine wells - {{ block.super }}
+{% endblock title %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class='container-fluid'>
+  {% if plate %}
+  <div class="row">
+    <div class="col-3">
+      <h3>Holding rack</h3>
+      <strong>ID:</strong> {{plate.holding_rack_id}} &nbsp|&nbsp
+      <strong>Area:</strong> {{plate.disease_area}} <br>
+      <strong>Type:</strong> {{plate.plate_type}} &nbsp|&nbsp
+      <strong>Priority:</strong> {{plate.priority}}    
+    </div>
+    <div class="col-6">
+      <div align='center'>
+        <form role='form' action='' method="POST", class='justify-content-center'>
+          {% csrf_token %}
+          <div class="form-group">
+            <a class="btn btn-primary btn-lg" href="/plate-samples/{{rack.gel_1004_csv.pk}}/{{rack.gmc_rack_id}}" role="button">Change Holding Rack</a>
+            <button type="submit" name='rack-scanner' value='{{ plate.pk }}' class="btn btn-success btn-lg">Rack Scanner</button> 
+            <button type="submit" name='ready' value='{{ plate.pk }}' class="btn btn-success btn-lg">Ready to Plate</button>
+          </div>
+        </form>
+      </div>
+    </div>
+      <div class="col-3">
+        <div align='right'>
+          <h4>Scan or type sample ID</h4>
+        </div>
+        <form role='form' action='' method="POST", class='form-inline float-right'>
+          {% csrf_token %}
+          <input type="hidden" id="well" name="well">
+          {{ sample_select_form|crispy }}
+          <div class="form-group">
+            <div class="col-lg-5 col-sm-offset-5">
+              <button type="submit" name='sample' class="btn btn-primary">Go</button>
+            </div>
+          </div>
+        </form>
+    </div>
+  </div>
+  {% if plate.ready_to_plate %}
+    <p>Holding rack ready to plate.</p>
+  {% else %}
+    <div class="row">
+      <div class="col-4">
+        <div class="tab-pane active">
+            <table class="plate">
+              <tbody>
+                <tr>
+                  <th></th>
+                  {% for column in plate_columns %}
+                    <th>{{ column }}</th>
+                  {% endfor %}
+                </tr>
+                {% for row in plate_rows %}
+                  <tr>
+                    <th>{{ row }}</th>
+                    {% for column in plate_columns %}
+                      {% if row|add:column in assigned_well_list %}
+                        {% for sample in plate_samples %}
+                          {% if row|add:column == sample.plate_well_id %}
+                            <td title='Position:             {{row|add:column}} 
+Laboratory ID:    {{sample.laboratory_sample_id}}
+Participant ID:     {{sample.participant_id}}
+Group ID:            {{sample.group_id}}' style="background-color: blue"><div class="tooltip hidden">Some text</div></td>
+                          {% endif %}
+                        {% endfor %}
+                      {% else %}
+                        <td class='unassigned' id="{{row|add:column}}" onclick="myFunction('{{row|add:column}}')"></td>
+                      {% endif %}
+                    {% endfor %}
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+        </div> 
+      </div> 
+      <div class='col-8' style="height: 350px; overflow-y:scroll;">
+        <div class="tab-pane active">
+          <table class="table table-bordered" id="dataTable">
+            <thead>
+              <tr>
+                <th>Holding Rack Well</th>
+                <th>Lab Sample ID</th>  
+                <th>Participant ID</th>
+                <th>Group ID</th>
+                <th>Priority</th>
+                <th>Disease Area</th>
+                <th>Sample Type</th>          
+                <th>Is Proband?</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sample in plate_samples %}
+              <tr>
+                <td>{{ sample.plate_well_id }}</td>
+                <td>{{ sample.laboratory_sample_id }}</td>
+                <td>{{ sample.participant_id }}</td>
+                <td>{{ sample.group_id }}</td>
+                <td>{{ sample.priority }}</td>
+                <td>{{ sample.disease_area }}</td>
+                <td>{{ sample.clin_sample_type }}</td>
+                <td>{{ sample.is_proband }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div> 
+      </div>    
+    </div>
+  {% endif %}
+  {% else %}
+  <div class="row">
+    <div class="col-6">
+      <h3>Determine plate well locations for samples</h3>
+      <p>Scan or select holding rack ID and then scan sample to determine well</p>
+    </div>
+    <div class="col-6">
+      <div align='right'>
+        <h4>Scan or type Holding Rack</h4>
+      </div>
+      <form role='form' action='' method="POST", class='form-inline float-right'>
+        {% csrf_token %}
+        {{ holding_rack_form|crispy }}
+        <div class="form-group">
+          <div class="col-lg-5 col-sm-offset-5">
+            <button type="submit" name='holding' class="btn btn-primary">Go</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-12">
+      {% if current_holding_racks_dict %}
+        <h5>Current available holding racks</h5>
+        <div class="tab-pane active">
+            <table class="table table-bordered" id="dataTable">
+              <thead>
+                <tr>
+                  <th>Rack ID</th>
+                  <th>Disease Area</th>
+                  <th>Sample Type</th>
+                  <th>Priority</th>
+                  <th>Number of Samples</th>
+                  <th>Ready to Plate</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for holding_rack, count in current_holding_racks_dict.items %}
+              <tr>
+                <td><a href="/plate-samples/{{ rack.gel_1004_csv.pk }}/{{rack.gmc_rack_id}}/{{ holding_rack.holding_rack_id }}">{{ holding_rack.holding_rack_id }}</a></td>
+                <td>{{ holding_rack.disease_area }}</td>
+                <td>{{ holding_rack.plate_type }}</td>
+                <td>{{ holding_rack.priority }}</td>
+                <td>{{ count }}</td>
+                <td>
+                  {% if holding_rack.ready_to_plate %}
+                    <i class="fas fa-check-circle" style="color:green"></i>
+                  {% else %}
+                    <i class="fas fa-times-circle" style="color:red"></i>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div> 
+      {% else %}
+        <p>No current holding racks, please scan a new rack to start</p>
+      {% endif %}
+    </div>     
+  </div>
+  {% endif %}
+  <hr>
+  <div class="row">
+    <div class="col-4">
+      <h3>Samples awaiting well assignment</h3>
+      <strong>GLH Rack ID:</strong> {{rack.gmc_rack_id}}
+    </div>
+    <div class="col-4">
+      <div align='center'>
+        <a class="btn btn-primary btn-lg" href="/awaiting-plating" role="button">Change GLH Rack</a>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-12">
+      <div class="tab-pane active">
+          <table class="table table-bordered" id="dataTable2">
+            <thead>
+              <tr>
+                <th>Participant ID</th>
+                <th>Group ID</th>
+                <th>Priority</th>
+                <th>Disease Area</th>
+                <th>Sample Type</th>
+                <th>Consignment Number</th>
+                <th>Lab Sample ID</th>
+                <th>Sample Volume</th>
+                <th>Rack Well</th>
+                <th>Is Proband?</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for sample in samples %}
+            <tr>
+              <td>{{ sample.participant_id }}</td>
+              <td>{{ sample.group_id }}</td>
+              <td>{{ sample.priority }}</td>
+              <td>{{ sample.disease_area }}</td>
+              <td>{{ sample.clin_sample_type }}</td>
+              <td>{{ sample.glh_sample_consignment_number }}</td>
+              <td>{{ sample.laboratory_sample_id }}</td>
+              <td>{{ sample.laboratory_sample_volume }}</td>
+              <td>{{ sample.gmc_rack_well }}</td>
+              <td>{{ sample.is_proband }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div> 
+    </div>     
+  </div>
+</div>
+
+<script>
+var form = document.getElementById('well');
+form.value = '';
+function myFunction(position) {
+  var unassignedWells = document.getElementsByClassName('unassigned')
+  var form = document.getElementById('well');
+  for (var i = 0; i < unassignedWells.length; i++) {
+    unassignedWells[i].style.backgroundColor = '#e9ecef'
+  }
+  if (position === form.value){
+    form.value = '';
+  } else {
+    form.value = position;
+    document.getElementById(position).style.backgroundColor = "red";
+    console.log(position);
+  }
+}
+</script>
+
+{% endblock content %}

@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block title %}
+    Acknowledge Samples - {{ block.super }}
+{% endblock title %}
+{% load crispy_forms_tags %}
+
+
+{% block content %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-4">
+        <h3>Acknowledge Receipt of Samples</h3>
+        <h4>Rack: {{ rack.gmc_rack_id }}</h4>
+      </div>
+      <div class="col-4" align='center'>
+        <form role='form' action='' method="POST" class='form'>
+            {% csrf_token %}
+            <div class="form-group">
+              <div>
+                  <button type="submit" name="rack-scanner" class="btn btn-success">Check Rack Scanner</button>
+              </div>
+            </div>
+        </form>
+      </div>
+      <div class="col-4">
+        <div align='right'>
+          <h4>Scan or type sample ID</h4>
+        </div>
+        <form role='form' action='' method="POST", class='form-inline float-right'>
+          {% csrf_token %}
+          {{ sample_select_form|crispy }}
+          <div class="form-group">
+            <div class="col-lg-5 col-sm-offset-5">
+              <button type="submit" name='sample-scanned' class="btn btn-primary">Go</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-10">
+        <p>Please acknowledge receipt of each sample in the rack by scanning each sample and then click "Acknowledge Samples" button once <em>all</em> samples have been scanned.</p>
+      </div>
+      <div class="col-2">
+        <form role='form' action='' method="POST" class='form'>
+            {% csrf_token %}
+            <div class="form-group">
+              <div>
+                {% if all_samples_received %}
+                  <button type="submit" name="rack-acked" class="btn btn-success btn-block">Acknowledge Samples</button>
+                {% else %}
+                  <button type="submit" onclick="return confirm('Are you sure? Not all samples have been marked as received.')" name="rack-acked" class="btn btn-warning btn-block">Acknowledge Samples</button>  
+                {% endif %}
+              </div>
+            </div>
+        </form>
+      </div>
+    </div>
+    <div class="col-12">
+      <div class="tab-pane active">
+        <br>
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Participant ID</th>
+                <th>Group ID</th>
+                <th>Priority</th>
+                <th>Disease Area</th>
+                <th>Sample Type</th>
+                <th>Consignment Number</th>
+                <th>Lab Sample ID</th>
+                <th>Sample Volume</th>
+                <th>Rack Well</th>
+                <th>Is Proband?</th>
+                <th>Sample recieved</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for sample in samples %}
+            <tr>
+              <td>{{ sample.participant_id }}</td>
+              <td>{{ sample.group_id }}</td>
+              <td>{{ sample.priority }}</td>
+              <td>{{ sample.disease_area }}</td>
+              <td>{{ sample.clin_sample_type }}</td>
+              <td>{{ sample.glh_sample_consignment_number }}</td>
+              <td>{{ sample.laboratory_sample_id }}</td>
+              <td>{{ sample.laboratory_sample_volume }}</td>
+              <td>{{ sample.gmc_rack_well }}</td>
+              <td>{{ sample.is_proband }}</td>
+              <td style="text-align:center">
+                <form role='form' action='' method="POST" class='form'>
+                  {% csrf_token %}
+                  <div class="form-group">
+                    <div>
+                      <button class='btn btn-primary-outline btn-xsl' type="submit" name='sample-received' value='{{ sample.pk }}'>
+                        <label class="switch">
+                          <input type="checkbox" {% if sample.sample_received %} checked {% endif %}>
+                          <span class="slider round"></span>
+                        </label>
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div> 
+    </div>     
+  </div>
+
+
+
+{% endblock content %}

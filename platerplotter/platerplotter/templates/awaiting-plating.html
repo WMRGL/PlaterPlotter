@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load static %}
+{% block title %}
+    Awaiting Plating - {{ block.super }}
+{% endblock title %}
+
+
+{% block content %}
+  <div class='container-fluid'>
+    <div class="row">
+      <div class="col-12">
+        <h3>Samples awaiting plating</h3>
+        <p>Click on a rack ID to start assigning samples to plate locations</p>
+      </div>
+    </div>
+    <hr>
+    <div class="row">
+      <div class="col-12">
+        <div class="tab-pane active">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Rack ID</th>
+                <th>Laboratory ID</th>
+                <th>Number of Samples Awaiting Plating</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for rack, samples in unplated_racks_dict.items %}
+            <tr>
+              <td><a href="/plate-samples/{{ rack.gel_1004_csv.pk }}/{{ rack.gmc_rack_id }}">{{ rack.gmc_rack_id }}</a></td>
+              <td>{{ rack.laboratory_id }}</td>
+              <td>{{ samples|length }}</td>
+            </tr>
+            {% endfor %} 
+            </tbody>
+          </table>
+        </div> 
+      </div>
+    </div>
+    <hr>
+</div>
+
+{% endblock content %}

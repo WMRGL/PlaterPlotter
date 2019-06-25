@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}
+    Unacknowledged Racks - {{ block.super }}
+{% endblock title %}
+
+
+{% block content %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-10">
+        <h3>Unacknowledged Racks</h3>
+        <p>Click on a rack ID to acknowledge that the samples have been received.</p>
+      </div>
+      <div class="col-2">
+        <form role='form' action='' method="POST" class='form'>
+            {% csrf_token %}
+            <div class="form-group">
+              <div>
+                <button type="submit" name='import-1004' class="btn btn-primary btn-block">Import New</button>
+              </div>
+            </div>
+        </form>
+      </div>
+    </div>
+    <hr>
+    {% for gel1004, racks in unacked_racks_dict.items %}
+    <div class="row">
+      <div class="col-10">
+        <div class="tab-pane active">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th colspan="4" style="background-color: #e9ecef">{{gel1004.filename}}</th>
+              </tr>
+              <tr>
+                <th>Rack ID</th>
+                <th>Laboratory ID</th>
+                <th>Number of Samples</th>
+                <th>Samples acknowledged</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for rack in racks %}
+            <tr>
+              <td><a href="/acknowledge-samples/{{ gel1004.pk }}/{{ rack.gmc_rack_id }}">{{ rack.gmc_rack_id }}</a></td>
+              <td>{{ rack.laboratory_id }}</td>
+              <td>{{ rack.no_samples }}</td>
+              <td>
+                {% if rack.rack_acknowledged %}
+                  <i class="fas fa-check-circle" style="color:green"></i>
+                {% else %}
+                  <i class="fas fa-times-circle" style="color:red"></i>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div> 
+      </div>
+      <div class="col-2">
+          <form role='form' action='' method="POST" class='form'>
+            {% csrf_token %}
+            <div class="form-group">
+              <div>
+                {% if gel1004.all_racks_acked %}
+                  <button type="submit" name='send-1005' value='{{ gel1004.pk }}' class="btn btn-success btn-block">Send Ack</button>
+                {% else %}
+                  <button type="submit" name='send-1005' value='{{ gel1004.pk }}' class="btn btn-success btn-block" disabled>Send Ack</button>
+                {% endif %}
+              </div>
+            </div>
+        </form>
+      </div>
+    </div>
+    <hr>
+    {% endfor %} 
+  </div>
+
+{% endblock content %}
