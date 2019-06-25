@@ -311,6 +311,9 @@ def acknowledge_samples(request, gel1004, rack):
 						extra_samples.append(rack_scanner_sample)
 				if samples_received_wrong_position or extra_samples:
 					messages.error(request, "Rack contains extra samples not listed in the GEL1004 or samples were in the wrong positions")
+				for rack_scanner_item in rack_scanner:
+					rack_scanner_item.acknowledged = True
+					rack_scanner_item.save()
 			else:
 				messages.error(request, "Rack " + rack.gmc_rack_id + " not found in Plate/Rack scanner CSV. Has the rack been scanned?")
 		if 'rack-acked' in request.POST:
@@ -437,8 +440,6 @@ def plate_samples(request, gel1004, rack, plate_id=None):
 						if sample.laboratory_sample_id == rack_scanner_sample.sample_id:
 							found = True
 							if sample.plate_well_id == rack_scanner_sample.position:
-								sample.sample_matched = True
-								sample.save()
 								rack_scanner_sample.matched = True
 								rack_scanner_sample.save()
 							else:
@@ -452,6 +453,9 @@ def plate_samples(request, gel1004, rack, plate_id=None):
 					messages.error(request, "Scanned rack does not match with assigned rack wells for this rack!")
 				else:
 					messages.info(request, "Positions confirmed and correct.")
+				for rack_scanner_item in rack_scanner:
+					rack_scanner_item.acknowledged = True
+					rack_scanner_item.save()
 			else:
 				messages.error(request, "Rack " + plate.holding_rack_id + " not found in Rack scanner CSV. Has the rack been scanned?")
 		if 'ready' in request.POST:
@@ -551,6 +555,9 @@ def plate_holding_rack(request, plate_pk):
 					plate.positions_confirmed = True
 					plate.save()
 					messages.info(request, "Positions confirmed and correct. Please plate samples and assign plate ID.")
+				for rack_scanner_item in rack_scanner:
+					rack_scanner_item.acknowledged = True
+					rack_scanner_item.save()
 			else:
 				messages.error(request, "Rack " + plate.holding_rack_id + " not found in Plate/Rack scanner CSV. Has the rack been scanned?")
 		if "assign-plate" in request.POST:

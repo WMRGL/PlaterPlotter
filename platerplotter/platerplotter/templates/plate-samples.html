@@ -84,7 +84,7 @@ Group ID:            {{sample.group_id}}' style="background-color: blue"><div cl
       </div> 
       <div class='col-8' style="height: 350px; overflow-y:scroll;">
         <div class="tab-pane active">
-          <table class="table table-bordered">
+          <table class="table table-bordered" id="dataTable">
             <thead>
               <tr>
                 <th>Holding Rack Well</th>
@@ -142,7 +142,7 @@ Group ID:            {{sample.group_id}}' style="background-color: blue"><div cl
       {% if current_holding_racks_dict %}
         <h5>Current available holding racks</h5>
         <div class="tab-pane active">
-            <table class="table table-bordered">
+            <table class="table table-bordered" id="dataTable">
               <thead>
                 <tr>
                   <th>Rack ID</th>
@@ -194,7 +194,7 @@ Group ID:            {{sample.group_id}}' style="background-color: blue"><div cl
   <div class="row">
     <div class="col-12">
       <div class="tab-pane active">
-          <table class="table table-bordered">
+          <table class="table table-bordered" id="dataTable2">
             <thead>
               <tr>
                 <th>Participant ID</th>

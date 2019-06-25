@@ -7,7 +7,7 @@ class PlateManager():
 		self.plate = plate
 		self.plate_rows = ['A','B','C','D','E','F','G','H']
 		self.plate_columns = ['01','02','03','04','05','06','07','08','09','10','11','12']
-		self.well_labels = ['A01', 'A02', 'A03', 'A04', 'A05', 'A06', 'A07', 'A08', 'A09', 'A10', 'A11', 'A12', 
+		self.old_well_labels = ['A01', 'A02', 'A03', 'A04', 'A05', 'A06', 'A07', 'A08', 'A09', 'A10', 'A11', 'A12', 
 							'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09', 'B10', 'B11', 'B12',
 							'C01', 'C02', 'C03', 'C04', 'C05', 'C06', 'C07', 'C08', 'C09', 'C10', 'C11', 'C12',
 							'D01', 'D02', 'D03', 'D04', 'D05', 'D06', 'D07', 'D08', 'D09', 'D10', 'D11', 'D12',
@@ -15,6 +15,14 @@ class PlateManager():
 							'F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10', 'F11', 'F12',
 							'G01', 'G02', 'G03', 'G04', 'G05', 'G06', 'G07', 'G08', 'G09', 'G10', 'G11', 'G12',
 							'H01', 'H02', 'H03', 'H04', 'H05', 'H06', 'H07', 'H08', 'H09', 'H10', 'H11', 'H12',]
+		self.well_labels = ['A01', 'B01', 'C01', 'D01', 'E01', 'F01', 'G01', 'H01', 'A02', 'B02', 'C02', 'D02', 
+					'E02', 'F02', 'G02', 'H02', 'A03', 'B03', 'C03', 'D03', 'E03', 'F03', 'G03', 'H03',
+					'A04', 'B04', 'C04', 'D04', 'E04', 'F04', 'G04', 'H04', 'A05', 'B05', 'C05', 'D05',
+					'E05', 'F05', 'G05', 'H05', 'A06', 'B06', 'C06', 'D06', 'E06', 'F06', 'G06', 'H06',
+					'A07', 'B07', 'C07', 'D07', 'E07', 'F07', 'G07', 'H07', 'A08', 'B08', 'C08', 'D08',
+					'E08', 'F08', 'G08', 'H08', 'A09', 'B09', 'C09', 'D09', 'E09', 'F09', 'G09', 'H09',
+					'A10', 'B10', 'C10', 'D10', 'E10', 'F10', 'G10', 'H10', 'A11', 'B11', 'C11', 'D11',
+					'E11', 'F11', 'G11', 'H11', 'A12', 'B12', 'C12', 'D12', 'E12', 'F12', 'G12', 'H12',]
 		self.well_contents = [None, None, None, None, None, None, None, None, None, None, None, None, 
 					None, None, None, None, None, None, None, None, None, None, None, None,
 					None, None, None, None, None, None, None, None, None, None, None, None,
@@ -32,10 +40,22 @@ class PlateManager():
 			else:
 				self.well_contents[well_index] = sample
 
+	def lookup_old_index(self, index):
+		well_label = self.well_labels[index]
+		return self.old_well_labels.index(well_label)
+
+	def lookup_new_indices(self, indices_to_avoid):
+		new_indices_to_avoid = []
+		for index in indices_to_avoid:
+			well_label = self.old_well_labels[index]
+			new_indices_to_avoid.append(self.well_labels.index(well_label))
+		return new_indices_to_avoid
+
 	def determine_indices_to_avoid(self, index):
 		'''
 		Determines which well positions should be avoided based on the plating rules
 		'''
+		index = self.lookup_old_index(index)
 		row = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 		col_dict = {0:[0,1,2], 1:[0,1,2,3], 2:[0,1,2,3,4], 3:[1,2,3,4,5],
 			4:[2,3,4,5,6], 5:[3,4,5,6,7], 6:[4,5,6,7,8], 7:[5,6,7,8,9],
@@ -80,7 +100,8 @@ class PlateManager():
 			indices_to_avoid += [(item + ((index//12)*12)) - 12 for item in dict_lookup]
 			indices_to_avoid += [(item + ((index//12)*12)) - 12*2 for item in dict_lookup]
 			indices_to_avoid += [(item + ((index//12)*12)) - 12*3 for item in dict_lookup]
-		return indices_to_avoid
+		new_indices_to_avoid = self.lookup_new_indices(indices_to_avoid)
+		return new_indices_to_avoid
 
 	def assign_well(self, request, sample, well):
 		'''
@@ -164,6 +185,7 @@ class PlateManager():
 				for index in well_indices_to_avoid:
 					if not self.well_contents[index]:
 						self.well_contents[index] = 'X'
+				print(self.well_contents)
 				if well:
 					well_index = self.well_labels.index(well)
 					if self.well_contents[well_index] == 'X':
