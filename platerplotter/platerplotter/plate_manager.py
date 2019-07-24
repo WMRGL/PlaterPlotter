@@ -34,7 +34,6 @@ class PlateManager():
 		samples = Sample.objects.filter(plate=self.plate)
 		for sample in samples:
 			well_index = self.well_labels.index(sample.plate_well_id)
-			print(well_index)
 			if self.well_contents[well_index]:
 				raise Exception("Multiple samples have been assigned to same well")
 			else:
@@ -109,6 +108,29 @@ class PlateManager():
 		'''
 		print("assigning well for sample " + str(sample))
 		print("len: " + str(len(self.well_contents)))
+		if self.plate.plate_type == "Problem":
+			if well:
+				well_index = self.well_labels.index(well)
+				sample.plate = self.plate
+				sample.plate_well_id = self.well_labels[well_index]
+				sample.save()
+				messages.info(request, sample.laboratory_sample_id + " assigned to well " + sample.plate_well_id)
+			else:
+				sample_assigned = False
+				well_index = 0
+				for well_content in self.well_contents:
+					if well_content:
+						well_index += 1
+					else:
+						sample.plate = self.plate
+						sample.plate_well_id = self.well_labels[well_index]
+						sample.save()
+						messages.info(request, sample.laboratory_sample_id + " assigned to well " + sample.plate_well_id)
+						sample_assigned = True
+						break
+				if not sample_assigned:
+					messages.error(request, "No more valid positions available in this rack. Please assign " + 
+						sample.laboratory_sample_id + " to a new rack.")
 		if self.plate.plate_type == "Proband":
 			no_samples_with_same_participant_id = True
 			no_family_members_on_same_plate = True
