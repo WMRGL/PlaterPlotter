@@ -4,9 +4,11 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.urls import reverse
-from platerplotter.models import Gel1004Csv, Gel1005Csv, Gel1008Csv, Rack, Plate, Sample, RackScanner, RackScannerSample
+from platerplotter.models import (Gel1004Csv, Gel1005Csv, Gel1008Csv, Rack, Plate, 
+	Sample, RackScanner, RackScannerSample, Buffer)
 from platerplotter.config.load_config import LoadConfig
-from platerplotter.forms import HoldingRackForm, SampleSelectForm, PlatingForm, Gel1008Form, LogIssueForm, ResolveIssueForm
+from platerplotter.forms import (HoldingRackForm, SampleSelectForm, PlatingForm, 
+	Gel1008Form, LogIssueForm, ResolveIssueForm)
 from datetime import datetime
 from django.core.exceptions import ValidationError
 from platerplotter.plate_manager import PlateManager
@@ -678,8 +680,17 @@ def plate_samples(request, rack, gel1004=None, plate_id=None):
 			sample_select_form = SampleSelectForm()
 			pk = request.POST['ready']
 			plate = Plate.objects.get(pk=pk)
+			# assign buffer wells
+			plate_manager.assign_buffer()
+			buffer_wells = Buffer.objects.filter(plate=plate).order_by('well_id')
 			plate.ready_to_plate = True
 			plate.save()
+			messages.info(request, "Holding rack has been marked as ready for plating.")
+			if buffer_wells:
+				buffer_wells_list = ''
+				for buffer_well in buffer_wells:
+					buffer_wells_list += buffer_well.well_id + ', '
+				messages.warning(request, "Buffer will need to be added to the following wells during plating: " + buffer_wells_list)
 		if 'sample' in request.POST:
 			holding_rack_form = HoldingRackForm()
 			sample_select_form = SampleSelectForm(request.POST)
@@ -814,6 +825,17 @@ def plate_holding_rack(request, plate_pk):
 				plate_id = plating_form.cleaned_data.get('plate_id')
 				plate.plate_id = plate_id
 				plate.save()
+				# generate output for robot
+				plate_manager = PlateManager(plate)
+				well_contents = plate_manager.get_well_contents()
+				for content in well_contents:
+					try:
+						print(content.well_id)
+					except:
+						try:
+							print(content.plate_well_id)
+						except:
+							pass
 	else:
 		plating_form = PlatingForm()
 	return render(request, 'plate-holding-rack.html', {
@@ -855,9 +877,6 @@ def ready_to_dispatch(request):
 				elements = []
 				data = [['Participant ID', 'Plate ID', 'Well ID', 
 						'Plate Consignment Number', 'Plate Date of Dispatch']]
-				#c = canvas.Canvas(path[:-3] + 'pdf')
-				#c.drawString(100,750,"Sample summary for consignment: " + str(consignment_number))
-				#c.save()
 				with open(path, 'w', newline='') as csvfile:
 					writer = csv.writer(csvfile, delimiter=',',
 						quotechar=',', quoting=csv.QUOTE_MINIMAL)
@@ -865,7 +884,7 @@ def ready_to_dispatch(request):
 						'Normalised Biorepository Sample Volume', 'Normalised Biorepository Concentration',
 						'Well ID', 'Plate Consignment Number', 'Plate Date of Dispatch'])
 					for plate in plates:
-						samples = Sample.objects.filter(plate=plate)
+						samples = Sample.objects.filter(plate=plate).order_by('plate_well_id')
 						for sample in samples:
 							writer.writerow([sample.participant_id, plate.plate_id,
 								sample.norm_biorep_sample_vol, sample.norm_biorep_conc,
@@ -900,23 +919,12 @@ def ready_to_dispatch(request):
 @login_required()
 def audit(request):
 	"""
-	Renders the search results page. Users can also search again from this page.
+	Renders the audit page showing all processed samples. 
 	"""
 	samples = Sample.objects.all().prefetch_related('rack', 'plate', 
 				'plate__gel_1008_csv', 'rack__gel_1004_csv', 'rack__gel_1004_csv__gel_1005_csv')
 	return render(request, 'audit.html', {"samples" : samples})
-	# sample_select_form = SampleSelectForm()
-	# sample = None
-	# if request.method == 'POST':
-	# 	sample_select_form = SampleSelectForm(request.POST)
-	# 	if sample_select_form.is_valid():
-	# 		lab_sample_id = sample_select_form .cleaned_data.get('lab_sample_id')
-	# 		try:
-	# 			sample = Sample.objects.get(laboratory_sample_id=lab_sample_id)
-	# 		except:
-	# 			messages.error(request, "No samples found with laboratory ID " + lab_sample_id)
-	# return render(request, 'audit.html', {"sample_select_form" : sample_select_form,
-	# 	"sample" : sample})
+
 
 
 def register(request):

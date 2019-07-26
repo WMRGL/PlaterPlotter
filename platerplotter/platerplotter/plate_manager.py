@@ -1,4 +1,4 @@
-from platerplotter.models import Plate, Sample
+from platerplotter.models import Plate, Sample, Buffer
 from django.contrib import messages
 
 class PlateManager():
@@ -7,14 +7,6 @@ class PlateManager():
 		self.plate = plate
 		self.plate_rows = ['A','B','C','D','E','F','G','H']
 		self.plate_columns = ['01','02','03','04','05','06','07','08','09','10','11','12']
-		self.old_well_labels = ['A01', 'A02', 'A03', 'A04', 'A05', 'A06', 'A07', 'A08', 'A09', 'A10', 'A11', 'A12', 
-							'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09', 'B10', 'B11', 'B12',
-							'C01', 'C02', 'C03', 'C04', 'C05', 'C06', 'C07', 'C08', 'C09', 'C10', 'C11', 'C12',
-							'D01', 'D02', 'D03', 'D04', 'D05', 'D06', 'D07', 'D08', 'D09', 'D10', 'D11', 'D12',
-							'E01', 'E02', 'E03', 'E04', 'E05', 'E06', 'E07', 'E08', 'E09', 'E10', 'E11', 'E12',
-							'F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10', 'F11', 'F12',
-							'G01', 'G02', 'G03', 'G04', 'G05', 'G06', 'G07', 'G08', 'G09', 'G10', 'G11', 'G12',
-							'H01', 'H02', 'H03', 'H04', 'H05', 'H06', 'H07', 'H08', 'H09', 'H10', 'H11', 'H12',]
 		self.well_labels = ['A01', 'B01', 'C01', 'D01', 'E01', 'F01', 'G01', 'H01', 'A02', 'B02', 'C02', 'D02', 
 					'E02', 'F02', 'G02', 'H02', 'A03', 'B03', 'C03', 'D03', 'E03', 'F03', 'G03', 'H03',
 					'A04', 'B04', 'C04', 'D04', 'E04', 'F04', 'G04', 'H04', 'A05', 'B05', 'C05', 'D05',
@@ -31,6 +23,22 @@ class PlateManager():
 					None, None, None, None, None, None, None, None, None, None, None, None,
 					None, None, None, None, None, None, None, None, None, None, None, None,
 					None, None, None, None, None, None, None, None, None, None, None, None,]
+		self.alt_well_labels = ['A01', 'A02', 'A03', 'A04', 'A05', 'A06', 'A07', 'A08', 'A09', 'A10', 'A11', 'A12', 
+					'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09', 'B10', 'B11', 'B12',
+					'C01', 'C02', 'C03', 'C04', 'C05', 'C06', 'C07', 'C08', 'C09', 'C10', 'C11', 'C12',
+					'D01', 'D02', 'D03', 'D04', 'D05', 'D06', 'D07', 'D08', 'D09', 'D10', 'D11', 'D12',
+					'E01', 'E02', 'E03', 'E04', 'E05', 'E06', 'E07', 'E08', 'E09', 'E10', 'E11', 'E12',
+					'F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10', 'F11', 'F12',
+					'G01', 'G02', 'G03', 'G04', 'G05', 'G06', 'G07', 'G08', 'G09', 'G10', 'G11', 'G12',
+					'H01', 'H02', 'H03', 'H04', 'H05', 'H06', 'H07', 'H08', 'H09', 'H10', 'H11', 'H12',]
+		self.alt_well_contents = [None, None, None, None, None, None, None, None, None, None, None, None, 
+					None, None, None, None, None, None, None, None, None, None, None, None,
+					None, None, None, None, None, None, None, None, None, None, None, None,
+					None, None, None, None, None, None, None, None, None, None, None, None,
+					None, None, None, None, None, None, None, None, None, None, None, None,
+					None, None, None, None, None, None, None, None, None, None, None, None,
+					None, None, None, None, None, None, None, None, None, None, None, None,
+					None, None, None, None, None, None, None, None, None, None, None, None,]
 		samples = Sample.objects.filter(plate=self.plate)
 		for sample in samples:
 			well_index = self.well_labels.index(sample.plate_well_id)
@@ -38,15 +46,32 @@ class PlateManager():
 				raise Exception("Multiple samples have been assigned to same well")
 			else:
 				self.well_contents[well_index] = sample
+			alt_well_index = self.alt_well_labels.index(sample.plate_well_id)
+			if self.alt_well_contents[alt_well_index]:
+				raise Exception("Multiple samples have been assigned to same well")
+			else:
+				self.alt_well_contents[alt_well_index] = sample
+		buffer_wells = Buffer.objects.filter(plate=self.plate)
+		for buffer_well in buffer_wells:
+			well_index = self.well_labels.index(buffer_well.well_id)
+			if self.well_contents[well_index]:
+				raise Exception("Multiple samples have been assigned to same well")
+			else:
+				self.well_contents[well_index] = buffer_well
+			alt_well_index = self.alt_well_labels.index(buffer_well.well_id)
+			if self.alt_well_contents[alt_well_index]:
+				raise Exception("Multiple samples have been assigned to same well")
+			else:
+				self.alt_well_contents[alt_well_index] = buffer_well
 
-	def lookup_old_index(self, index):
+	def lookup_alt_index(self, index):
 		well_label = self.well_labels[index]
-		return self.old_well_labels.index(well_label)
+		return self.alt_well_labels.index(well_label)
 
 	def lookup_new_indices(self, indices_to_avoid):
 		new_indices_to_avoid = []
 		for index in indices_to_avoid:
-			well_label = self.old_well_labels[index]
+			well_label = self.alt_well_labels[index]
 			new_indices_to_avoid.append(self.well_labels.index(well_label))
 		return new_indices_to_avoid
 
@@ -54,7 +79,7 @@ class PlateManager():
 		'''
 		Determines which well positions should be avoided based on the plating rules
 		'''
-		index = self.lookup_old_index(index)
+		index = self.lookup_alt_index(index)
 		row = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 		col_dict = {0:[0,1,2], 1:[0,1,2,3], 2:[0,1,2,3,4], 3:[1,2,3,4,5],
 			4:[2,3,4,5,6], 5:[3,4,5,6,7], 6:[4,5,6,7,8], 7:[5,6,7,8,9],
@@ -347,6 +372,30 @@ class PlateManager():
 					if not sample_assigned:
 						messages.error(request, "No more valid positions available in this rack. Please assign " + 
 							sample.laboratory_sample_id + " to a new rack.")
+
+	def get_last_occupied_well(self):
+		for i, e in enumerate(reversed(self.well_contents)):
+			if e is not None:
+				return len(self.well_contents) - i - 1
+		return -1
+
+	def assign_buffer(self):
+		last_occupied_well_index = self.get_last_occupied_well()
+		print(self.well_contents)
+		if last_occupied_well_index > 0:
+			index_count = 0
+			while index_count < last_occupied_well_index:
+				if not self.well_contents[index_count]:
+					well_label = self.well_labels[index_count]
+					buffer_well = Buffer.objects.create(
+						well_id = well_label,
+						plate = self.plate)
+				index_count += 1
+
+	def get_well_contents(self):
+		print(self.well_contents)
+		print(self.alt_well_contents)
+		return(self.alt_well_contents)
 
 
 

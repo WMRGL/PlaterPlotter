@@ -71,6 +71,13 @@ class Plate(models.Model):
 		else:
 			return "Holding Rack ID: " + self.holding_rack_id
 
+class Buffer(models.Model):
+	well_id = models.CharField(max_length=3, choices=well_ids)
+	plate = models.ForeignKey(Plate, on_delete=models.CASCADE, related_name='buffer_wells')
+
+	def __str__(self):
+		return self.well_id
+
 class Sample(models.Model):
 	rack = models.ForeignKey(Rack, on_delete=models.CASCADE)
 	plate = models.ForeignKey(Plate, on_delete=models.CASCADE, null=True, blank=True)
@@ -99,8 +106,8 @@ class Sample(models.Model):
 	sample_received = models.BooleanField(default=False)
 	sample_matched = models.BooleanField(default=False)
 	sample_received_datetime = models.DateTimeField(null=True)
-	norm_biorep_sample_vol = models.FloatField(null=True)
-	norm_biorep_conc = models.FloatField(null=True)
+	norm_biorep_sample_vol = models.FloatField(null=True, blank=True)
+	norm_biorep_conc = models.FloatField(null=True, blank=True)
 	plate_well_id = models.CharField(max_length=3, choices=well_ids, null=True)
 	issue_identified = models.BooleanField(default=False)
 	comment = models.TextField(blank=True, null=True)

@@ -1,5 +1,6 @@
 from django.contrib import admin
-from platerplotter.models import Gel1004Csv, Gel1005Csv, Gel1008Csv, Rack, Plate, Sample, RackScanner, RackScannerSample
+from platerplotter.models import (Gel1004Csv, Gel1005Csv, Gel1008Csv, Rack, 
+	Plate, Sample, RackScanner, RackScannerSample, Buffer)
 
 class Gel1004CsvAdmin(admin.ModelAdmin):
 	model = Gel1004Csv
@@ -38,7 +39,8 @@ class SampleAdmin(admin.ModelAdmin):
 					'is_repeat', 'issue_outcome', 'clin_sample_type']
 	list_display = ['laboratory_sample_id', 'participant_id', 'group_id',
 					'priority', 'sample_type', 'rack', 'plate']
-	search_fields = ['laboratory_sample_id', 'participant_id', 'group_id']
+	search_fields = ['laboratory_sample_id', 'participant_id', 'group_id',
+					'plate__holding_rack_id', 'plate__plate_id']
 
 
 class RackScannerAdmin(admin.ModelAdmin):
@@ -53,6 +55,11 @@ class RackScannerSampleAdmin(admin.ModelAdmin):
 	list_display = ['sample_id', 'rack_scanner', 'position', 'matched']
 	search_fields = ['sample_id']
 
+class BufferAdmin(admin.ModelAdmin):
+	model = Buffer
+	list_display = ['plate', 'well_id']
+	search_fields = ['plate__holding_rack_id', 'plate__plate_id']
+
 
 admin.site.register(Gel1004Csv, Gel1004CsvAdmin)
 admin.site.register(Gel1005Csv, Gel1005CsvAdmin)
@@ -60,5 +67,7 @@ admin.site.register(Gel1008Csv, Gel1008CsvAdmin)
 admin.site.register(Rack, RackAdmin)
 admin.site.register(Plate, PlateAdmin)
 admin.site.register(Sample, SampleAdmin)
+admin.site.register(Buffer, BufferAdmin)
 admin.site.register(RackScanner, RackScannerAdmin)
 admin.site.register(RackScannerSample, RackScannerSampleAdmin)
+
