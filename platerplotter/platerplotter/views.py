@@ -521,7 +521,7 @@ def problem_samples(request, holding_rack_id=None):
 
 
 @login_required()
-def awaiting_assignment_to_holding_rack(request):
+def awaiting_holding_rack_assignment(request):
 	unplated_samples = Sample.objects.filter(holding_rack_well__holding_rack__plate__isnull = True, 
 		holding_rack_well__holding_rack__gel_1004_csv__gel_1005_csv__isnull = False,
 		sample_received = True, issue_identified=False)
@@ -752,28 +752,25 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
 		"holding_rack_rows": holding_rack_rows,
 		"holding_rack_columns": holding_rack_columns})
 
-###################### DOWN TO HERE ###############################
-
 @login_required()
 def ready_to_plate(request):
 	"""
 	Renders page displaying holding racks that are ready for plating
 	"""
-	ready_to_plate = Plate.objects.filter(ready_to_plate=True, plate_id__isnull=True)
-	for plate in ready_to_plate:
-		plate.sample_count = Sample.objects.filter(plate=plate).count
+	ready_to_plate = HoldingRack.objects.filter(ready_to_plate=True, plate__isnull=True)
+	for rack in ready_to_plate:
+		rack.sample_count = Sample.objects.filter(holding_rack_well__holding_rack=rack).count
 	return render(request, 'ready-to-plate.html', {"ready_to_plate" : ready_to_plate})
 
 @login_required()
-def plate_holding_rack(request, plate_pk):
-	plate = Plate.objects.get(pk=plate_pk)
-	samples = sorted(Sample.objects.filter(plate=plate), 
-			key=lambda x: (x.plate_well_id[0], int(x.plate_well_id[1:])))
+def plate_holding_rack(request, holding_rack_pk):
+	holding_rack = HoldingRack.objects.get(pk=holding_rack_pk)
+	samples = Sample.objects.filter(holding_rack_well__holding_rack=holding_rack)
 	if request.method == 'POST':
 		if "rack-scanner" in request.POST:
 			plating_form = PlatingForm()
 			rack_scan()
-			rack_scanner = RackScanner.objects.filter(scanned_id=plate.holding_rack_id,
+			rack_scanner = RackScanner.objects.filter(scanned_id=holding_rack.holding_rack_id,
 				acknowledged=False).order_by('-date_modified')
 			if rack_scanner:
 				rack_scanner_samples = RackScannerSample.objects.filter(rack_scanner=rack_scanner[0])
@@ -785,7 +782,7 @@ def plate_holding_rack(request, plate_pk):
 					for rack_scanner_sample in rack_scanner_samples:
 						if sample.laboratory_sample_id == rack_scanner_sample.sample_id:
 							found = True
-							if sample.plate_well_id == rack_scanner_sample.position:
+							if sample.holding_rack_well.well_id == rack_scanner_sample.position:
 								sample.sample_matched = True
 								sample.save()
 								rack_scanner_sample.matched = True
@@ -800,20 +797,21 @@ def plate_holding_rack(request, plate_pk):
 				if samples_in_wrong_position or extra_samples or missing_samples:
 					messages.error(request, "Scanned rack does not match with assigned rack wells for this rack!")
 				else:
-					plate.positions_confirmed = True
-					plate.save()
+					holding_rack.positions_confirmed = True
+					holding_rack.save()
 					messages.info(request, "Positions confirmed and correct. Please plate samples and assign plate ID.")
 				for rack_scanner_item in rack_scanner:
 					rack_scanner_item.acknowledged = True
 					rack_scanner_item.save()
 			else:
-				messages.error(request, "Rack " + plate.holding_rack_id + " not found in Plate/Rack scanner CSV. Has the rack been scanned?")
+				messages.error(request, "Rack " + holding_rack.holding_rack_id + " not found in Plate/Rack scanner CSV. Has the rack been scanned?")
 		if "assign-plate" in request.POST:
 			plating_form = PlatingForm(request.POST)
 			if plating_form.is_valid():
 				plate_id = plating_form.cleaned_data.get('plate_id')
-				plate.plate_id = plate_id
-				plate.save()
+				plate = Plate.objects.create(plate_id = plate_id)
+				holding_rack.plate = plate
+				holding_rack.save()
 				# generate output for robot
 				plate_manager = PlateManager(plate)
 				well_contents = plate_manager.get_well_contents()
@@ -828,7 +826,7 @@ def plate_holding_rack(request, plate_pk):
 	else:
 		plating_form = PlatingForm()
 	return render(request, 'plate-holding-rack.html', {
-		"plate" : plate,
+		"holding_rack" : holding_rack,
 		"samples" : samples,
 		"plating_form" : plating_form})
 
@@ -837,9 +835,9 @@ def ready_to_dispatch(request):
 	"""
 	Renders page displaying plates that are ready for dispatch
 	"""
-	ready_to_dispatch = Plate.objects.filter(ready_to_plate=True, plate_id__isnull=False, gel_1008_csv__isnull=True)
-	for plate in ready_to_dispatch:
-		plate.sample_count = Sample.objects.filter(plate=plate).count
+	ready_to_dispatch = HoldingRack.objects.filter(ready_to_plate=True, plate__isnull=False, plate__gel_1008_csv__isnull=True)
+	for holding_rack in ready_to_dispatch:
+		holding_rack.sample_count = Sample.objects.filter(holding_rack_well__holding_rack=holding_rack).count
 	if request.method == 'POST':
 		gel1008_form = Gel1008Form(request.POST)
 		if gel1008_form.is_valid():
@@ -855,12 +853,12 @@ def ready_to_dispatch(request):
 					report_generated_datetime = datetime_now,
 					consignment_number = consignment_number,
 					date_of_dispatch = date_of_dispatch)
-				plates = []
+				holding_racks = []
 				for pk in plate_pks:
 					plate = Plate.objects.get(pk=pk)
 					plate.gel_1008_csv = gel_1008_csv
 					plate.save()
-					plates.append(plate)
+					holding_racks.append(plate.holding_rack)
 				path = directory + filename
 				doc = SimpleDocTemplate(path[:-3] + 'pdf')
 				elements = []
@@ -872,8 +870,8 @@ def ready_to_dispatch(request):
 					writer.writerow(['Participant ID', 'Plate ID',
 						'Normalised Biorepository Sample Volume', 'Normalised Biorepository Concentration',
 						'Well ID', 'Plate Consignment Number', 'Plate Date of Dispatch'])
-					for plate in plates:
-						samples = Sample.objects.filter(plate=plate).order_by('plate_well_id')
+					for holding_rack in holding_racks:
+						samples = Sample.objects.filter(holding_rack_well__holding_rack=holding_rack).order_by('holding_rack_well__well_id')
 						for sample in samples:
 							writer.writerow([sample.participant_id, plate.plate_id,
 								sample.norm_biorep_sample_vol, sample.norm_biorep_conc,
@@ -910,8 +908,10 @@ def audit(request):
 	"""
 	Renders the audit page showing all processed samples. 
 	"""
-	samples = Sample.objects.all().prefetch_related('rack', 'plate', 
-				'plate__gel_1008_csv', 'rack__gel_1004_csv', 'rack__gel_1004_csv__gel_1005_csv')
+	samples = Sample.objects.all().prefetch_related('receiving_rack', 'holding_rack_well', 
+				'holding_rack_well__holding_rack', 'holding_rack_well__holding_rack__plate', 
+				'holding_rack_well__holding_rack__plate__gel_1008_csv', 
+				'receiving_rack__gel_1004_csv', 'receiving_rack__gel_1004_csv__gel_1005_csv')
 	return render(request, 'audit.html', {"samples" : samples})
 
 

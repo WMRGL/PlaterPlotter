@@ -1,12 +1,12 @@
-from platerplotter.models import Plate, Sample, Buffer
+from platerplotter.models import HoldingRack, HoldingRackWell, Plate, Sample
 from django.contrib import messages
 
 class HoldingRackManager():
 
-	def __init__(self, plate):
-		self.plate = plate
-		self.plate_rows = ['A','B','C','D','E','F','G','H']
-		self.plate_columns = ['01','02','03','04','05','06','07','08','09','10','11','12']
+	def __init__(self, holding_rack):
+		self.holding_rack = holding_rack
+		self.holding_rack_rows = ['A','B','C','D','E','F','G','H']
+		self.holding_rack_columns = ['01','02','03','04','05','06','07','08','09','10','11','12']
 		self.well_labels = ['A01', 'B01', 'C01', 'D01', 'E01', 'F01', 'G01', 'H01', 'A02', 'B02', 'C02', 'D02', 
 					'E02', 'F02', 'G02', 'H02', 'A03', 'B03', 'C03', 'D03', 'E03', 'F03', 'G03', 'H03',
 					'A04', 'B04', 'C04', 'D04', 'E04', 'F04', 'G04', 'H04', 'A05', 'B05', 'C05', 'D05',
@@ -31,38 +31,38 @@ class HoldingRackManager():
 					'F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10', 'F11', 'F12',
 					'G01', 'G02', 'G03', 'G04', 'G05', 'G06', 'G07', 'G08', 'G09', 'G10', 'G11', 'G12',
 					'H01', 'H02', 'H03', 'H04', 'H05', 'H06', 'H07', 'H08', 'H09', 'H10', 'H11', 'H12',]
-		self.alt_well_contents = [None, None, None, None, None, None, None, None, None, None, None, None, 
-					None, None, None, None, None, None, None, None, None, None, None, None,
-					None, None, None, None, None, None, None, None, None, None, None, None,
-					None, None, None, None, None, None, None, None, None, None, None, None,
-					None, None, None, None, None, None, None, None, None, None, None, None,
-					None, None, None, None, None, None, None, None, None, None, None, None,
-					None, None, None, None, None, None, None, None, None, None, None, None,
-					None, None, None, None, None, None, None, None, None, None, None, None,]
-		samples = Sample.objects.filter(plate=self.plate)
+		# self.alt_well_contents = [None, None, None, None, None, None, None, None, None, None, None, None, 
+		# 			None, None, None, None, None, None, None, None, None, None, None, None,
+		# 			None, None, None, None, None, None, None, None, None, None, None, None,
+		# 			None, None, None, None, None, None, None, None, None, None, None, None,
+		# 			None, None, None, None, None, None, None, None, None, None, None, None,
+		# 			None, None, None, None, None, None, None, None, None, None, None, None,
+		# 			None, None, None, None, None, None, None, None, None, None, None, None,
+		# 			None, None, None, None, None, None, None, None, None, None, None, None,]
+		samples = Sample.objects.filter(holding_rack_well__holding_rack=self.holding_rack)
 		for sample in samples:
-			well_index = self.well_labels.index(sample.plate_well_id)
+			well_index = self.well_labels.index(sample.holding_rack_well.well_id)
 			if self.well_contents[well_index]:
 				raise Exception("Multiple samples have been assigned to same well")
 			else:
 				self.well_contents[well_index] = sample
-			alt_well_index = self.alt_well_labels.index(sample.plate_well_id)
-			if self.alt_well_contents[alt_well_index]:
-				raise Exception("Multiple samples have been assigned to same well")
-			else:
-				self.alt_well_contents[alt_well_index] = sample
-		buffer_wells = Buffer.objects.filter(plate=self.plate)
-		for buffer_well in buffer_wells:
-			well_index = self.well_labels.index(buffer_well.well_id)
-			if self.well_contents[well_index]:
-				raise Exception("Multiple samples have been assigned to same well")
-			else:
-				self.well_contents[well_index] = buffer_well
-			alt_well_index = self.alt_well_labels.index(buffer_well.well_id)
-			if self.alt_well_contents[alt_well_index]:
-				raise Exception("Multiple samples have been assigned to same well")
-			else:
-				self.alt_well_contents[alt_well_index] = buffer_well
+			# alt_well_index = self.alt_well_labels.index(sample.plate_well_id)
+			# if self.alt_well_contents[alt_well_index]:
+			# 	raise Exception("Multiple samples have been assigned to same well")
+			# else:
+			# 	self.alt_well_contents[alt_well_index] = sample
+		# buffer_wells = Buffer.objects.filter(plate=self.plate)
+		# for buffer_well in buffer_wells:
+		# 	well_index = self.well_labels.index(buffer_well.well_id)
+		# 	if self.well_contents[well_index]:
+		# 		raise Exception("Multiple samples have been assigned to same well")
+		# 	else:
+		# 		self.well_contents[well_index] = buffer_well
+		# 	alt_well_index = self.alt_well_labels.index(buffer_well.well_id)
+		# 	if self.alt_well_contents[alt_well_index]:
+		# 		raise Exception("Multiple samples have been assigned to same well")
+		# 	else:
+		# 		self.alt_well_contents[alt_well_index] = buffer_well
 
 	def lookup_alt_index(self, index):
 		well_label = self.well_labels[index]
@@ -133,13 +133,14 @@ class HoldingRackManager():
 		'''
 		print("assigning well for sample " + str(sample))
 		print("len: " + str(len(self.well_contents)))
-		if self.plate.plate_type == "Problem":
+		if self.holding_rack.holding_rack_type == "Problem":
 			if well:
 				well_index = self.well_labels.index(well)
-				sample.plate = self.plate
-				sample.plate_well_id = self.well_labels[well_index]
-				sample.save()
-				messages.info(request, sample.laboratory_sample_id + " assigned to well " + sample.plate_well_id)
+				holding_rack_well = HoldingRackWell.create(
+					holding_rack = self.holding_rack,
+					well_id = self.well_labels[well_index],
+					sample = sample)
+				messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
 			else:
 				sample_assigned = False
 				well_index = 0
@@ -147,16 +148,17 @@ class HoldingRackManager():
 					if well_content:
 						well_index += 1
 					else:
-						sample.plate = self.plate
-						sample.plate_well_id = self.well_labels[well_index]
-						sample.save()
-						messages.info(request, sample.laboratory_sample_id + " assigned to well " + sample.plate_well_id)
+						holding_rack_well = HoldingRackWell.create(
+							holding_rack = self.holding_rack,
+							well_id = self.well_labels[well_index],
+							sample = sample)
+						messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
 						sample_assigned = True
 						break
 				if not sample_assigned:
 					messages.error(request, "No more valid positions available in this rack. Please assign " + 
 						sample.laboratory_sample_id + " to a new rack.")
-		if self.plate.plate_type == "Proband":
+		if self.holding_rack.rack_type == "Proband":
 			no_samples_with_same_participant_id = True
 			no_family_members_on_same_plate = True
 			for well_content in self.well_contents:
@@ -172,10 +174,11 @@ class HoldingRackManager():
 			if no_samples_with_same_participant_id and no_family_members_on_same_plate:
 				if well:
 					well_index = self.well_labels.index(well)
-					sample.plate = self.plate
-					sample.plate_well_id = self.well_labels[well_index]
-					sample.save()
-					messages.info(request, sample.laboratory_sample_id + " assigned to well " + sample.plate_well_id)
+					holding_rack_well = HoldingRackWell.create(
+						holding_rack = self.holding_rack,
+						well_id = self.well_labels[well_index],
+						sample = sample)
+					messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
 				else:
 					sample_assigned = False
 					well_index = 0
@@ -183,37 +186,38 @@ class HoldingRackManager():
 						if well_content:
 							well_index += 1
 						else:
-							sample.plate = self.plate
-							sample.plate_well_id = self.well_labels[well_index]
-							sample.save()
-							messages.info(request, sample.laboratory_sample_id + " assigned to well " + sample.plate_well_id)
+							holding_rack_well = HoldingRackWell.create(
+								holding_rack = self.holding_rack,
+								well_id = self.well_labels[well_index],
+								sample = sample)
+							messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
 							sample_assigned = True
 							break
 					if not sample_assigned:
 						messages.error(request, "No more valid positions available in this rack. Please assign " + 
 							sample.laboratory_sample_id + " to a new rack.")
-		elif self.plate.plate_type == "Family":
+		elif self.holding_rack.rack_type == "Family":
 			matching_proband_sample_found = False
-			matching_proband_samples = Sample.objects.filter(sample_type = "Proband", group_id = sample.group_id, plate__isnull = True)
+			matching_proband_samples = Sample.objects.filter(sample_type = "Proband", group_id = sample.group_id, holding_rack_well__isnull = True)
 			if matching_proband_samples:
 				matching_proband_sample_found = True
 				for matching_proband_sample in matching_proband_samples:
 					messages.warning(request, "Matching proband sample found in GMC rack: " +
-						matching_proband_sample.rack.gmc_rack_id + " in well " + 
-						matching_proband_sample.gmc_rack_well + " but not yet assigned to holding rack. These samples must be sent in the same consignment.")
+						matching_proband_sample.receiving_rack.receiving_rack_id + " in well " + 
+						matching_proband_sample.receiving_rack_well + " but not yet assigned to holding rack. These samples must be sent in the same consignment.")
 			else:
 				matching_proband_samples = Sample.objects.filter(sample_type = "Proband", group_id = sample.group_id, plate__gel_1008_csv__isnull = True)
 				if matching_proband_samples:
 					matching_proband_sample_found = True
 					for matching_proband_sample in matching_proband_samples:
-						if matching_proband_sample.plate.plate_id:	
+						if matching_proband_sample.holding_rack_well.holding_rack.plate.plate_id:	
 							messages.info(request, "Matching proband sample found and has already been plated on plate: " +
-								matching_proband_sample.plate.plate_id + " in well " + 
-								matching_proband_sample.plate_well_id + ". These samples must be sent in the same consignment.")
+								matching_proband_sample.holding_rack_well.holding_rack.plate.plate_id + " in well " + 
+								matching_proband_sample.holding_rack_well.well_id + ". These samples must be sent in the same consignment.")
 						else:
 							messages.info(request, "Matching proband sample found and has been assigned to holding rack: " +
-								matching_proband_sample.plate.holding_rack_id + " in well " + 
-								matching_proband_sample.plate_well_id + ". These samples must be sent in the same consignment.")
+								matching_proband_sample.holding_rack_well.holding_rack.holding_rack_id + " in well " + 
+								matching_proband_sample.holding_rack_well.well_id + ". These samples must be sent in the same consignment.")
 			if not matching_proband_sample_found:
 				messages.error(request, "No matching proband sample found for this sample. Unable to assign to holding rack.")
 			no_samples_with_same_participant_id = True
@@ -232,16 +236,16 @@ class HoldingRackManager():
 				for index in well_indices_to_avoid:
 					if not self.well_contents[index]:
 						self.well_contents[index] = 'X'
-				print(self.well_contents)
 				if well:
 					well_index = self.well_labels.index(well)
 					if self.well_contents[well_index] == 'X':
 						messages.error(request, "Selected well is too close to another sample from the same family. Unable to assigned to this well.")
 					else:
-						sample.plate = self.plate
-						sample.plate_well_id = self.well_labels[well_index]
-						sample.save()
-						messages.info(request, sample.laboratory_sample_id + " assigned to well " + sample.plate_well_id)
+						holding_rack_well = HoldingRackWell.create(
+							holding_rack = self.holding_rack,
+							well_id = self.well_labels[well_index],
+							sample = sample)
+						messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
 				else:
 					sample_assigned = False
 					well_index = 0
@@ -249,37 +253,38 @@ class HoldingRackManager():
 						if well_content:
 							well_index += 1
 						else:
-							sample.plate = self.plate
-							sample.plate_well_id = self.well_labels[well_index]
-							sample.save()
-							messages.info(request, sample.laboratory_sample_id + " assigned to well " + sample.plate_well_id)
+							holding_rack_well = HoldingRackWell.create(
+								holding_rack = self.holding_rack,
+								well_id = self.well_labels[well_index],
+								sample = sample)
+							messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
 							sample_assigned = True
 							break
 					if not sample_assigned:
 						messages.error(request, "No more valid positions available in this rack. Please assign " + 
 							sample.laboratory_sample_id + " to a new rack.")
-		elif self.plate.plate_type == "Tumour":
+		elif self.holding_rack.rack_type == "Tumour":
 			matching_germline_sample_found = False
-			matching_germline_samples = Sample.objects.filter(sample_type = "Cancer Germline", participant_id = sample.participant_id, plate__isnull = True)
+			matching_germline_samples = Sample.objects.filter(sample_type = "Cancer Germline", participant_id = sample.participant_id, holding_rack_well__isnull = True)
 			if matching_germline_samples:
 				matching_germline_sample_found = True
 				for matching_germline_sample in matching_germline_samples:
 					messages.warning(request, "Matching germline sample found in GMC rack: " +
-						matching_germline_sample.rack.gmc_rack_id + " in well " + 
-						matching_germline_sample.gmc_rack_well + " but not yet assigned to holding rack. These samples must be sent in the same consignment.")
+						matching_germline_sample.receiving_rack.receiving_rack_id + " in well " + 
+						matching_germline_sample.receiving_rack_well + " but not yet assigned to holding rack. These samples must be sent in the same consignment.")
 			else:
-				matching_germline_samples = Sample.objects.filter(sample_type = "Cancer Germline", participant_id = sample.participant_id, plate__gel_1008_csv__isnull = True)
+				matching_germline_samples = Sample.objects.filter(sample_type = "Cancer Germline", participant_id = sample.participant_id, holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True)
 				if matching_germline_samples:
 					matching_germline_sample_found = True
 					for matching_germline_sample in matching_germline_samples:
-						if matching_germline_sample.plate.plate_id:	
+						if matching_germline_sample.holding_rack_well.holding_rack.plate.plate_id:	
 							messages.info(request, "Matching germline sample found and has already been plated on plate: " +
-								matching_germline_sample.plate.plate_id + " in well " + 
-								matching_germline_sample.plate_well_id + ". These samples must be sent in the same consignment.")
+								matching_germline_sample.holding_rack_well.holding_rack.plate.plate_id + " in well " + 
+								matching_germline_sample.holding_rack_well.well_id + ". These samples must be sent in the same consignment.")
 						else:
 							messages.info(request, "Matching germline sample found and has been assigned to holding rack: " +
-								matching_germline_sample.plate.holding_rack_id + " in well " + 
-								matching_germline_sample.plate_well_id + ". These samples must be sent in the same consignment.")
+								matching_germline_sample.holding_rack_well.holding_rack.holding_rack_id + " in well " + 
+								matching_germline_sample.holding_rack_well.well_id + ". These samples must be sent in the same consignment.")
 			if not matching_germline_sample_found:
 				messages.error(request, "No matching germline sample found for this sample. Unable to assign to holding rack.")
 			well_indices_to_avoid = []
@@ -298,10 +303,11 @@ class HoldingRackManager():
 					if self.well_contents[well_index] == 'X':
 						messages.error(request, "Selected well is too close to another sample from the same family. Unable to assigned to this well.")
 					else:
-						sample.plate = self.plate
-						sample.plate_well_id = self.well_labels[well_index]
-						sample.save()
-						messages.info(request, sample.laboratory_sample_id + " assigned to well " + sample.plate_well_id)
+						holding_rack_well = HoldingRackWell.create(
+							holding_rack = self.holding_rack,
+							well_id = self.well_labels[well_index],
+							sample = sample)
+						messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
 				else:
 					sample_assigned = False
 					well_index = 0
@@ -309,16 +315,17 @@ class HoldingRackManager():
 						if well_content:
 							well_index += 1
 						else:
-							sample.plate = self.plate
-							sample.plate_well_id = self.well_labels[well_index]
-							sample.save()
-							messages.info(request, sample.laboratory_sample_id + " assigned to well " + sample.plate_well_id)
+							holding_rack_well = HoldingRackWell.create(
+								holding_rack = self.holding_rack,
+								well_id = self.well_labels[well_index],
+								sample = sample)
+							messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
 							sample_assigned = True
 							break
 					if not sample_assigned:
 						messages.error(request, "No more valid positions available in this rack. Please assign " + 
 							sample.laboratory_sample_id + " to a new rack.")
-		elif self.plate.plate_type == "Cancer Germline":
+		elif self.holding_rack.rack_type == "Cancer Germline":
 			no_samples_with_same_participant_id = True
 			for well_content in self.well_contents:
 				if well_content:
@@ -327,35 +334,36 @@ class HoldingRackManager():
 						messages.error(request, "Unable to add sample " + sample.laboratory_sample_id + 
 							" to this rack as a sample with the same participant ID is already assigned to this rack.")
 			matching_tumour_sample_found = False
-			matching_tumour_samples = Sample.objects.filter(sample_type = "Tumour", participant_id = sample.participant_id, plate__isnull = True)
+			matching_tumour_samples = Sample.objects.filter(sample_type = "Tumour", participant_id = sample.participant_id, holding_rack_well__isnull = True)
 			if matching_tumour_samples:
 				matching_tumour_sample_found = True
 				for matching_tumour_sample in matching_tumour_samples:
 					messages.warning(request, "Matching tumour sample found in GMC rack: " +
-						matching_tumour_sample.rack.gmc_rack_id + " in well " + 
-						matching_tumour_sample.gmc_rack_well + " but not yet assigned to holding rack. These samples must be sent in the same consignment.")
+						matching_tumour_sample.receiving_rack.receiving_rack_id + " in well " + 
+						matching_tumour_sample.receiving_rack_well + " but not yet assigned to holding rack. These samples must be sent in the same consignment.")
 			else:
-				matching_tumour_samples = Sample.objects.filter(sample_type = "Tumour", participant_id = sample.participant_id, plate__gel_1008_csv__isnull = True)
+				matching_tumour_samples = Sample.objects.filter(sample_type = "Tumour", participant_id = sample.participant_id, holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True)
 				if matching_tumour_samples:
 					matching_tumour_sample_found = True
 					for matching_tumour_sample in matching_tumour_samples:
-						if matching_tumour_sample.plate.plate_id:	
+						if matching_tumour_sample.holding_rack_well.holding_rack.plate.plate_id:	
 							messages.info(request, "Matching tumour sample found and has already been plated on plate: " +
-								matching_tumour_sample.plate.plate_id + " in well " + 
-								matching_tumour_sample.plate_well_id + ". These samples must be sent in the same consignment.")
+								matching_tumour_sample.holding_rack_well.holding_rack.plate.plate_id + " in well " + 
+								matching_tumour_sample.holding_rack_well.well_id + ". These samples must be sent in the same consignment.")
 						else:
 							messages.info(request, "Matching tumour sample found and has been assigned to holding rack: " +
-								matching_tumour_sample.plate.holding_rack_id + " in well " + 
-								matching_tumour_sample.plate_well_id + ". These samples must be sent in the same consignment.")
+								matching_tumour_sample.holding_rack_well.holding_rack.holding_rack_id + " in well " + 
+								matching_tumour_sample.holding_rack_well.well_id + ". These samples must be sent in the same consignment.")
 			if not matching_tumour_sample_found:
 				messages.error(request, "No matching tumour sample found for this sample. Unable to assign to holding rack.")
 			if no_samples_with_same_participant_id and matching_tumour_sample_found:
 				if well:
 					well_index = self.well_labels.index(well)
-					sample.plate = self.plate
-					sample.plate_well_id = self.well_labels[well_index]
-					sample.save()
-					messages.info(request, sample.laboratory_sample_id + " assigned to well " + sample.plate_well_id)
+					holding_rack_well = HoldingRackWell.create(
+						holding_rack = self.holding_rack,
+						well_id = self.well_labels[well_index],
+						sample = sample)
+					messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
 				else:
 					sample_assigned = False
 					well_index = 0
@@ -363,10 +371,11 @@ class HoldingRackManager():
 						if well_content:
 							well_index += 1
 						else:
-							sample.plate = self.plate
-							sample.plate_well_id = self.well_labels[well_index]
-							sample.save()
-							messages.info(request, sample.laboratory_sample_id + " assigned to well " + sample.plate_well_id)
+							holding_rack_well = HoldingRackWell.create(
+								holding_rack = self.holding_rack,
+								well_id = self.well_labels[well_index],
+								sample = sample)
+							messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
 							sample_assigned = True
 							break
 					if not sample_assigned:
@@ -387,9 +396,10 @@ class HoldingRackManager():
 			while index_count < last_occupied_well_index:
 				if not self.well_contents[index_count]:
 					well_label = self.well_labels[index_count]
-					buffer_well = Buffer.objects.create(
-						well_id = well_label,
-						plate = self.plate)
+					HoldingRackWell.create(
+								holding_rack = self.holding_rack,
+								well_id = self.well_labels[well_index],
+								buffer_added = True)
 				index_count += 1
 
 	def get_well_contents(self):

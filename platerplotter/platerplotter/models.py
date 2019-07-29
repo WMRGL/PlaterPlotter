@@ -55,7 +55,7 @@ class Plate(models.Model):
 		return self.plate_id
 
 class HoldingRack(models.Model):
-	plate = models.OneToOneField(Plate, on_delete=models.CASCADE, null=True, blank=True)
+	plate = models.OneToOneField(Plate, on_delete=models.CASCADE, null=True, blank=True, related_name='holding_rack')
 	holding_rack_id = models.CharField(max_length=11)
 	disease_area = models.CharField(max_length=12, choices = (
 			("Cancer", "Cancer"),
@@ -117,7 +117,7 @@ class HoldingRackWell(models.Model):
 	holding_rack = models.ForeignKey(HoldingRack, on_delete=models.CASCADE, related_name = 'wells')
 	well_id = models.CharField(max_length=3, choices=well_ids)
 	buffer_added = models.BooleanField(default=False)
-	sample = models.OneToOneField(Sample, on_delete=models.CASCADE, null=True, blank=True)
+	sample = models.OneToOneField(Sample, on_delete=models.CASCADE, null=True, blank=True, related_name='holding_rack_well')
 
 	def __str__(self):
 		return self.holding_rack + ' ' + self.well_id
