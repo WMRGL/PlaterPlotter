@@ -1,7 +1,7 @@
 from platerplotter.models import Plate, Sample, Buffer
 from django.contrib import messages
 
-class PlateManager():
+class HoldingRackManager():
 
 	def __init__(self, plate):
 		self.plate = plate

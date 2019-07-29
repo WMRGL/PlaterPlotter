@@ -3,7 +3,7 @@ import pytz
 from django import forms
 from django.forms import ModelForm
 from datetime import datetime
-from platerplotter.models import Gel1004Csv, Rack, Plate, Sample, Gel1008Csv
+from platerplotter.models import Plate, Sample, Gel1008Csv
 from django.core.exceptions import ValidationError
 
 class HoldingRackForm(forms.Form):
@@ -41,20 +41,6 @@ class ResolveIssueForm(forms.ModelForm):
 		labels = {'comment': "", 
 				'issue_outcome' : "Outcome",}
 		widgets = {'comment': forms.Textarea(attrs={'rows':4, 'cols':50}),}
-
-
-	#issue_comment = forms.CharField(label='', widget=forms.Textarea(attrs={'rows':4, 'cols':55}))
-
-# class ParticipantIdForm(forms.Form):
-# 	participant_id = forms.CharField(label='', widget=forms.TextInput(attrs={'autofocus': 'autofocus'}))
-
-# 	def clean_participant_id(self):
-# 		participant_id = self.cleaned_data['participant_id'].lower()
-# 		if not re.match(r'^[p,P]\d{2}-\d*$', participant_id):
-# 			raise ValidationError("Invalid Participant ID")
-# 		else:
-# 			return participant_id
-
 
 class PlatingForm(ModelForm):
 	class Meta:
@@ -102,28 +88,3 @@ class Gel1008Form(ModelForm):
 			return date_of_dispatch
 		else:
 			raise ValidationError("Required field.")
-
-
-# class ReceivedSampleForm(ModelForm):
-# 	class Meta:
-# 		model = ReceivedSample
-# 		exclude = ['sampleReceivedDateTime']
-
-# 	def clean_gmcRackId(self):
-# 		gmcRackId = self.cleaned_data['gmcRackId']
-# 		if not re.match(r'^[A-Z]{2}\d{8}$', gmcRackId):
-# 			raise ValidationError("Invalid: should be two letters followed by 8 digits")
-# 		return gmcRackId
-
-# 	def clean_laboratorySampleId(self):
-# 		laboratorySampleId = self.cleaned_data['laboratorySampleId']
-# 		if not re.match(r'^\d{10}$', laboratorySampleId):
-# 			raise ValidationError("Invalid: should be 10 digits (left padded with 0's)")
-# 		return laboratorySampleId
-
-# 	def save(self, commit=True):
-# 		instance = super(ReceivedSampleForm, self).save(commit=False)
-# 		instance.sampleReceivedDateTime = datetime.now(pytz.timezone('Europe/London'))
-# 		if commit:
-# 			instance.save()
-# 		return instance
