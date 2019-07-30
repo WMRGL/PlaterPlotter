@@ -114,7 +114,7 @@ class Sample(models.Model):
 		return self.laboratory_sample_id
 
 class HoldingRackWell(models.Model):
-	holding_rack = models.ForeignKey(HoldingRack, on_delete=models.CASCADE, related_name = 'wells')
+	holding_rack = models.ForeignKey(HoldingRack, on_delete=models.CASCADE, related_name = 'holding_rack_well')
 	well_id = models.CharField(max_length=3, choices=well_ids)
 	buffer_added = models.BooleanField(default=False)
 	sample = models.OneToOneField(Sample, on_delete=models.CASCADE, null=True, blank=True, related_name='holding_rack_well')

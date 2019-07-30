@@ -213,7 +213,7 @@ def import_acks(request):
 								except:
 									rack = ReceivingRack.objects.create(
 										gel_1004_csv = gel_1004_csv,
-										gmc_rack_id = check_rack_id(row[3].strip()),
+										receiving_rack_id = check_rack_id(row[3].strip()),
 										laboratory_id = check_laboratory_id(row[7].strip()),
 										glh_sample_consignment_number = check_glh_sample_consignment_number(row[5].strip()))
 								# creates new Sample object
@@ -266,7 +266,7 @@ def import_acks(request):
 					'Sample Received', 'Sample Received DateTime',
 					'DateTime Report Generated', 'Laboratory Sample ID'])
 				for rack in racks:
-					samples = Sample.objects.filter(rack=rack)
+					samples = Sample.objects.filter(receiving_rack=rack)
 					for sample in samples:
 						received_datetime = ''
 						if sample.sample_received_datetime:
@@ -278,15 +278,15 @@ def import_acks(request):
 	unacked_gel_1004 = Gel1004Csv.objects.filter(gel_1005_csv__isnull = True)
 	unacked_racks_dict = {}
 	for gel_1004 in unacked_gel_1004:
-		unacked_racks_dict[gel_1004] = Rack.objects.filter(gel_1004_csv=gel_1004)
+		unacked_racks_dict[gel_1004] = ReceivingRack.objects.filter(gel_1004_csv=gel_1004)
 		for gel_1004, racks in unacked_racks_dict.items():
 			all_racks_acked = True
 			for rack in racks:
-				rack.no_samples = Sample.objects.filter(rack=rack).count()
+				rack.no_samples = Sample.objects.filter(receiving_rack=rack).count()
 				if not rack.rack_acknowledged:
 					all_racks_acked = False
 			gel_1004.all_racks_acked = all_racks_acked
-	return render(request, 'import-acks.html', {"unacked_racks_dict" : unacked_racks_dict})
+	return render(request, 'platerplotter/import-acks.html', {"unacked_racks_dict" : unacked_racks_dict})
 
 @login_required()
 def acknowledge_samples(request, gel1004, rack):
@@ -373,7 +373,7 @@ def acknowledge_samples(request, gel1004, rack):
 				sample.save()
 				url = reverse('acknowledge_samples', kwargs={
 					"gel1004" : gel1004,
-					"rack" : rack.gmc_rack_id,
+					"rack" : rack.receiving_rack_id,
 					})
 				return HttpResponseRedirect(url)
 		if 'delete-issue' in request.POST:
@@ -386,7 +386,7 @@ def acknowledge_samples(request, gel1004, rack):
 				sample.save()
 				url = reverse('acknowledge_samples', kwargs={
 					"gel1004" : gel1004,
-					"rack" : rack.gmc_rack_id,
+					"rack" : rack.receiving_rack_id,
 					})
 				return HttpResponseRedirect(url)
 	all_samples_received = True
@@ -395,7 +395,7 @@ def acknowledge_samples(request, gel1004, rack):
 			all_samples_received = False
 	if all_samples_received:
 		messages.info(request, "All samples received")
-	return render(request, 'acknowledge-samples.html', {"rack" : rack,
+	return render(request, 'platerplotter/acknowledge-samples.html', {"rack" : rack,
 		"samples" : samples,
 		"sample_select_form" : sample_select_form,
 		"sample_form_dict" : sample_form_dict,
@@ -406,18 +406,18 @@ def acknowledge_samples(request, gel1004, rack):
 def problem_samples(request, holding_rack_id=None):
 	holding_rack_rows = ['A','B','C','D','E','F','G','H']
 	holding_rack_columns = ['01','02','03','04','05','06','07','08','09','10','11','12']
-	samples = Sample.objects.filter(issue_identified = True, issue_outcome= "Not resolved").exclude(holding_rack_well__holding_rack__rack_type='Problem')
+	samples = Sample.objects.filter(issue_identified = True, issue_outcome= "Not resolved").exclude(holding_rack_well__holding_rack__holding_rack_type='Problem')
 	sample_form_dict = {}
 	for sample in samples:
 		sample_form_dict[sample] = LogIssueForm(instance=sample)
-	current_holding_racks = HoldingRack.objects.filter(rack_type="Problem")
+	current_holding_racks = HoldingRack.objects.filter(holding_rack_type="Problem")
 	current_holding_racks_dict = {}
 	for current_holding_rack in current_holding_racks:
 		current_holding_racks_dict[current_holding_rack] = Sample.objects.filter(holding_rack_well__holding_rack=current_holding_rack).count()
 	assigned_well_list = []
 	holding_rack_samples_form_dict = {}
 	if holding_rack_id:
-		holding_rack = HoldingRack.objects.get(holding_rack_id=holding_rack_id, plate_type='Problem', plate__isnull=True)
+		holding_rack = HoldingRack.objects.get(holding_rack_id=holding_rack_id, holding_rack_type='Problem', plate__isnull=True)
 		holding_rack_samples = Sample.objects.filter(holding_rack_well__holding_rack=holding_rack)
 		holding_rack_manager = HoldingRackManager(holding_rack)
 		for sample in holding_rack_samples:
@@ -508,7 +508,7 @@ def problem_samples(request, holding_rack_id=None):
 		holding_rack_form = HoldingRackForm()
 		sample_select_form = SampleSelectForm()
 
-	return render(request, 'problem-samples.html', {"sample_form_dict" : sample_form_dict,
+	return render(request, 'platerplotter/problem-samples.html', {"sample_form_dict" : sample_form_dict,
 		"holding_rack_form" : holding_rack_form,
 		"sample_select_form" : sample_select_form,
 		"holding_rack" : holding_rack,
@@ -523,7 +523,7 @@ def problem_samples(request, holding_rack_id=None):
 @login_required()
 def awaiting_holding_rack_assignment(request):
 	unplated_samples = Sample.objects.filter(holding_rack_well__holding_rack__plate__isnull = True, 
-		holding_rack_well__holding_rack__gel_1004_csv__gel_1005_csv__isnull = False,
+		receiving_rack__gel_1004_csv__gel_1005_csv__isnull = False,
 		sample_received = True, issue_identified=False)
 	unplated_racks_dict = {}
 	for sample in unplated_samples:
@@ -552,14 +552,14 @@ def awaiting_holding_rack_assignment(request):
 		else:
 			rack.priority = 'Mixed'
 		rack.save()
-	problem_samples = Sample.objects.filter(holding_rack_well__holding_rack__rack_type="Problem", issue_outcome="Ready for plating")
+	problem_samples = Sample.objects.filter(holding_rack_well__holding_rack__holding_rack_type="Problem", issue_outcome="Ready for plating")
 	problem_holding_rack_dict = {}
 	for problem_sample in problem_samples:
 		if problem_sample.holding_rack_well.holding_rack in problem_holding_rack_dict:
 			problem_holding_rack_dict[problem_sample.holding_rack_well.holding_rack].append(sample)
 		else:
 			problem_holding_rack_dict[problem_sample.holding_rack_well.holding_rack] = [problem_sample]
-	return render(request, 'awaiting-holding-rack-assignment.html', {
+	return render(request, 'platerplotter/awaiting-holding-rack-assignment.html', {
 		"unplated_racks_dict" : unplated_racks_dict,
 		"problem_holding_rack_dict" : problem_holding_rack_dict})
 
@@ -738,7 +738,7 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
 	else:
 		holding_rack_form = HoldingRackForm()
 		sample_select_form = SampleSelectForm()
-	return render(request, 'assign-samples-to-holding-rack.html', {"rack" : rack,
+	return render(request, 'platerplotter/assign-samples-to-holding-rack.html', {"rack" : rack,
 		"problem_plate" : problem_plate,
 		"samples" : samples,
 		"holding_rack_form" : holding_rack_form,
@@ -760,7 +760,7 @@ def ready_to_plate(request):
 	ready_to_plate = HoldingRack.objects.filter(ready_to_plate=True, plate__isnull=True)
 	for rack in ready_to_plate:
 		rack.sample_count = Sample.objects.filter(holding_rack_well__holding_rack=rack).count
-	return render(request, 'ready-to-plate.html', {"ready_to_plate" : ready_to_plate})
+	return render(request, 'platerplotter/ready-to-plate.html', {"ready_to_plate" : ready_to_plate})
 
 @login_required()
 def plate_holding_rack(request, holding_rack_pk):
@@ -825,7 +825,7 @@ def plate_holding_rack(request, holding_rack_pk):
 							pass
 	else:
 		plating_form = PlatingForm()
-	return render(request, 'plate-holding-rack.html', {
+	return render(request, 'platerplotter/plate-holding-rack.html', {
 		"holding_rack" : holding_rack,
 		"samples" : samples,
 		"plating_form" : plating_form})
@@ -899,7 +899,7 @@ def ready_to_dispatch(request):
 			return HttpResponseRedirect('/ready-to-dispatch/')
 	else:
 		gel1008_form = Gel1008Form()
-	return render(request, 'ready-to-dispatch.html', {
+	return render(request, 'platerplotter/ready-to-dispatch.html', {
 		"ready_to_dispatch" : ready_to_dispatch,
 		"gel1008_form" : gel1008_form})
 
@@ -912,7 +912,7 @@ def audit(request):
 				'holding_rack_well__holding_rack', 'holding_rack_well__holding_rack__plate', 
 				'holding_rack_well__holding_rack__plate__gel_1008_csv', 
 				'receiving_rack__gel_1004_csv', 'receiving_rack__gel_1004_csv__gel_1005_csv')
-	return render(request, 'audit.html', {"samples" : samples})
+	return render(request, 'platerplotter/audit.html', {"samples" : samples})
 
 
 

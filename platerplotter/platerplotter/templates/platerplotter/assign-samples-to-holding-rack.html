@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'platerplotter/base.html' %}
 {% load bootstrap4 %}
 {% load static %}
 {% block title %}
@@ -291,7 +291,7 @@ Group ID:            {{sample.group_id}}' style="background-color: blue"><div cl
                       <button type="button" class="close" data-dismiss="modal"> X </button>
                     </div>
                     <div class="modal-body">
-                      <strong>Participant ID:</strong> {{ sample.participant_id }} {{ hist.delivery.opening_user.last_name }}
+                      <strong>Participant ID:</strong> {{ sample.participant_id }}
                       <form role='form' action='' method="POST", class='form'>
                         {% csrf_token %}
                         {{ form|crispy }}

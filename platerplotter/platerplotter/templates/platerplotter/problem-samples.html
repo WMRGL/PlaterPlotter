@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'platerplotter/base.html' %}
 {% load bootstrap4 %}
 {% load static %}
 {% block title %}
@@ -112,7 +112,7 @@ Group ID:            {{sample.group_id}}' style="background-color: black"><div c
                       <button type="button" class="close" data-dismiss="modal"> X </button>
                     </div>
                     <div class="modal-body">
-                      <strong>Participant ID:</strong> {{ sample.participant_id }} {{ hist.delivery.opening_user.last_name }}
+                      <strong>Participant ID:</strong> {{ sample.participant_id }}
                       <form role='form' action='' method="POST", class='form'>
                         {% csrf_token %}
                         {{ form|crispy }}
@@ -220,20 +220,20 @@ Group ID:            {{sample.group_id}}' style="background-color: black"><div c
             {% for sample, form in sample_form_dict.items %}
             <tr>
               <td>
-                {% if sample.plate %}
-                  {{ sample.plate.holding_rack_id }}
+                {% if sample.holding_rack_well %}
+                  {{ sample.holding_rack_well.holding_rack.holding_rack_id }}
                 {% else %}
-                  {{ sample.rack.gmc_rack_id }}
+                  {{ sample.receiving_rack.receiving_rack_id }}
                 {% endif %}
               </td>
               <td>
                 {% if sample.plate %}
-                  {{ sample.plate_well_id }}
+                  {{ sample.holding_rack_well.well_id }}
                 {% else %}
-                  {{ sample.gmc_rack_well }}
+                  {{ sample.receiving_rack_well }}
                 {% endif %}
               </td>
-              <td>{{ sample.rack.laboratory_id  }}</td>
+              <td>{{ sample.receiving_rack.laboratory_id  }}</td>
               <td>{{ sample.participant_id }}</td>
               <td>{{ sample.group_id }}</td>
               <td>{{ sample.priority }}</td>
@@ -254,7 +254,7 @@ Group ID:            {{sample.group_id}}' style="background-color: black"><div c
                       <button type="button" class="close" data-dismiss="modal"> X </button>
                     </div>
                     <div class="modal-body">
-                      <strong>Participant ID:</strong> {{ sample.participant_id }} {{ hist.delivery.opening_user.last_name }}
+                      <strong>Participant ID:</strong> {{ sample.participant_id }}
                       <form role='form' action='' method="POST", class='form'>
                         {% csrf_token %}
                         {{ form|crispy }}
