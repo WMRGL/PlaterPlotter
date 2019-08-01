@@ -28,7 +28,7 @@
             {% for rack in ready_to_plate %}
             <tr>
               <td><a href="/plate-holding-rack/{{ rack.pk }}">{{ rack.holding_rack_id }}</a></td>
-              <td>{{ rack.plate_type }}</td>
+              <td>{{ rack.holding_rack_type }}</td>
               <td>{{ rack.half_full }}</td>
               <td>{{ rack.full }}</td>
               <td>{{ rack.sample_count }}</td>

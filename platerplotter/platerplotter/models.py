@@ -45,10 +45,10 @@ class ReceivingRack(models.Model):
 		("Urgent", "Urgent"), ("Mixed", "Mixed")), null=True, blank=True)	
 
 	def __str__(self):
-		return self.gmc_rack_id
+		return self.receiving_rack_id
 
 class Plate(models.Model):
-	gel_1008_csv = models.ForeignKey(Gel1008Csv, on_delete=models.CASCADE, null=True, blank=True)
+	gel_1008_csv = models.ForeignKey(Gel1008Csv, on_delete=models.SET_NULL, null=True, blank=True, related_name='plate')
 	plate_id = models.CharField(max_length=13, unique=True)
 
 	def __str__(self):
@@ -114,13 +114,13 @@ class Sample(models.Model):
 		return self.laboratory_sample_id
 
 class HoldingRackWell(models.Model):
-	holding_rack = models.ForeignKey(HoldingRack, on_delete=models.CASCADE, related_name = 'holding_rack_well')
+	holding_rack = models.ForeignKey(HoldingRack, on_delete=models.CASCADE, related_name = 'wells')
 	well_id = models.CharField(max_length=3, choices=well_ids)
 	buffer_added = models.BooleanField(default=False)
-	sample = models.OneToOneField(Sample, on_delete=models.CASCADE, null=True, blank=True, related_name='holding_rack_well')
+	sample = models.OneToOneField(Sample, on_delete=models.SET_NULL, null=True, blank=True, related_name='holding_rack_well')
 
 	def __str__(self):
-		return self.holding_rack + ' ' + self.well_id
+		return self.holding_rack.holding_rack_id + ' ' + self.well_id
 
 class RackScanner(models.Model):
 	filename = models.CharField(max_length=60)

@@ -33,9 +33,9 @@
             <tbody>
             {% for rack, samples in unplated_racks_dict.items %}
             <tr>
-              <td><a href="/plate-samples/{{ rack.gel_1004_csv.pk }}/{{ rack.gmc_rack_id }}">{{ rack.gmc_rack_id }}</a></td>
+              <td><a href="/assign-samples-to-holding-rack/{{ rack.gel_1004_csv.pk }}/{{ rack.receiving_rack_id }}">{{ rack.receiving_rack_id }}</a></td>
               <td>{{ rack.disease_area }}</td>
-              <td>{{ rack.rack_type }}</td>
+              <td>{{ rack.holding_rack_type }}</td>
               <td>{{ rack.priority }}</td>
               <td>{{ rack.laboratory_id }}</td>
               <td>{{ samples|length }}</td>
@@ -47,7 +47,7 @@
       </div>
     </div>
     <hr>
-    {% if problem_plate_dict %}
+    {% if problem_holding_rack_dict %}
       <div class="row">
         <div class="col-12">
           <div class="tab-pane active">
@@ -61,10 +61,10 @@
                 </tr>
               </thead>
               <tbody>
-              {% for plate, samples in problem_plate_dict.items %}
+              {% for holding_rack, samples in problem_holding_rack_dict.items %}
               <tr>
-                <td><a href="/plate-samples/{{ plate.holding_rack_id }}">{{ plate.holding_rack_id }}</a></td>
-                <td>{{ plate.plate_type }}</td>
+                <td><a href="/assign-samples-to-holding-rack/{{ holding_rack.holding_rack_id }}">{{ holding_rack.holding_rack_id }}</a></td>
+                <td>{{ holding_rack.holding_rack_type }}</td>
                 <td>{{ samples|length }}</td>
               </tr>
               {% endfor %} 

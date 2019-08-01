@@ -42,16 +42,16 @@
               <td>{{ sample.participant_id }}</td>
               <td>{{ sample.group_id }}</td>
               <td>{{ sample.disease_area }}</td>
-              <td>{{ sample.rack.gmc_rack_id }}, {{ sample.gmc_rack_well }}</td>
-              <td>{{ sample.rack.laboratory_id }}</td>
+              <td>{{ sample.receiving_rack.receiving_rack_id }}, {{ sample.receiving_rack_well }}</td>
+              <td>{{ sample.receiving_rack.laboratory_id }}</td>
               <td>{{ sample.sample_received_datetime }}</td>
-              <td>{{ sample.rack.gel_1004_csv.gel_1005_csv.report_generated_datetime }}</td>
-              <td>{{ sample.plate.holding_rack_id }}, {{ sample.plate_well_id }}</td>
-              <td>{{ sample.plate.plate_type }}</td>
-              <td>{{ sample.plate.plate_id }}</td>
-              <td>{{ sample.plate.gel_1008_csv.report_generated_datetime }}</td>
-              <td>{{ sample.plate.gel_1008_csv.consignment_number }}</td>
-              <td>{{ sample.plate.gel_1008_csv.date_of_dispatch }}</td>
+              <td>{{ sample.receiving_rack.gel_1004_csv.gel_1005_csv.report_generated_datetime }}</td>
+              <td>{{ sample.holding_rack_well.holding_rack.holding_rack_id }}, {{ sample.holding_rack_well.well_id }}</td>
+              <td>{{ sample.holding_rack_well.holding_rack.holding_rack_type }}</td>
+              <td>{{ sample.holding_rack_well.holding_rack.plate.plate_id }}</td>
+              <td>{{ sample.holding_rack_well.holding_rack.plate.gel_1008_csv.report_generated_datetime }}</td>
+              <td>{{ sample.holding_rack_well.holding_rack.plate.gel_1008_csv.consignment_number }}</td>
+              <td>{{ sample.holding_rack_well.holding_rack.plate.gel_1008_csv.date_of_dispatch }}</td>
               <td>{{ sample.comment }}</td>
               <td>{{ sample.issue_outcome }}</td>
             </tr>

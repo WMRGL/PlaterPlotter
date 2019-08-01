@@ -19,6 +19,7 @@ import re
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Flowable, Paragraph, SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
+from reportlab.lib.pagesizes import landscape, A4
 
 # def ajax_change_sample_received_status(request):
 #     sample_received = request.GET.get('sample_received', False)
@@ -252,7 +253,7 @@ def import_acks(request):
 			racks = ReceivingRack.objects.filter(gel_1004_csv=gel_1004)
 			directory = LoadConfig().load()['gel1005path']
 			datetime_now = datetime.now(pytz.timezone('UTC'))
-			filename = "ngis_bio_to_gel_samples_received_" + datetime.now(pytz.timezone('UTC')).strftime("%y%m%d_%H%M%S") + ".csv"
+			filename = "ngis_bio_to_gel_samples_received_" + datetime.now(pytz.timezone('UTC')).strftime("%Y%m%d_%H%M%S") + ".csv"
 			gel_1005 = Gel1005Csv.objects.create(
 				filename=filename,
 				report_generated_datetime=datetime_now)
@@ -268,11 +269,15 @@ def import_acks(request):
 				for rack in racks:
 					samples = Sample.objects.filter(receiving_rack=rack)
 					for sample in samples:
+						if sample.sample_received:
+							sample_received = 'Yes'
+						else:
+							sample_received = 'No'
 						received_datetime = ''
 						if sample.sample_received_datetime:
 							received_datetime = sample.sample_received_datetime.replace(microsecond=0).isoformat().replace('+00:00', 'Z')
 						writer.writerow([sample.participant_id, rack.laboratory_id,
-							sample.sample_received, received_datetime,
+							sample_received, received_datetime,
 							gel_1005.report_generated_datetime.replace(microsecond=0).isoformat().replace('+00:00', 'Z'), sample.laboratory_sample_id])
 			return HttpResponseRedirect('/')
 	unacked_gel_1004 = Gel1004Csv.objects.filter(gel_1005_csv__isnull = True)
@@ -421,7 +426,7 @@ def problem_samples(request, holding_rack_id=None):
 		holding_rack_samples = Sample.objects.filter(holding_rack_well__holding_rack=holding_rack)
 		holding_rack_manager = HoldingRackManager(holding_rack)
 		for sample in holding_rack_samples:
-			assigned_well_list.append(sample.holding_rack_well__well_id)
+			assigned_well_list.append(sample.holding_rack_well.well_id)
 			holding_rack_samples_form_dict[sample] = ResolveIssueForm(instance=sample)
 	else:
 		holding_rack = None
@@ -435,11 +440,15 @@ def problem_samples(request, holding_rack_id=None):
 				holding_rack_id = holding_rack_form.cleaned_data.get('holding_rack_id')
 				try:
 					holding_rack = HoldingRack.objects.get(holding_rack_id=holding_rack_id, plate__isnull=True)
-					if holding_rack.rack_type != "Problem":
-						messages.error(request, "You have scanned a holding rack being used for " + holding_rack.rack_type + " samples. Please scan an exisiting or new Problem rack.")
+					if holding_rack.holding_rack_type != "Problem":
+						messages.error(request, "You have scanned a holding rack being used for " + holding_rack.holding_rack_type + " samples. Please scan an exisiting or new Problem rack.")
 						error = True
 				except:
-					holding_rack = HoldingRack.objects.create(holding_rack_id=holding_rack_id, rack_type="Problem")
+					holding_rack = HoldingRack.objects.create(holding_rack_id=holding_rack_id, holding_rack_type="Problem")
+					for holding_rack_row in holding_rack_rows:
+						for holding_rack_column in holding_rack_columns:
+							HoldingRackWell.objects.create(holding_rack=holding_rack,
+								well_id=holding_rack_row + holding_rack_column)
 				if holding_rack and not error:
 					url = reverse('problem_samples', kwargs={
 							'holding_rack_id' : holding_rack.holding_rack_id,
@@ -522,15 +531,15 @@ def problem_samples(request, holding_rack_id=None):
 
 @login_required()
 def awaiting_holding_rack_assignment(request):
-	unplated_samples = Sample.objects.filter(holding_rack_well__holding_rack__plate__isnull = True, 
+	unplated_samples = Sample.objects.filter(holding_rack_well__isnull = True, 
 		receiving_rack__gel_1004_csv__gel_1005_csv__isnull = False,
 		sample_received = True, issue_identified=False)
 	unplated_racks_dict = {}
 	for sample in unplated_samples:
-		if sample.holding_rack_well.holding_rack in unplated_racks_dict:
-			unplated_racks_dict[sample.holding_rack_well.holding_rack].append(sample)
+		if sample.receiving_rack in unplated_racks_dict:
+			unplated_racks_dict[sample.receiving_rack].append(sample)
 		else:
-			unplated_racks_dict[sample.holding_rack_well.holding_rack] = [sample] 
+			unplated_racks_dict[sample.receiving_rack] = [sample] 
 	for rack, samples in unplated_racks_dict.items():
 		disease_area_set = set()
 		rack_type_set = set()
@@ -544,9 +553,9 @@ def awaiting_holding_rack_assignment(request):
 		else:
 			rack.disease_area = 'Mixed'
 		if len(rack_type_set) == 1:
-			rack.rack_type = rack_type_set.pop()
+			rack.holding_rack_type = rack_type_set.pop()
 		else:
-			rack.rack_type = 'Mixed'
+			rack.holding_rack_type = 'Mixed'
 		if len(priority_set) == 1:
 			rack.priority = priority_set.pop()
 		else:
@@ -565,6 +574,7 @@ def awaiting_holding_rack_assignment(request):
 
 @login_required()
 def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=None):
+	print(holding_rack_id)
 	holding_rack_rows = ['A','B','C','D','E','F','G','H']
 	holding_rack_columns = ['01','02','03','04','05','06','07','08','09','10','11','12']
 	if gel1004:
@@ -577,13 +587,13 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
 											issue_outcome="Sample destroyed")
 		problem_holding_rack=None
 	else:
-		problem_holding_rack = HoldingRack.objects.get(holding_rack_id=rack, plate_type='Problem')
-		samples = Sample.objects.filter(holding_rack_wel__holding_rack=problem_holding_rack, issue_outcome="Ready for plating")
+		problem_holding_rack = HoldingRack.objects.get(holding_rack_id=rack, holding_rack_type='Problem')
+		samples = Sample.objects.filter(holding_rack_well__holding_rack=problem_holding_rack, issue_outcome="Ready for plating")
 		rack=None
 	sample_form_dict = {}
 	for sample in samples:
 		sample_form_dict[sample] = LogIssueForm(instance=sample)
-	current_holding_racks = HoldingRack.objects.filter(plate__isnull=True).exclude(plate_type='Problem')
+	current_holding_racks = HoldingRack.objects.filter(plate__isnull=True).exclude(holding_rack_type='Problem')
 	current_holding_racks_dict = {}
 	for current_holding_rack in current_holding_racks:
 		current_holding_racks_dict[current_holding_rack] = Sample.objects.filter(holding_rack_well__holding_rack=current_holding_rack).count()
@@ -599,6 +609,7 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
 	else:
 		holding_rack = None
 		holding_rack_samples = None
+	print(holding_rack)
 	if request.method == 'POST':
 		if 'holding' in request.POST:
 			sample_select_form = SampleSelectForm()
@@ -611,11 +622,15 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
 				else:
 					try:
 						holding_rack = HoldingRack.objects.get(holding_rack_id=holding_rack_id, plate__isnull=True)
-						if holding_rack.rack_type == 'Problem':
+						if holding_rack.holding_rack_type == 'Problem':
 							messages.error(request, "You have scanned a holding rack for Problem samples. Please scan the correct holding rack.")
 							error = True
 					except:
 						holding_rack = HoldingRack.objects.create(holding_rack_id=holding_rack_id)
+						for holding_rack_row in holding_rack_rows:
+							for holding_rack_column in holding_rack_columns:
+								HoldingRackWell.objects.create(holding_rack=holding_rack,
+									well_id=holding_rack_row + holding_rack_column)
 				if holding_rack and not error:
 					url = reverse('assign_samples_to_holding_rack', kwargs={
 							'gel1004' : rack.gel_1004_csv.pk,
@@ -691,19 +706,19 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
 				if sample:
 					if holding_rack.disease_area == 'Unassigned':
 						holding_rack.disease_area = sample.disease_area
-						holding_rack.plate_type = sample.sample_type
+						holding_rack.holding_rack_type = sample.sample_type
 						holding_rack.priority = sample.priority
 						holding_rack.save()
-					if sample.sample_type == holding_rack.plate_type and sample.priority == holding_rack.priority:
+					if sample.sample_type == holding_rack.holding_rack_type and sample.priority == holding_rack.priority:
 						well = request.POST['well']
 						holding_rack_manager.assign_well(request=request, sample=sample, well=well)
 					else:
 						messages.error(request, "Sample does not match holding rack type! Unable to add to this rack.")
 				else:
 					messages.error(request, lab_sample_id + " not found in GLH Rack " + rack.receiving_rack_id)
-				if problem_plate:
-					url = reverse('assign_samples_to_holding_rack', kwargs={
-								'rack' : problem_plate.holding_rack_id,
+				if problem_holding_rack:
+					url = reverse('assign_problem_samples_to_holding_rack', kwargs={
+								'rack' : problem_holding_rack.holding_rack_id,
 								'holding_rack_id' : holding_rack.holding_rack_id,
 								})
 				else:	
@@ -723,23 +738,35 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
 				sample.comment = comment
 				sample.issue_outcome = "Not resolved"
 				sample.save()
-				if problem_plate:
-					url = reverse('assign_samples_to_holding_rack', kwargs={
-								'rack' : problem_plate.holding_rack_id,
-								'holding_rack_id' : holding_rack.holding_rack_id,
-								})
-				else:	
-					url = reverse('assign_samples_to_holding_rack', kwargs={
-								'gel1004' : rack.gel_1004_csv.pk,
-								'rack' : rack.receiving_rack_id,
-								'holding_rack_id' : holding_rack.holding_rack_id,
-								})
+				if problem_holding_rack:
+					if holding_rack:
+						url = reverse('assign_problem_samples_to_holding_rack', kwargs={
+									'rack' : problem_holding_rack.holding_rack_id,
+									'holding_rack_id' : holding_rack.holding_rack_id,
+									})
+					else:
+						url = reverse('assign_problem_samples_to_holding_rack', kwargs={
+									'rack' : problem_holding_rack.holding_rack_id,
+									})
+				else:
+					if holding_rack:	
+						url = reverse('assign_samples_to_holding_rack', kwargs={
+									'gel1004' : rack.gel_1004_csv.pk,
+									'rack' : rack.receiving_rack_id,
+									'holding_rack_id' : holding_rack.holding_rack_id,
+									})
+					else:
+						url = reverse('assign_samples_to_holding_rack', kwargs={
+									'gel1004' : rack.gel_1004_csv.pk,
+									'rack' : rack.receiving_rack_id,
+									})
 				return HttpResponseRedirect(url)
 	else:
 		holding_rack_form = HoldingRackForm()
 		sample_select_form = SampleSelectForm()
-	return render(request, 'platerplotter/assign-samples-to-holding-rack.html', {"rack" : rack,
-		"problem_plate" : problem_plate,
+	return render(request, 'platerplotter/assign-samples-to-holding-rack.html', {
+		"rack" : rack,
+		"problem_holding_rack" : problem_holding_rack,
 		"samples" : samples,
 		"holding_rack_form" : holding_rack_form,
 		"sample_select_form" : sample_select_form,
@@ -813,16 +840,9 @@ def plate_holding_rack(request, holding_rack_pk):
 				holding_rack.plate = plate
 				holding_rack.save()
 				# generate output for robot
-				plate_manager = PlateManager(plate)
-				well_contents = plate_manager.get_well_contents()
-				for content in well_contents:
-					try:
-						print(content.well_id)
-					except:
-						try:
-							print(content.plate_well_id)
-						except:
-							pass
+				holding_rack_wells = HoldingRackWell.objects.filter(holding_rack=holding_rack).order_by('well_id')
+				for well in holding_rack_wells:
+					print(well.well_id)
 	else:
 		plating_form = PlatingForm()
 	return render(request, 'platerplotter/plate-holding-rack.html', {
@@ -847,7 +867,7 @@ def ready_to_dispatch(request):
 				date_of_dispatch = gel1008_form.cleaned_data.get('date_of_dispatch')
 				directory = LoadConfig().load()['gel1008path']
 				datetime_now = datetime.now(pytz.timezone('UTC'))
-				filename = "ngis_bio_to_gel_sample_dispatch_" + datetime.now(pytz.timezone('UTC')).strftime("%y%m%d_%H%M%S") + ".csv"
+				filename = "ngis_bio_to_gel_sample_dispatch_" + datetime.now(pytz.timezone('UTC')).strftime("%Y%m%d_%H%M%S") + ".csv"
 				gel_1008_csv = Gel1008Csv.objects.create(
 					filename = filename,
 					report_generated_datetime = datetime_now,
@@ -861,24 +881,27 @@ def ready_to_dispatch(request):
 					holding_racks.append(plate.holding_rack)
 				path = directory + filename
 				doc = SimpleDocTemplate(path[:-3] + 'pdf')
+				doc.pagesize = landscape(A4)
 				elements = []
-				data = [['Participant ID', 'Plate ID', 'Well ID', 
+				data = [['Participant ID', 'Laboratory Sample ID', 'Plate ID', 'Well ID', 
 						'Plate Consignment Number', 'Plate Date of Dispatch']]
 				with open(path, 'w', newline='') as csvfile:
 					writer = csv.writer(csvfile, delimiter=',',
 						quotechar=',', quoting=csv.QUOTE_MINIMAL)
-					writer.writerow(['Participant ID', 'Plate ID',
+					writer.writerow(['Participant ID', 'Laboratory Sample ID', 'Plate ID',
 						'Normalised Biorepository Sample Volume', 'Normalised Biorepository Concentration',
 						'Well ID', 'Plate Consignment Number', 'Plate Date of Dispatch'])
 					for holding_rack in holding_racks:
 						samples = Sample.objects.filter(holding_rack_well__holding_rack=holding_rack).order_by('holding_rack_well__well_id')
 						for sample in samples:
-							writer.writerow([sample.participant_id, plate.plate_id,
+							writer.writerow([sample.participant_id, sample.laboratory_sample_id, 
+								sample.holding_rack_well.holding_rack.plate.plate_id,
 								sample.norm_biorep_sample_vol, sample.norm_biorep_conc,
-								sample.plate_well_id, gel_1008_csv.consignment_number, 
+								sample.holding_rack_well.well_id, gel_1008_csv.consignment_number, 
 								gel_1008_csv.date_of_dispatch.replace(microsecond=0).isoformat().replace('+00:00', 'Z')])
-							data.append([sample.participant_id, plate.plate_id,
-								sample.plate_well_id, gel_1008_csv.consignment_number, 
+							data.append([sample.participant_id, sample.laboratory_sample_id,
+								sample.holding_rack_well.holding_rack.plate.plate_id,
+								sample.holding_rack_well.well_id, gel_1008_csv.consignment_number, 
 								gel_1008_csv.date_of_dispatch.replace(microsecond=0).isoformat().replace('+00:00', 'Z')])
 				flowObjects = list()
 				styles=getSampleStyleSheet()

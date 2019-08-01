@@ -31,14 +31,6 @@ class HoldingRackManager():
 					'F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10', 'F11', 'F12',
 					'G01', 'G02', 'G03', 'G04', 'G05', 'G06', 'G07', 'G08', 'G09', 'G10', 'G11', 'G12',
 					'H01', 'H02', 'H03', 'H04', 'H05', 'H06', 'H07', 'H08', 'H09', 'H10', 'H11', 'H12',]
-		# self.alt_well_contents = [None, None, None, None, None, None, None, None, None, None, None, None, 
-		# 			None, None, None, None, None, None, None, None, None, None, None, None,
-		# 			None, None, None, None, None, None, None, None, None, None, None, None,
-		# 			None, None, None, None, None, None, None, None, None, None, None, None,
-		# 			None, None, None, None, None, None, None, None, None, None, None, None,
-		# 			None, None, None, None, None, None, None, None, None, None, None, None,
-		# 			None, None, None, None, None, None, None, None, None, None, None, None,
-		# 			None, None, None, None, None, None, None, None, None, None, None, None,]
 		samples = Sample.objects.filter(holding_rack_well__holding_rack=self.holding_rack)
 		for sample in samples:
 			well_index = self.well_labels.index(sample.holding_rack_well.well_id)
@@ -127,20 +119,25 @@ class HoldingRackManager():
 		new_indices_to_avoid = self.lookup_new_indices(indices_to_avoid)
 		return new_indices_to_avoid
 
+	def assign_holding_rack_well(self, request, sample, well_index):
+		if hasattr(sample, 'holding_rack_well'):
+			sample.holding_rack_well.delete()
+			sample.save()
+		holding_rack_well = HoldingRackWell.objects.get(
+			holding_rack = self.holding_rack,
+			well_id = self.well_labels[well_index])
+		holding_rack_well.sample = sample
+		holding_rack_well.save()
+		messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
+
 	def assign_well(self, request, sample, well):
 		'''
 		Finds next available free well and assigns sample to this
 		'''
-		print("assigning well for sample " + str(sample))
-		print("len: " + str(len(self.well_contents)))
 		if self.holding_rack.holding_rack_type == "Problem":
 			if well:
 				well_index = self.well_labels.index(well)
-				holding_rack_well = HoldingRackWell.create(
-					holding_rack = self.holding_rack,
-					well_id = self.well_labels[well_index],
-					sample = sample)
-				messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
+				self.assign_holding_rack_well(request, sample, well_index)
 			else:
 				sample_assigned = False
 				well_index = 0
@@ -148,17 +145,13 @@ class HoldingRackManager():
 					if well_content:
 						well_index += 1
 					else:
-						holding_rack_well = HoldingRackWell.create(
-							holding_rack = self.holding_rack,
-							well_id = self.well_labels[well_index],
-							sample = sample)
-						messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
+						self.assign_holding_rack_well(request, sample, well_index)
 						sample_assigned = True
 						break
 				if not sample_assigned:
 					messages.error(request, "No more valid positions available in this rack. Please assign " + 
 						sample.laboratory_sample_id + " to a new rack.")
-		if self.holding_rack.rack_type == "Proband":
+		if self.holding_rack.holding_rack_type == "Proband":
 			no_samples_with_same_participant_id = True
 			no_family_members_on_same_plate = True
 			for well_content in self.well_contents:
@@ -174,11 +167,7 @@ class HoldingRackManager():
 			if no_samples_with_same_participant_id and no_family_members_on_same_plate:
 				if well:
 					well_index = self.well_labels.index(well)
-					holding_rack_well = HoldingRackWell.create(
-						holding_rack = self.holding_rack,
-						well_id = self.well_labels[well_index],
-						sample = sample)
-					messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
+					self.assign_holding_rack_well(request, sample, well_index)
 				else:
 					sample_assigned = False
 					well_index = 0
@@ -186,17 +175,13 @@ class HoldingRackManager():
 						if well_content:
 							well_index += 1
 						else:
-							holding_rack_well = HoldingRackWell.create(
-								holding_rack = self.holding_rack,
-								well_id = self.well_labels[well_index],
-								sample = sample)
-							messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
+							self.assign_holding_rack_well(request, sample, well_index)
 							sample_assigned = True
 							break
 					if not sample_assigned:
 						messages.error(request, "No more valid positions available in this rack. Please assign " + 
 							sample.laboratory_sample_id + " to a new rack.")
-		elif self.holding_rack.rack_type == "Family":
+		elif self.holding_rack.holding_rack_type == "Family":
 			matching_proband_sample_found = False
 			matching_proband_samples = Sample.objects.filter(sample_type = "Proband", group_id = sample.group_id, holding_rack_well__isnull = True)
 			if matching_proband_samples:
@@ -206,11 +191,11 @@ class HoldingRackManager():
 						matching_proband_sample.receiving_rack.receiving_rack_id + " in well " + 
 						matching_proband_sample.receiving_rack_well + " but not yet assigned to holding rack. These samples must be sent in the same consignment.")
 			else:
-				matching_proband_samples = Sample.objects.filter(sample_type = "Proband", group_id = sample.group_id, plate__gel_1008_csv__isnull = True)
+				matching_proband_samples = Sample.objects.filter(sample_type = "Proband", group_id = sample.group_id, holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True)
 				if matching_proband_samples:
 					matching_proband_sample_found = True
 					for matching_proband_sample in matching_proband_samples:
-						if matching_proband_sample.holding_rack_well.holding_rack.plate.plate_id:	
+						if matching_proband_sample.holding_rack_well.holding_rack.plate:	
 							messages.info(request, "Matching proband sample found and has already been plated on plate: " +
 								matching_proband_sample.holding_rack_well.holding_rack.plate.plate_id + " in well " + 
 								matching_proband_sample.holding_rack_well.well_id + ". These samples must be sent in the same consignment.")
@@ -241,11 +226,7 @@ class HoldingRackManager():
 					if self.well_contents[well_index] == 'X':
 						messages.error(request, "Selected well is too close to another sample from the same family. Unable to assigned to this well.")
 					else:
-						holding_rack_well = HoldingRackWell.create(
-							holding_rack = self.holding_rack,
-							well_id = self.well_labels[well_index],
-							sample = sample)
-						messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
+						self.assign_holding_rack_well(request, sample, well_index)
 				else:
 					sample_assigned = False
 					well_index = 0
@@ -253,17 +234,13 @@ class HoldingRackManager():
 						if well_content:
 							well_index += 1
 						else:
-							holding_rack_well = HoldingRackWell.create(
-								holding_rack = self.holding_rack,
-								well_id = self.well_labels[well_index],
-								sample = sample)
-							messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
+							self.assign_holding_rack_well(request, sample, well_index)
 							sample_assigned = True
 							break
 					if not sample_assigned:
 						messages.error(request, "No more valid positions available in this rack. Please assign " + 
 							sample.laboratory_sample_id + " to a new rack.")
-		elif self.holding_rack.rack_type == "Tumour":
+		elif self.holding_rack.holding_rack_type == "Tumour":
 			matching_germline_sample_found = False
 			matching_germline_samples = Sample.objects.filter(sample_type = "Cancer Germline", participant_id = sample.participant_id, holding_rack_well__isnull = True)
 			if matching_germline_samples:
@@ -303,11 +280,7 @@ class HoldingRackManager():
 					if self.well_contents[well_index] == 'X':
 						messages.error(request, "Selected well is too close to another sample from the same family. Unable to assigned to this well.")
 					else:
-						holding_rack_well = HoldingRackWell.create(
-							holding_rack = self.holding_rack,
-							well_id = self.well_labels[well_index],
-							sample = sample)
-						messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
+						self.assign_holding_rack_well(request, sample, well_index)
 				else:
 					sample_assigned = False
 					well_index = 0
@@ -315,17 +288,13 @@ class HoldingRackManager():
 						if well_content:
 							well_index += 1
 						else:
-							holding_rack_well = HoldingRackWell.create(
-								holding_rack = self.holding_rack,
-								well_id = self.well_labels[well_index],
-								sample = sample)
-							messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
+							self.assign_holding_rack_well(request, sample, well_index)
 							sample_assigned = True
 							break
 					if not sample_assigned:
 						messages.error(request, "No more valid positions available in this rack. Please assign " + 
 							sample.laboratory_sample_id + " to a new rack.")
-		elif self.holding_rack.rack_type == "Cancer Germline":
+		elif self.holding_rack.holding_rack_type == "Cancer Germline":
 			no_samples_with_same_participant_id = True
 			for well_content in self.well_contents:
 				if well_content:
@@ -359,11 +328,7 @@ class HoldingRackManager():
 			if no_samples_with_same_participant_id and matching_tumour_sample_found:
 				if well:
 					well_index = self.well_labels.index(well)
-					holding_rack_well = HoldingRackWell.create(
-						holding_rack = self.holding_rack,
-						well_id = self.well_labels[well_index],
-						sample = sample)
-					messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
+					self.assign_holding_rack_well(request, sample, well_index)
 				else:
 					sample_assigned = False
 					well_index = 0
@@ -371,11 +336,7 @@ class HoldingRackManager():
 						if well_content:
 							well_index += 1
 						else:
-							holding_rack_well = HoldingRackWell.create(
-								holding_rack = self.holding_rack,
-								well_id = self.well_labels[well_index],
-								sample = sample)
-							messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
+							self.assign_holding_rack_well(request, sample, well_index)
 							sample_assigned = True
 							break
 					if not sample_assigned:
@@ -390,22 +351,22 @@ class HoldingRackManager():
 
 	def assign_buffer(self):
 		last_occupied_well_index = self.get_last_occupied_well()
-		print(self.well_contents)
 		if last_occupied_well_index > 0:
 			index_count = 0
 			while index_count < last_occupied_well_index:
 				if not self.well_contents[index_count]:
 					well_label = self.well_labels[index_count]
-					HoldingRackWell.create(
-								holding_rack = self.holding_rack,
-								well_id = self.well_labels[well_index],
-								buffer_added = True)
+					holding_rack_well = HoldingRackWell.objects.get(
+						holding_rack = self.holding_rack,
+						well_id = self.well_labels[index_count])
+					holding_rack_well.buffer_added = True
+					holding_rack_well.save()
 				index_count += 1
 
-	def get_well_contents(self):
-		print(self.well_contents)
-		print(self.alt_well_contents)
-		return(self.alt_well_contents)
+	# def get_well_contents(self):
+	# 	print(self.well_contents)
+	# 	print(self.alt_well_contents)
+	# 	return(self.alt_well_contents)
 
 
 

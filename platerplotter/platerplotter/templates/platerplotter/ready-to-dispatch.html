@@ -41,15 +41,15 @@
               </tr>
             </thead>
             <tbody>
-            {% for plate in ready_to_dispatch %}
+            {% for holding_rack in ready_to_dispatch %}
             <tr>
-              <td>{{ plate.plate_id }}</td>
-              <td>{{ plate.plate_type }}</td>
-              <td>{{ plate.half_full }}</td>
-              <td>{{ plate.full }}</td>
-              <td>{{ plate.sample_count }}</td>
+              <td>{{ holding_rack.plate.plate_id }}</td>
+              <td>{{ holding_rack.holding_rack_type }}</td>
+              <td>{{ holding_rack.half_full }}</td>
+              <td>{{ holding_rack.full }}</td>
+              <td>{{ holding_rack.sample_count }}</td>
               <td style="text-align:center">
-                <input type="checkbox" name="selected_plate" value="{{plate.pk}}">
+                <input type="checkbox" name="selected_plate" value="{{holding_rack.plate.pk}}">
 <!--                 <form role='form' action='' method="POST" class='form'>
                   {% csrf_token %}
                   <div class="form-group">
