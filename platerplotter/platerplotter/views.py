@@ -1,10 +1,14 @@
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.urls import reverse
-from platerplotter.models import Gel1004Csv, Gel1005Csv, Gel1008Csv, Rack, Plate, Sample, RackScanner, RackScannerSample
+from platerplotter.models import (Gel1004Csv, Gel1005Csv, Gel1008Csv, Rack, Plate, 
+	Sample, RackScanner, RackScannerSample, Buffer)
 from platerplotter.config.load_config import LoadConfig
-from platerplotter.forms import HoldingRackForm, SampleSelectForm, PlatingForm, Gel1008Form
+from platerplotter.forms import (HoldingRackForm, SampleSelectForm, PlatingForm, 
+	Gel1008Form, LogIssueForm, ResolveIssueForm)
 from datetime import datetime
 from django.core.exceptions import ValidationError
 from platerplotter.plate_manager import PlateManager
@@ -49,10 +53,10 @@ def check_plating_organisation(plating_organisation):
 		return plating_organisation.lower()
 
 def check_rack_id(rack_id):
-	if not re.match(r'^[a-zA-Z]{2}\d{8}$', rack_id):
+	if 8 > len(rack_id) > 12:
 		raise ValueError('Incorrect rack ID. Received {} which does not match the required specification.'.format(rack_id))
 	else:
-		return rack_id.upper()
+		return rack_id
 
 def check_laboratory_id(laboratory_id):
 	accepted_ids = ["yne", "now", "eme", "lnn", "lns", "wwm", "sow"]
@@ -128,9 +132,9 @@ def check_rack_well(rack_well):
 		return rack_well
 
 def check_is_proband(is_proband):
-	if is_proband == "TRUE":
+	if is_proband == "TRUE" or is_proband == "True":
 		return True
-	if is_proband == "FALSE":
+	if is_proband == "FALSE" or is_proband == "False":
 		return False
 	if type(is_proband) == type(True):
 		return is_proband
@@ -170,6 +174,7 @@ def rack_scan():
 							position=pad_zeros(row[0].strip()))
 			os.rename(path, directory + "processed/" + filename)
 
+@login_required()
 def import_acks(request):
 	"""
 	Renders import acks page. Allows users to import new GEL1004 acks
@@ -284,10 +289,16 @@ def import_acks(request):
 			gel_1004.all_racks_acked = all_racks_acked
 	return render(request, 'import-acks.html', {"unacked_racks_dict" : unacked_racks_dict})
 
+@login_required()
 def acknowledge_samples(request, gel1004, rack):
 	rack = Rack.objects.get(gel_1004_csv=gel1004, gmc_rack_id=rack)
 	samples = Sample.objects.filter(rack=rack)
 	sample_select_form = SampleSelectForm()
+	log_issue_form = LogIssueForm()
+	sample_form_dict = {}
+	for sample in samples:
+		sample_form_dict[sample] = LogIssueForm(instance=sample)
+	print(sample_form_dict)
 	if request.method == 'POST':
 		if 'rack-scanner' in request.POST:
 			rack_scan()
@@ -336,6 +347,7 @@ def acknowledge_samples(request, gel1004, rack):
 					sample.sample_received_datetime = datetime.now(pytz.timezone('UTC'))
 					sample.save()
 			sample_select_form = SampleSelectForm()
+			log_issue_form = LogIssueForm()
 		if 'sample-received' in request.POST:
 			pk = request.POST['sample-received']
 			sample = Sample.objects.get(pk=pk)
@@ -351,6 +363,36 @@ def acknowledge_samples(request, gel1004, rack):
 				"rack" : rack.gmc_rack_id,
 				})
 			return HttpResponseRedirect(url)
+		if 'log-issue' in request.POST:
+			log_issue_form = LogIssueForm(request.POST)
+			if log_issue_form.is_valid():
+				pk = request.POST['log-issue']
+				comment = log_issue_form.cleaned_data.get('comment')
+				print(pk)
+				print(comment)
+				sample = Sample.objects.get(pk=pk)
+				sample.issue_identified = True
+				sample.comment = comment
+				sample.issue_outcome = "Not resolved"
+				sample.save()
+				url = reverse('acknowledge_samples', kwargs={
+					"gel1004" : gel1004,
+					"rack" : rack.gmc_rack_id,
+					})
+				return HttpResponseRedirect(url)
+		if 'delete-issue' in request.POST:
+			log_issue_form = LogIssueForm(request.POST)
+			if log_issue_form.is_valid():
+				pk = request.POST['delete-issue']
+				sample = Sample.objects.get(pk=pk)
+				sample.issue_identified = False
+				sample.comment = None
+				sample.save()
+				url = reverse('acknowledge_samples', kwargs={
+					"gel1004" : gel1004,
+					"rack" : rack.gmc_rack_id,
+					})
+				return HttpResponseRedirect(url)
 	all_samples_received = True
 	for sample in samples:
 		if not sample.sample_received:
@@ -360,43 +402,33 @@ def acknowledge_samples(request, gel1004, rack):
 	return render(request, 'acknowledge-samples.html', {"rack" : rack,
 		"samples" : samples,
 		"sample_select_form" : sample_select_form,
+		"sample_form_dict" : sample_form_dict,
+		"log_issue_form" : log_issue_form,
 		"all_samples_received" : all_samples_received})
 
-def awaiting_plating(request):
-	unplated_samples = Sample.objects.filter(plate__isnull = True, 
-		rack__gel_1004_csv__gel_1005_csv__isnull = False,
-		sample_received = True)
-	unplated_racks_dict = {}
-	for sample in unplated_samples:
-		if sample.rack in unplated_racks_dict:
-			unplated_racks_dict[sample.rack].append(sample)
-		else:
-			unplated_racks_dict[sample.rack] = [sample] 
-	return render(request, 'awaiting-plating.html', {
-		"unplated_racks_dict" : unplated_racks_dict})
-
-def plate_samples(request, gel1004, rack, plate_id=None):
+@login_required()
+def problem_samples(request, plate_id=None):
 	plate_rows = ['A','B','C','D','E','F','G','H']
 	plate_columns = ['01','02','03','04','05','06','07','08','09','10','11','12']
-	rack = Rack.objects.get(gel_1004_csv=gel1004, gmc_rack_id=rack)
-	samples = Sample.objects.filter(rack=rack,
-		plate__isnull = True,
-		rack__gel_1004_csv__gel_1005_csv__isnull = False,
-		sample_received = True)
-	samples = sorted(samples, key=lambda x: (x.gmc_rack_well[0], int(x.gmc_rack_well[1:])))
-	current_holding_racks = Plate.objects.filter(plate_id__isnull=True)
+	samples = Sample.objects.filter(issue_identified = True, issue_outcome= "Not resolved").exclude(plate__plate_type='Problem')
+	sample_form_dict = {}
+	for sample in samples:
+		sample_form_dict[sample] = LogIssueForm(instance=sample)
+	current_holding_racks = Plate.objects.filter(plate_type="Problem")
 	current_holding_racks_dict = {}
 	for current_holding_rack in current_holding_racks:
 		current_holding_racks_dict[current_holding_rack] = Sample.objects.filter(plate=current_holding_rack).count()
 	assigned_well_list = []
+	plate_samples_form_dict = {}
 	if plate_id:
-		plate = Plate.objects.get(holding_rack_id=plate_id, plate_id__isnull=True)
+		plate = Plate.objects.get(holding_rack_id=plate_id, plate_type='Problem', plate_id__isnull=True)
 		plate_samples = sorted(Sample.objects.filter(plate=plate), 
 			key=lambda x: (x.plate_well_id[0], int(x.plate_well_id[1:])), 
 			reverse=True)
 		plate_manager = PlateManager(plate)
 		for sample in plate_samples:
 			assigned_well_list.append(sample.plate_well_id)
+			plate_samples_form_dict[sample] = ResolveIssueForm(instance=sample)
 	else:
 		plate = None
 		plate_samples = None
@@ -405,15 +437,198 @@ def plate_samples(request, gel1004, rack, plate_id=None):
 			sample_select_form = SampleSelectForm()
 			holding_rack_form = HoldingRackForm(request.POST)
 			if holding_rack_form.is_valid():
+				error = False
+				holding_rack_id = holding_rack_form.cleaned_data.get('holding_rack_id')
+				try:
+					plate = Plate.objects.get(holding_rack_id=holding_rack_id, plate_id__isnull=True)
+					if plate.plate_type != "Problem":
+						messages.error(request, "You have scanned a holding rack being used for " + plate.plate_type + " samples. Please scan an exisiting or new Problem rack.")
+						error = True
+				except:
+					plate = Plate.objects.create(holding_rack_id=holding_rack_id, plate_type="Problem")
+				if plate and not error:
+					url = reverse('problem_samples', kwargs={
+							'plate_id' : plate.holding_rack_id,
+							})
+				else:
+					url = reverse('problem_samples')
+				return HttpResponseRedirect(url)
+		if 'sample' in request.POST:
+			holding_rack_form = HoldingRackForm()
+			sample_select_form = SampleSelectForm(request.POST)
+			if sample_select_form.is_valid():
+				lab_sample_id = sample_select_form.cleaned_data.get('lab_sample_id')
+				sample = None
+				for unassigned_sample in samples:
+					if unassigned_sample.laboratory_sample_id == lab_sample_id:
+						sample = unassigned_sample
+				if sample:
+					well = request.POST['well']
+					plate_manager.assign_well(request=request, sample=sample, well=well)
+				else:
+					messages.error(request, lab_sample_id + " not found. Has an issue been logged for this sample?")
+				url = reverse('problem_samples', kwargs={
+							'plate_id' : plate.holding_rack_id,
+							})
+				return HttpResponseRedirect(url)
+		if 'log-issue' in request.POST:
+			log_issue_form = LogIssueForm(request.POST)
+			if log_issue_form.is_valid():
+				pk = request.POST['log-issue']
+				comment = log_issue_form.cleaned_data.get('comment')
+				sample = Sample.objects.get(pk=pk)
+				sample.issue_identified = True
+				sample.comment = comment
+				sample.issue_outcome = "Not resolved"
+				sample.save()
+				url = reverse('problem_samples')
+				return HttpResponseRedirect(url)
+		if 'delete-issue' in request.POST:
+			log_issue_form = LogIssueForm(request.POST)
+			if log_issue_form.is_valid():
+				pk = request.POST['delete-issue']
+				sample = Sample.objects.get(pk=pk)
+				sample.issue_identified = False
+				sample.comment = None
+				sample.issue_outcome = None
+				sample.save()
+				url = reverse('problem_samples')
+				return HttpResponseRedirect(url)
+		if 'resolve-issue' in request.POST:
+			resolve_issue_form = ResolveIssueForm(request.POST)
+			if resolve_issue_form.is_valid():
+				pk = request.POST['resolve-issue']
+				comment = resolve_issue_form.cleaned_data.get('comment')
+				outcome = resolve_issue_form.cleaned_data.get('issue_outcome')
+				sample = Sample.objects.get(pk=pk)
+				sample.comment = comment
+				sample.issue_outcome = outcome
+				if outcome == "Sample returned to extracting GLH" or outcome == "Sample destroyed":
+					sample.plate = None
+					sample.plate_well_id = None
+				sample.save()
+				url = reverse('problem_samples', kwargs={
+							'plate_id' : plate.holding_rack_id,
+							})
+				return HttpResponseRedirect(url)
+	else:
+		holding_rack_form = HoldingRackForm()
+		sample_select_form = SampleSelectForm()
+
+	return render(request, 'problem-samples.html', {"sample_form_dict" : sample_form_dict,
+		"holding_rack_form" : holding_rack_form,
+		"sample_select_form" : sample_select_form,
+		"plate" : plate,
+		"plate_samples" : plate_samples,
+		"plate_samples_form_dict" : plate_samples_form_dict,
+		"assigned_well_list" : assigned_well_list,
+		"current_holding_racks_dict" : current_holding_racks_dict,
+		"plate_rows": plate_rows,
+		"plate_columns": plate_columns})
+
+
+@login_required()
+def awaiting_plating(request):
+	unplated_samples = Sample.objects.filter(plate__isnull = True, 
+		rack__gel_1004_csv__gel_1005_csv__isnull = False,
+		sample_received = True, issue_identified=False)
+	unplated_racks_dict = {}
+	for sample in unplated_samples:
+		if sample.rack in unplated_racks_dict:
+			unplated_racks_dict[sample.rack].append(sample)
+		else:
+			unplated_racks_dict[sample.rack] = [sample] 
+	for rack, samples in unplated_racks_dict.items():
+		disease_area_set = set()
+		rack_type_set = set()
+		priority_set = set()
+		for sample in samples:
+			disease_area_set.add(sample.disease_area)
+			rack_type_set.add(sample.sample_type)
+			priority_set.add(sample.priority)
+		if len(disease_area_set) == 1:
+			rack.disease_area = disease_area_set.pop()
+		else:
+			rack.disease_area = 'Mixed'
+		if len(rack_type_set) == 1:
+			rack.rack_type = rack_type_set.pop()
+		else:
+			rack.rack_type = 'Mixed'
+		if len(priority_set) == 1:
+			rack.priority = priority_set.pop()
+		else:
+			rack.priority = 'Mixed'
+		rack.save()
+	problem_samples = Sample.objects.filter(plate__plate_type="Problem", issue_outcome="Ready for plating")
+	problem_plate_dict = {}
+	for problem_sample in problem_samples:
+		if problem_sample.plate in problem_plate_dict:
+			problem_plate_dict[problem_sample.plate].append(sample)
+		else:
+			problem_plate_dict[problem_sample.plate] = [problem_sample]
+	return render(request, 'awaiting-plating.html', {
+		"unplated_racks_dict" : unplated_racks_dict,
+		"problem_plate_dict" : problem_plate_dict})
+
+@login_required()
+def plate_samples(request, rack, gel1004=None, plate_id=None):
+	plate_rows = ['A','B','C','D','E','F','G','H']
+	plate_columns = ['01','02','03','04','05','06','07','08','09','10','11','12']
+	print(gel1004)
+	if gel1004:
+		rack = Rack.objects.get(gel_1004_csv=gel1004, gmc_rack_id=rack)
+		samples = Sample.objects.filter(rack=rack,
+			plate__isnull = True,
+			rack__gel_1004_csv__gel_1005_csv__isnull = False,
+			sample_received = True).exclude(issue_outcome="Not resolved").exclude(
+											issue_outcome="Sample returned to extracting GLH").exclude(
+											issue_outcome="Sample destroyed")
+		problem_plate=None
+	else:
+		problem_plate = Plate.objects.get(holding_rack_id=rack, plate_type='Problem')
+		samples = Sample.objects.filter(plate=problem_plate, issue_outcome="Ready for plating")
+		rack=None
+	#samples = sorted(samples, key=lambda x: (x.gmc_rack_well[0], int(x.gmc_rack_well[1:])))
+	sample_form_dict = {}
+	for sample in samples:
+		sample_form_dict[sample] = LogIssueForm(instance=sample)
+	current_holding_racks = Plate.objects.filter(plate_id__isnull=True).exclude(plate_type='Problem')
+	current_holding_racks_dict = {}
+	for current_holding_rack in current_holding_racks:
+		current_holding_racks_dict[current_holding_rack] = Sample.objects.filter(plate=current_holding_rack).count()
+	assigned_well_list = []
+	plate_samples_form_dict = {}
+	if plate_id:
+		plate = Plate.objects.get(holding_rack_id=plate_id, plate_id__isnull=True)
+		plate_samples = sorted(Sample.objects.filter(plate=plate), 
+			key=lambda x: (x.plate_well_id[0], int(x.plate_well_id[1:])), 
+			reverse=True)
+		plate_manager = PlateManager(plate)
+		for sample in plate_samples:
+			assigned_well_list.append(sample.plate_well_id)
+			plate_samples_form_dict[sample] = LogIssueForm(instance=sample)
+	else:
+		plate = None
+		plate_samples = None
+
+	if request.method == 'POST':
+		if 'holding' in request.POST:
+			sample_select_form = SampleSelectForm()
+			holding_rack_form = HoldingRackForm(request.POST)
+			if holding_rack_form.is_valid():
+				error = False
 				holding_rack_id = holding_rack_form.cleaned_data.get('holding_rack_id')
 				if holding_rack_id == rack.gmc_rack_id:
 					messages.error(request, "You have scanned the GMC Rack. Please scan the holding rack.")
 				else:
 					try:
 						plate = Plate.objects.get(holding_rack_id=holding_rack_id, plate_id__isnull=True)
+						if plate.plate_type == 'Problem':
+							messages.error(request, "You have scanned a holding rack for Problem samples. Please scan the correct holding rack.")
+							error = True
 					except:
 						plate = Plate.objects.create(holding_rack_id=holding_rack_id)
-				if plate:
+				if plate and not error:
 					url = reverse('plate_samples', kwargs={
 							'gel1004' : rack.gel_1004_csv.pk,
 							'rack' : rack.gmc_rack_id,
@@ -465,8 +680,17 @@ def plate_samples(request, gel1004, rack, plate_id=None):
 			sample_select_form = SampleSelectForm()
 			pk = request.POST['ready']
 			plate = Plate.objects.get(pk=pk)
+			# assign buffer wells
+			plate_manager.assign_buffer()
+			buffer_wells = Buffer.objects.filter(plate=plate).order_by('well_id')
 			plate.ready_to_plate = True
 			plate.save()
+			messages.info(request, "Holding rack has been marked as ready for plating.")
+			if buffer_wells:
+				buffer_wells_list = ''
+				for buffer_well in buffer_wells:
+					buffer_wells_list += buffer_well.well_id + ', '
+				messages.warning(request, "Buffer will need to be added to the following wells during plating: " + buffer_wells_list)
 		if 'sample' in request.POST:
 			holding_rack_form = HoldingRackForm()
 			sample_select_form = SampleSelectForm(request.POST)
@@ -490,26 +714,58 @@ def plate_samples(request, gel1004, rack, plate_id=None):
 						messages.error(request, "Sample does not match holding rack type! Unable to add to this rack.")
 				else:
 					messages.error(request, lab_sample_id + " not found in GLH Rack " + rack.gmc_rack_id)
-				url = reverse('plate_samples', kwargs={
-							'gel1004' : rack.gel_1004_csv.pk,
-							'rack' : rack.gmc_rack_id,
-							'plate_id' : plate.holding_rack_id,
-							})
+				if problem_plate:
+					url = reverse('plate_problem_samples', kwargs={
+								'rack' : problem_plate.holding_rack_id,
+								'plate_id' : plate.holding_rack_id,
+								})
+				else:	
+					url = reverse('plate_samples', kwargs={
+								'gel1004' : rack.gel_1004_csv.pk,
+								'rack' : rack.gmc_rack_id,
+								'plate_id' : plate.holding_rack_id,
+								})
+				return HttpResponseRedirect(url)
+		if 'log-issue' in request.POST:
+			log_issue_form = LogIssueForm(request.POST)
+			if log_issue_form.is_valid():
+				pk = request.POST['log-issue']
+				comment = log_issue_form.cleaned_data.get('comment')
+				sample = Sample.objects.get(pk=pk)
+				sample.issue_identified = True
+				sample.comment = comment
+				sample.issue_outcome = "Not resolved"
+				sample.save()
+				if problem_plate:
+					url = reverse('plate_problem_samples', kwargs={
+								'rack' : problem_plate.holding_rack_id,
+								'plate_id' : plate.holding_rack_id,
+								})
+				else:	
+					url = reverse('plate_samples', kwargs={
+								'gel1004' : rack.gel_1004_csv.pk,
+								'rack' : rack.gmc_rack_id,
+								'plate_id' : plate.holding_rack_id,
+								})
 				return HttpResponseRedirect(url)
 	else:
 		holding_rack_form = HoldingRackForm()
 		sample_select_form = SampleSelectForm()
 	return render(request, 'plate-samples.html', {"rack" : rack,
+		"problem_plate" : problem_plate,
 		"samples" : samples,
 		"holding_rack_form" : holding_rack_form,
 		"sample_select_form" : sample_select_form,
+		"sample_form_dict" : sample_form_dict,
 		"plate" : plate,
 		"plate_samples" : plate_samples,
+		"plate_samples_form_dict" : plate_samples_form_dict,
 		"assigned_well_list" : assigned_well_list,
 		"current_holding_racks_dict" : current_holding_racks_dict,
 		"plate_rows": plate_rows,
 		"plate_columns": plate_columns})
 
+@login_required()
 def ready_to_plate(request):
 	"""
 	Renders page displaying holding racks that are ready for plating
@@ -519,6 +775,7 @@ def ready_to_plate(request):
 		plate.sample_count = Sample.objects.filter(plate=plate).count
 	return render(request, 'ready-to-plate.html', {"ready_to_plate" : ready_to_plate})
 
+@login_required()
 def plate_holding_rack(request, plate_pk):
 	plate = Plate.objects.get(pk=plate_pk)
 	samples = sorted(Sample.objects.filter(plate=plate), 
@@ -568,6 +825,17 @@ def plate_holding_rack(request, plate_pk):
 				plate_id = plating_form.cleaned_data.get('plate_id')
 				plate.plate_id = plate_id
 				plate.save()
+				# generate output for robot
+				plate_manager = PlateManager(plate)
+				well_contents = plate_manager.get_well_contents()
+				for content in well_contents:
+					try:
+						print(content.well_id)
+					except:
+						try:
+							print(content.plate_well_id)
+						except:
+							pass
 	else:
 		plating_form = PlatingForm()
 	return render(request, 'plate-holding-rack.html', {
@@ -575,6 +843,7 @@ def plate_holding_rack(request, plate_pk):
 		"samples" : samples,
 		"plating_form" : plating_form})
 
+@login_required()
 def ready_to_dispatch(request):
 	"""
 	Renders page displaying plates that are ready for dispatch
@@ -608,9 +877,6 @@ def ready_to_dispatch(request):
 				elements = []
 				data = [['Participant ID', 'Plate ID', 'Well ID', 
 						'Plate Consignment Number', 'Plate Date of Dispatch']]
-				#c = canvas.Canvas(path[:-3] + 'pdf')
-				#c.drawString(100,750,"Sample summary for consignment: " + str(consignment_number))
-				#c.save()
 				with open(path, 'w', newline='') as csvfile:
 					writer = csv.writer(csvfile, delimiter=',',
 						quotechar=',', quoting=csv.QUOTE_MINIMAL)
@@ -618,7 +884,7 @@ def ready_to_dispatch(request):
 						'Normalised Biorepository Sample Volume', 'Normalised Biorepository Concentration',
 						'Well ID', 'Plate Consignment Number', 'Plate Date of Dispatch'])
 					for plate in plates:
-						samples = Sample.objects.filter(plate=plate)
+						samples = Sample.objects.filter(plate=plate).order_by('plate_well_id')
 						for sample in samples:
 							writer.writerow([sample.participant_id, plate.plate_id,
 								sample.norm_biorep_sample_vol, sample.norm_biorep_conc,
@@ -650,19 +916,28 @@ def ready_to_dispatch(request):
 		"ready_to_dispatch" : ready_to_dispatch,
 		"gel1008_form" : gel1008_form})
 
+@login_required()
 def audit(request):
 	"""
-	Renders the search results page. Users can also search again from this page.
+	Renders the audit page showing all processed samples. 
 	"""
-	sample_select_form = SampleSelectForm()
-	sample = None
-	if request.method == 'POST':
-		sample_select_form = SampleSelectForm(request.POST)
-		if sample_select_form.is_valid():
-			lab_sample_id = sample_select_form .cleaned_data.get('lab_sample_id')
-			try:
-				sample = Sample.objects.get(laboratory_sample_id=lab_sample_id)
-			except:
-				messages.error(request, "No samples found with laboratory ID " + lab_sample_id)
-	return render(request, 'audit.html', {"sample_select_form" : sample_select_form,
-		"sample" : sample})
+	samples = Sample.objects.all().prefetch_related('rack', 'plate', 
+				'plate__gel_1008_csv', 'rack__gel_1004_csv', 'rack__gel_1004_csv__gel_1005_csv')
+	return render(request, 'audit.html', {"samples" : samples})
+
+
+
+def register(request):
+    created = False
+    matching_users = []
+    if request.method == 'POST':
+        email = request.POST['email']
+        username = request.POST['username']
+        password = request.POST['password']
+        matching_users = User.objects.filter(username=username)
+        if not matching_users:
+            u = User.objects.create_user(username, email, password)
+            u.is_active = False
+            u.save()
+            created = True
+    return render(request, 'registration/register.html', {'created': created, 'matching_users': matching_users})

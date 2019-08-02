@@ -87,3 +87,11 @@ input:checked + .slider:before {
 .slider.round:before {
   border-radius: 50%;
 }
+
+.nav-link {
+    color: #212529;
+}
+
+.nav .active {
+  color: #005FBA;
+}

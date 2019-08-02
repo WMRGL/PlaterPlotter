@@ -18,10 +18,14 @@
     <div class="row">
       <div class="col-12">
         <div class="tab-pane active">
-          <table class="table table-bordered">
+          <h4>GLH Racks</h4>
+          <table class="table table-bordered" id="dataTable">
             <thead>
               <tr>
                 <th>Rack ID</th>
+                <th>Disease Area</th>
+                <th>Sample Type</th>
+                <th>Priority</th>
                 <th>Laboratory ID</th>
                 <th>Number of Samples Awaiting Plating</th>
               </tr>
@@ -30,6 +34,9 @@
             {% for rack, samples in unplated_racks_dict.items %}
             <tr>
               <td><a href="/plate-samples/{{ rack.gel_1004_csv.pk }}/{{ rack.gmc_rack_id }}">{{ rack.gmc_rack_id }}</a></td>
+              <td>{{ rack.disease_area }}</td>
+              <td>{{ rack.rack_type }}</td>
+              <td>{{ rack.priority }}</td>
               <td>{{ rack.laboratory_id }}</td>
               <td>{{ samples|length }}</td>
             </tr>
@@ -40,6 +47,33 @@
       </div>
     </div>
     <hr>
+    {% if problem_plate_dict %}
+      <div class="row">
+        <div class="col-12">
+          <div class="tab-pane active">
+            <h4>Problem Racks</h4>
+            <table class="table table-bordered" id="dataTable2">
+              <thead>
+                <tr>
+                  <th>Rack ID</th>
+                  <th>Sample Type</th>
+                  <th>Number of Samples Awaiting Plating</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for plate, samples in problem_plate_dict.items %}
+              <tr>
+                <td><a href="/plate-samples/{{ plate.holding_rack_id }}">{{ plate.holding_rack_id }}</a></td>
+                <td>{{ plate.plate_type }}</td>
+                <td>{{ samples|length }}</td>
+              </tr>
+              {% endfor %} 
+              </tbody>
+            </table>
+          </div> 
+        </div>
+      </div>
+    {% endif %}
 </div>
 
 {% endblock content %}

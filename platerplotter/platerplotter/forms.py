@@ -26,6 +26,25 @@ class SampleSelectForm(forms.Form):
 		else:
 			return lab_sample_id
 
+class LogIssueForm(forms.ModelForm):
+	class Meta:
+		model = Sample
+		fields = ('comment',)
+		labels = {'comment': "",}
+		widgets = {'comment': forms.Textarea(attrs={'rows':4, 'cols':50}),}
+
+class ResolveIssueForm(forms.ModelForm):
+	class Meta:
+		model = Sample
+		fields = ('comment', 
+				'issue_outcome',)
+		labels = {'comment': "", 
+				'issue_outcome' : "Outcome",}
+		widgets = {'comment': forms.Textarea(attrs={'rows':4, 'cols':50}),}
+
+
+	#issue_comment = forms.CharField(label='', widget=forms.Textarea(attrs={'rows':4, 'cols':55}))
+
 # class ParticipantIdForm(forms.Form):
 # 	participant_id = forms.CharField(label='', widget=forms.TextInput(attrs={'autofocus': 'autofocus'}))
 
@@ -49,10 +68,8 @@ class PlatingForm(ModelForm):
 		if self.cleaned_data['plate_id']:
 			plate_id = self.cleaned_data['plate_id'].upper()
 			if Plate.objects.filter(plate_id=plate_id).exists():
-				print("error raised")
 				raise ValidationError("Plate ID already used.")
 			if not re.match(r'^LP\d{7}-DNA$', plate_id):
-				print("error raised")
 				raise ValidationError("Invalid Plate ID.")
 			return plate_id
 		else:

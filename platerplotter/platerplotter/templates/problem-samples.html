@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load static %}
+{% block title %}
+    Determine wells - {{ block.super }}
+{% endblock title %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class='container-fluid'>
+  {% if plate %}
+  <div class="row">
+    <div class="col-3">
+      <h3>Problem rack</h3>
+      <strong>ID:</strong> {{plate.holding_rack_id}}  
+    </div>
+    <div class="col-6">
+      <div align='center'>
+        <form role='form' action='' method="POST", class='justify-content-center'>
+          {% csrf_token %}
+          <div class="form-group">
+            <a class="btn btn-primary btn-lg" href="/problem-samples/" role="button">Change Problem Rack</a>
+          </div>
+        </form>
+      </div>
+    </div>
+      <div class="col-3">
+        <div align='right'>
+          <h4>Scan or type sample ID</h4>
+        </div>
+        <form role='form' action='' method="POST", class='form-inline float-right'>
+          {% csrf_token %}
+          <input type="hidden" id="well" name="well">
+          {{ sample_select_form|crispy }}
+          <div class="form-group">
+            <div class="col-lg-5 col-sm-offset-5">
+              <button type="submit" name='sample' class="btn btn-primary">Go</button>
+            </div>
+          </div>
+        </form>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-4">
+      <div class="tab-pane active">
+          <table class="plate">
+            <tbody>
+              <tr>
+                <th></th>
+                {% for column in plate_columns %}
+                  <th>{{ column }}</th>
+                {% endfor %}
+              </tr>
+              {% for row in plate_rows %}
+                <tr>
+                  <th>{{ row }}</th>
+                  {% for column in plate_columns %}
+                    {% if row|add:column in assigned_well_list %}
+                      {% for sample in plate_samples %}
+                        {% if row|add:column == sample.plate_well_id %}
+                          <td title='Position:             {{row|add:column}} 
+Laboratory ID:    {{sample.laboratory_sample_id}}
+Participant ID:     {{sample.participant_id}}
+Group ID:            {{sample.group_id}}' style="background-color: black"><div class="tooltip hidden">Some text</div></td>
+                        {% endif %}
+                      {% endfor %}
+                    {% else %}
+                      <td class='unassigned' id="{{row|add:column}}" onclick="myFunction('{{row|add:column}}')"></td>
+                    {% endif %}
+                  {% endfor %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+      </div> 
+    </div> 
+    <div class='col-8' style="height: 350px; overflow-y:scroll;">
+      <div class="tab-pane active">
+        <table class="table table-bordered" id="dataTable">
+          <thead>
+            <tr>
+              <th>Holding Rack Well</th>
+              <th>Lab Sample ID</th>  
+              <th>Participant ID</th>
+              <th>Group ID</th>
+              <th>Priority</th>
+              <th>Disease Area</th>
+              <th>Sample Type</th>          
+              <th>Issue</th>
+              <th>Resolve Issue</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sample, form in plate_samples_form_dict.items %}
+            <tr>
+              <td>{{ sample.plate_well_id }}</td>
+              <td>{{ sample.laboratory_sample_id }}</td>
+              <td>{{ sample.participant_id }}</td>
+              <td>{{ sample.group_id }}</td>
+              <td>{{ sample.priority }}</td>
+              <td>{{ sample.disease_area }}</td>
+              <td>{{ sample.sample_type }}</td>
+              <td>{{ sample.comment }}</td>
+              <td>                   
+                <a class='btn btn-warning' href=# data-toggle="modal" data-target="#editIssueModal-{{sample.pk}}">Edit Issue</a>
+              </td>
+                <div id='editIssueModal-{{sample.pk}}' class="modal fade" role="dialog">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h4 class="modal-title">Log issue for {{ sample.laboratory_sample_id }}</h4>
+                      <button type="button" class="close" data-dismiss="modal"> X </button>
+                    </div>
+                    <div class="modal-body">
+                      <strong>Participant ID:</strong> {{ sample.participant_id }} {{ hist.delivery.opening_user.last_name }}
+                      <form role='form' action='' method="POST", class='form'>
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <br>
+                        <div class="form-group">
+                          <div class="float-right">
+                            <button type="submit" name='resolve-issue' value='{{ sample.pk }}'class="btn btn-primary">Update</button>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div> 
+    </div>    
+  </div>
+  {% else %}
+  <div class="row">
+    <div class="col-6">
+      <h3>Assign problem samples to a problem holding rack</h3>
+      <p>Scan or select holding problem rack ID and then scan sample to assign well</p>
+    </div>
+    <div class="col-6">
+      <div align='right'>
+        <h4>Scan or type Problem Rack</h4>
+      </div>
+      <form role='form' action='' method="POST", class='form-inline float-right'>
+        {% csrf_token %}
+        {{ holding_rack_form|crispy }}
+        <div class="form-group">
+          <div class="col-lg-5 col-sm-offset-5">
+            <button type="submit" name='holding' class="btn btn-primary">Go</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-12">
+      {% if current_holding_racks_dict %}
+        <h5>Current available problem racks</h5>
+        <div class="tab-pane active">
+            <table class="table table-bordered" id="dataTable">
+              <thead>
+                <tr>
+                  <th>Rack ID</th>
+                  <th>Disease Area</th>
+                  <th>Sample Type</th>
+                  <th>Priority</th>
+                  <th>Number of Samples</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for holding_rack, count in current_holding_racks_dict.items %}
+              <tr>
+                <td><a href="/problem-samples/{{ holding_rack.holding_rack_id }}">{{ holding_rack.holding_rack_id }}</a></td>
+                <td>Mixed</td>
+                <td>{{ holding_rack.plate_type }}</td>
+                <td>Mixed</td>
+                <td>{{ count }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div> 
+      {% else %}
+        <p>No current problem racks, please scan a new rack to start</p>
+      {% endif %}
+    </div>     
+  </div>
+  {% endif %}
+  <hr>
+  <div class="row">
+    <div class="col-4">
+      <h3>Problem samples awaiting well assignment</h3>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-12">
+      <div class="tab-pane active">
+          <table class="table table-bordered" id="dataTable2">
+            <thead>
+              <tr>
+                <th>Rack</th>
+                <th>Well</th>
+                <th>GLH</th>
+                <th>Participant ID</th>
+                <th>Group ID</th>
+                <th>Priority</th>
+                <th>Disease Area</th>
+                <th>Sample Type</th>
+                <th>Tissue Type</th>
+                <th>Lab Sample ID</th>
+                <th>Sample Volume</th>
+                <th>Issue</th>
+                <th>Edit Issue</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for sample, form in sample_form_dict.items %}
+            <tr>
+              <td>
+                {% if sample.plate %}
+                  {{ sample.plate.holding_rack_id }}
+                {% else %}
+                  {{ sample.rack.gmc_rack_id }}
+                {% endif %}
+              </td>
+              <td>
+                {% if sample.plate %}
+                  {{ sample.plate_well_id }}
+                {% else %}
+                  {{ sample.gmc_rack_well }}
+                {% endif %}
+              </td>
+              <td>{{ sample.rack.laboratory_id  }}</td>
+              <td>{{ sample.participant_id }}</td>
+              <td>{{ sample.group_id }}</td>
+              <td>{{ sample.priority }}</td>
+              <td>{{ sample.disease_area }}</td>
+              <td>{{ sample.sample_type}}</td>
+              <td>{{ sample.clin_sample_type }}</td>
+              <td>{{ sample.laboratory_sample_id }}</td>
+              <td>{{ sample.laboratory_sample_volume }}</td>
+              <td>{{ sample.comment }}</td>
+              <td>                   
+                <a class='btn btn-warning' href=# data-toggle="modal" data-target="#editIssueModal-{{sample.pk}}">Edit Issue</a>
+              </td>
+                <div id='editIssueModal-{{sample.pk}}' class="modal fade" role="dialog">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h4 class="modal-title">Log issue for {{ sample.laboratory_sample_id }}</h4>
+                      <button type="button" class="close" data-dismiss="modal"> X </button>
+                    </div>
+                    <div class="modal-body">
+                      <strong>Participant ID:</strong> {{ sample.participant_id }} {{ hist.delivery.opening_user.last_name }}
+                      <form role='form' action='' method="POST", class='form'>
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <br>
+                        <div class="form-group">
+                          <div class="float-right">
+                            <button type="submit" name='delete-issue' value='{{ sample.pk }}'class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this issue?')">Delete</button>
+                            <button type="submit" name='log-issue' value='{{ sample.pk }}'class="btn btn-primary">Edit</button>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div> 
+    </div>     
+  </div>
+</div>
+
+<script>
+var form = document.getElementById('well');
+form.value = '';
+function myFunction(position) {
+  var unassignedWells = document.getElementsByClassName('unassigned')
+  var form = document.getElementById('well');
+  for (var i = 0; i < unassignedWells.length; i++) {
+    unassignedWells[i].style.backgroundColor = '#e9ecef'
+  }
+  if (position === form.value){
+    form.value = '';
+  } else {
+    form.value = position;
+    document.getElementById(position).style.backgroundColor = "red";
+    console.log(position);
+  }
+}
+</script>
+
+{% endblock content %}
