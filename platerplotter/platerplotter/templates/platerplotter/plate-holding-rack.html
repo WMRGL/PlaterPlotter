@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'platerplotter/base.html' %}
 {% block title %}
     Acknowledge Samples - {{ block.super }}
 {% endblock title %}
@@ -10,9 +10,9 @@
     <div class="row">
       <div class="col-5">
         <h3>Plate samples</h3>
-        <h4>Holding Rack: {{ plate.holding_rack_id }}</h4>
-        {% if plate.plate_id %}
-          <h4>Plate ID: {{ plate.plate_id }}</h4>
+        <h4>Holding Rack: {{ holding_rack.holding_rack_id }}</h4>
+        {% if holding_rack.plate %}
+          <h4>Plate ID: {{ holding_rack.plate.plate_id }}</h4>
         {% else %}
           <p>Please confirm correct position of samples using plate scanner and then assign plate ID</p>
         {% endif %}
@@ -22,7 +22,7 @@
             {% csrf_token %}
             <div class="form-group">
               <div>
-                {% if plate.positions_confirmed %}
+                {% if holding_rack.positions_confirmed %}
                   <button type="submit" name="rack-scanner" class="btn btn-success" disabled title="Rack positions confirmed.
 Please plate samples.">Check Rack Scanner</button>
                 {% else %}
@@ -41,7 +41,7 @@ Please plate samples.">Check Rack Scanner</button>
           {{ plating_form|crispy }}
           <div class="form-group">
             <div class="col-lg-5 col-sm-offset-5">
-              {% if plate.positions_confirmed %}
+              {% if holding_rack.positions_confirmed %}
                 <button type="submit" name="assign-plate" class="btn btn-primary">Assign Plate</button>
               {% else %}
                 <button type="submit" name="assign-plate" class="btn btn-primary" disabled title="Please confirm sample positions using rack scanner first.">Assign Plate</button>
@@ -71,7 +71,7 @@ Please plate samples.">Check Rack Scanner</button>
               <tbody>
               {% for sample in samples %}
               <tr>
-                <td>{{ sample.plate_well_id }}</td>
+                <td>{{ sample.holding_rack_well.well_id }}</td>
                 <td>{{ sample.laboratory_sample_id }}</td>
                 <td>{{ sample.participant_id }}</td>
                 <td>{{ sample.group_id }}</td>

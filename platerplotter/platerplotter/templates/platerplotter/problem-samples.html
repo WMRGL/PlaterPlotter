@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'platerplotter/base.html' %}
 {% load bootstrap4 %}
 {% load static %}
 {% block title %}
@@ -8,11 +8,11 @@
 
 {% block content %}
 <div class='container-fluid'>
-  {% if plate %}
+  {% if holding_rack %}
   <div class="row">
     <div class="col-3">
       <h3>Problem rack</h3>
-      <strong>ID:</strong> {{plate.holding_rack_id}}  
+      <strong>ID:</strong> {{holding_rack.holding_rack_id}}  
     </div>
     <div class="col-6">
       <div align='center'>
@@ -47,21 +47,21 @@
             <tbody>
               <tr>
                 <th></th>
-                {% for column in plate_columns %}
+                {% for column in holding_rack_columns %}
                   <th>{{ column }}</th>
                 {% endfor %}
               </tr>
-              {% for row in plate_rows %}
+              {% for row in holding_rack_rows %}
                 <tr>
                   <th>{{ row }}</th>
-                  {% for column in plate_columns %}
+                  {% for column in holding_rack_columns %}
                     {% if row|add:column in assigned_well_list %}
-                      {% for sample in plate_samples %}
-                        {% if row|add:column == sample.plate_well_id %}
+                      {% for sample in holding_rack_samples %}
+                        {% if row|add:column == sample.holding_rack_well.well_id %}
                           <td title='Position:             {{row|add:column}} 
 Laboratory ID:    {{sample.laboratory_sample_id}}
 Participant ID:     {{sample.participant_id}}
-Group ID:            {{sample.group_id}}' style="background-color: black"><div class="tooltip hidden">Some text</div></td>
+Group ID:            {{sample.group_id}}' style="background-color: black"><div class="tooltip hidden"></div></td>
                         {% endif %}
                       {% endfor %}
                     {% else %}
@@ -91,9 +91,9 @@ Group ID:            {{sample.group_id}}' style="background-color: black"><div c
             </tr>
           </thead>
           <tbody>
-            {% for sample, form in plate_samples_form_dict.items %}
+            {% for sample, form in holding_rack_samples_form_dict.items %}
             <tr>
-              <td>{{ sample.plate_well_id }}</td>
+              <td>{{ sample.holding_rack_well.well_id }}</td>
               <td>{{ sample.laboratory_sample_id }}</td>
               <td>{{ sample.participant_id }}</td>
               <td>{{ sample.group_id }}</td>
@@ -112,7 +112,7 @@ Group ID:            {{sample.group_id}}' style="background-color: black"><div c
                       <button type="button" class="close" data-dismiss="modal"> X </button>
                     </div>
                     <div class="modal-body">
-                      <strong>Participant ID:</strong> {{ sample.participant_id }} {{ hist.delivery.opening_user.last_name }}
+                      <strong>Participant ID:</strong> {{ sample.participant_id }}
                       <form role='form' action='' method="POST", class='form'>
                         {% csrf_token %}
                         {{ form|crispy }}
@@ -175,7 +175,7 @@ Group ID:            {{sample.group_id}}' style="background-color: black"><div c
               <tr>
                 <td><a href="/problem-samples/{{ holding_rack.holding_rack_id }}">{{ holding_rack.holding_rack_id }}</a></td>
                 <td>Mixed</td>
-                <td>{{ holding_rack.plate_type }}</td>
+                <td>{{ holding_rack.holding_rack_type }}</td>
                 <td>Mixed</td>
                 <td>{{ count }}</td>
               </tr>
@@ -220,20 +220,20 @@ Group ID:            {{sample.group_id}}' style="background-color: black"><div c
             {% for sample, form in sample_form_dict.items %}
             <tr>
               <td>
-                {% if sample.plate %}
-                  {{ sample.plate.holding_rack_id }}
+                {% if sample.holding_rack_well %}
+                  {{ sample.holding_rack_well.holding_rack.holding_rack_id }}
                 {% else %}
-                  {{ sample.rack.gmc_rack_id }}
+                  {{ sample.receiving_rack.receiving_rack_id }}
                 {% endif %}
               </td>
               <td>
-                {% if sample.plate %}
-                  {{ sample.plate_well_id }}
+                {% if sample.holding_rack_well %}
+                  {{ sample.holding_rack_well.well_id }}
                 {% else %}
-                  {{ sample.gmc_rack_well }}
+                  {{ sample.receiving_rack_well }}
                 {% endif %}
               </td>
-              <td>{{ sample.rack.laboratory_id  }}</td>
+              <td>{{ sample.receiving_rack.laboratory_id  }}</td>
               <td>{{ sample.participant_id }}</td>
               <td>{{ sample.group_id }}</td>
               <td>{{ sample.priority }}</td>
@@ -254,7 +254,7 @@ Group ID:            {{sample.group_id}}' style="background-color: black"><div c
                       <button type="button" class="close" data-dismiss="modal"> X </button>
                     </div>
                     <div class="modal-body">
-                      <strong>Participant ID:</strong> {{ sample.participant_id }} {{ hist.delivery.opening_user.last_name }}
+                      <strong>Participant ID:</strong> {{ sample.participant_id }}
                       <form role='form' action='' method="POST", class='form'>
                         {% csrf_token %}
                         {{ form|crispy }}

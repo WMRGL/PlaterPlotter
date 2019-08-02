@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'platerplotter/base.html' %}
 {% load bootstrap4 %}
 {% load static %}
 {% block title %}
@@ -8,23 +8,23 @@
 
 {% block content %}
 <div class='container-fluid'>
-  {% if plate %}
+  {% if holding_rack %}
   <div class="row">
     <div class="col-3">
       <h3>Holding rack</h3>
-      <strong>ID:</strong> {{plate.holding_rack_id}} &nbsp|&nbsp
-      <strong>Area:</strong> {{plate.disease_area}} <br>
-      <strong>Type:</strong> {{plate.plate_type}} &nbsp|&nbsp
-      <strong>Priority:</strong> {{plate.priority}}    
+      <strong>ID:</strong> {{holding_rack.holding_rack_id}} &nbsp|&nbsp
+      <strong>Area:</strong> {{holding_rack.disease_area}} <br>
+      <strong>Type:</strong> {{holding_rack.holding_rack_type}} &nbsp|&nbsp
+      <strong>Priority:</strong> {{holding_rack.priority}}    
     </div>
     <div class="col-6">
       <div align='center'>
         <form role='form' action='' method="POST", class='justify-content-center'>
           {% csrf_token %}
           <div class="form-group">
-            <a class="btn btn-primary btn-lg" href="/plate-samples/{{rack.gel_1004_csv.pk}}/{{rack.gmc_rack_id}}" role="button">Change Holding Rack</a>
-            <button type="submit" name='rack-scanner' value='{{ plate.pk }}' class="btn btn-success btn-lg">Rack Scanner</button> 
-            <button type="submit" name='ready' value='{{ plate.pk }}' class="btn btn-success btn-lg">Ready to Plate</button>
+            <a class="btn btn-primary btn-lg" href="/assign-samples-to-holding-rack/{{rack.gel_1004_csv.pk}}/{{rack.receiving_rack_id}}" role="button">Change Holding Rack</a>
+            <button type="submit" name='rack-scanner' value='{{ holding_rack.pk }}' class="btn btn-success btn-lg">Rack Scanner</button> 
+            <button type="submit" name='ready' value='{{ holding_rack.pk }}' class="btn btn-success btn-lg">Ready to Plate</button>
           </div>
         </form>
       </div>
@@ -45,7 +45,7 @@
         </form>
     </div>
   </div>
-  {% if plate.ready_to_plate %}
+  {% if holding_rack.ready_to_plate %}
     <p>Holding rack ready to plate.</p>
   {% else %}
     <div class="row">
@@ -55,21 +55,21 @@
               <tbody>
                 <tr>
                   <th></th>
-                  {% for column in plate_columns %}
+                  {% for column in holding_rack_columns %}
                     <th>{{ column }}</th>
                   {% endfor %}
                 </tr>
-                {% for row in plate_rows %}
+                {% for row in holding_rack_rows %}
                   <tr>
                     <th>{{ row }}</th>
-                    {% for column in plate_columns %}
+                    {% for column in holding_rack_columns %}
                       {% if row|add:column in assigned_well_list %}
-                        {% for sample in plate_samples %}
-                          {% if row|add:column == sample.plate_well_id %}
+                        {% for sample in holding_rack_samples %}
+                          {% if row|add:column == sample.holding_rack_well.well_id %}
                             <td title='Position:             {{row|add:column}} 
 Laboratory ID:    {{sample.laboratory_sample_id}}
 Participant ID:     {{sample.participant_id}}
-Group ID:            {{sample.group_id}}' style="background-color: blue"><div class="tooltip hidden">Some text</div></td>
+Group ID:            {{sample.group_id}}' style="background-color: blue"><div class="tooltip hidden"></div></td>
                           {% endif %}
                         {% endfor %}
                       {% else %}
@@ -96,9 +96,9 @@ Group ID:            {{sample.group_id}}' style="background-color: blue"><div cl
               </tr>
             </thead>
             <tbody>
-              {% for sample, form in plate_samples_form_dict.items %}
+              {% for sample, form in holding_rack_samples_form_dict.items %}
               <tr>
-                <td>{{ sample.plate_well_id }}</td>
+                <td>{{ sample.holding_rack_well.well_id }}</td>
                 <td>{{ sample.laboratory_sample_id }}</td>
                 <td>{{ sample.participant_id }}</td>
                 <td>{{ sample.group_id }}</td>
@@ -182,12 +182,12 @@ Group ID:            {{sample.group_id}}' style="background-color: blue"><div cl
               {% for holding_rack, count in current_holding_racks_dict.items %}
               <tr>
                 {% if rack %}
-                  <td><a href="/plate-samples/{{ rack.gel_1004_csv.pk }}/{{rack.gmc_rack_id}}/{{ holding_rack.holding_rack_id }}">{{ holding_rack.holding_rack_id }}</a></td>
-                {% elif problem_plate %}
-                  <td><a href="/plate-problem-rack-samples/{{problem_plate.holding_rack_id}}/{{ holding_rack.holding_rack_id }}"> {{ holding_rack.holding_rack_id }}</a></td>
+                  <td><a href="/assign-samples-to-holding-rack/{{ rack.gel_1004_csv.pk }}/{{rack.receiving_rack_id}}/{{ holding_rack.holding_rack_id }}">{{ holding_rack.holding_rack_id }}</a></td>
+                {% elif problem_holding_rack %}
+                  <td><a href="/assign-problem-rack-samples-to-holding-rack/{{problem_holding_rack.holding_rack_id}}/{{ holding_rack.holding_rack_id }}"> {{ holding_rack.holding_rack_id }}</a></td>
                 {% endif %}
                 <td>{{ holding_rack.disease_area }}</td>
-                <td>{{ holding_rack.plate_type }}</td>
+                <td>{{ holding_rack.holding_rack_type }}</td>
                 <td>{{ holding_rack.priority }}</td>
                 <td>{{ count }}</td>
                 <td>
@@ -212,11 +212,15 @@ Group ID:            {{sample.group_id}}' style="background-color: blue"><div cl
   <div class="row">
     <div class="col-4">
       <h3>Samples awaiting well assignment</h3>
-      <strong>GLH Rack ID:</strong> {{rack.gmc_rack_id}}
+      {% if problem_holding_rack %}
+        <strong>Problem Rack ID:</strong> {{problem_holding_rack.holding_rack_id}}
+      {% else %}
+        <strong>GLH Rack ID:</strong> {{rack.receiving_rack_id}}
+      {% endif %}
     </div>
     <div class="col-4">
       <div align='center'>
-        <a class="btn btn-primary btn-lg" href="/awaiting-plating" role="button">Change Rack</a>
+        <a class="btn btn-primary btn-lg" href="/awaiting-holding-rack-assignment" role="button">Change Rack</a>
       </div>
     </div>
   </div>
@@ -233,7 +237,6 @@ Group ID:            {{sample.group_id}}' style="background-color: blue"><div cl
                 <th>Disease Area</th>
                 <th>Sample Type</th>
                 <th>Tissue Type</th>
-                <th>Consignment Number</th>
                 <th>Lab Sample ID</th>
                 <th>Sample Volume</th>
                 <th>Log Issue</th> 
@@ -242,14 +245,17 @@ Group ID:            {{sample.group_id}}' style="background-color: blue"><div cl
             <tbody>
             {% for sample, form in sample_form_dict.items %}
             <tr>
-              <td>{{ sample.gmc_rack_well }}</td>
+              {% if problem_holding_rack %}
+                <td>{{ sample.holding_rack_well.well_id }}</td>
+              {% else %}
+                <td>{{ sample.receiving_rack_well }}</td>
+              {% endif %}
               <td>{{ sample.participant_id }}</td>
               <td>{{ sample.group_id }}</td>
               <td>{{ sample.priority }}</td>
               <td>{{ sample.disease_area }}</td>
               <td>{{ sample.sample_type }}</td>
               <td>{{ sample.clin_sample_type }}</td>
-              <td>{{ sample.glh_sample_consignment_number }}</td>
               <td>{{ sample.laboratory_sample_id }}</td>
               <td>{{ sample.laboratory_sample_volume }}</td>
               {% if sample.issue_identified %} 
@@ -291,7 +297,7 @@ Group ID:            {{sample.group_id}}' style="background-color: blue"><div cl
                       <button type="button" class="close" data-dismiss="modal"> X </button>
                     </div>
                     <div class="modal-body">
-                      <strong>Participant ID:</strong> {{ sample.participant_id }} {{ hist.delivery.opening_user.last_name }}
+                      <strong>Participant ID:</strong> {{ sample.participant_id }}
                       <form role='form' action='' method="POST", class='form'>
                         {% csrf_token %}
                         {{ form|crispy }}
