@@ -863,60 +863,130 @@ def ready_to_dispatch(request):
 		if gel1008_form.is_valid():
 			if request.POST.getlist('selected_plate'):
 				plate_pks = request.POST.getlist('selected_plate')
-				consignment_number = gel1008_form.cleaned_data.get('consignment_number')
-				date_of_dispatch = gel1008_form.cleaned_data.get('date_of_dispatch')
-				directory = LoadConfig().load()['gel1008path']
-				datetime_now = datetime.now(pytz.timezone('UTC'))
-				filename = "ngis_bio_to_gel_sample_dispatch_" + datetime.now(pytz.timezone('UTC')).strftime("%Y%m%d_%H%M%S") + ".csv"
-				gel_1008_csv = Gel1008Csv.objects.create(
-					filename = filename,
-					report_generated_datetime = datetime_now,
-					consignment_number = consignment_number,
-					date_of_dispatch = date_of_dispatch)
-				holding_racks = []
+				# determine that all samples that must be sent in the same consignment have been selected
+				all_cancer_samples = set()
+				all_rare_disease_samples = set()
 				for pk in plate_pks:
 					plate = Plate.objects.get(pk=pk)
-					plate.gel_1008_csv = gel_1008_csv
-					plate.save()
-					holding_racks.append(plate.holding_rack)
-				path = directory + filename
-				doc = SimpleDocTemplate(path[:-3] + 'pdf')
-				doc.pagesize = landscape(A4)
-				elements = []
-				data = [['Participant ID', 'Laboratory Sample ID', 'Plate ID', 'Well ID', 
-						'Plate Consignment Number', 'Plate Date of Dispatch']]
-				with open(path, 'w', newline='') as csvfile:
-					writer = csv.writer(csvfile, delimiter=',',
-						quotechar=',', quoting=csv.QUOTE_MINIMAL)
-					writer.writerow(['Participant ID', 'Laboratory Sample ID', 'Plate ID',
-						'Normalised Biorepository Sample Volume', 'Normalised Biorepository Concentration',
-						'Well ID', 'Plate Consignment Number', 'Plate Date of Dispatch'])
-					for holding_rack in holding_racks:
-						samples = Sample.objects.filter(holding_rack_well__holding_rack=holding_rack).order_by('holding_rack_well__well_id')
+					if plate.holding_rack.holding_rack_type == "Cancer Germline" or plate.holding_rack.holding_rack_type == "Tumour":
+						samples = Sample.objects.filter(holding_rack_well__holding_rack__plate = plate)
 						for sample in samples:
-							writer.writerow([sample.participant_id, sample.laboratory_sample_id, 
-								sample.holding_rack_well.holding_rack.plate.plate_id,
-								sample.norm_biorep_sample_vol, sample.norm_biorep_conc,
-								sample.holding_rack_well.well_id, gel_1008_csv.consignment_number, 
-								gel_1008_csv.date_of_dispatch.replace(microsecond=0).isoformat().replace('+00:00', 'Z')])
-							data.append([sample.participant_id, sample.laboratory_sample_id,
-								sample.holding_rack_well.holding_rack.plate.plate_id,
-								sample.holding_rack_well.well_id, gel_1008_csv.consignment_number, 
-								gel_1008_csv.date_of_dispatch.replace(microsecond=0).isoformat().replace('+00:00', 'Z')])
-				flowObjects = list()
-				styles=getSampleStyleSheet()
-				table_header = "Sample summary for consignment: " + str(consignment_number)
-				flowObjects.append(Paragraph(table_header,styles["h4"]))
-				t1=Table(data,hAlign="LEFT")
-				t1.setStyle(TableStyle([('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
-							('BOX', (0,0), (-1,-1), 0.25, colors.black),
-							('BACKGROUND',(0,0),(-1,0),colors.gray),
-							('TEXTCOLOR',(0,0),(-1,0),colors.black),
-							]))
-				flowObjects.append(t1)
-				doc.build(flowObjects)
+							all_cancer_samples.add(sample)
+					if plate.holding_rack.holding_rack_type == "Proband" or plate.holding_rack.holding_rack_type == "Family":
+						samples = Sample.objects.filter(holding_rack_well__holding_rack__plate = plate)
+						for sample in samples:
+							all_rare_disease_samples.add(sample)
+				matching_cancer_samples_not_selected = set()
+				for sample in all_cancer_samples:
+					matching_samples = Sample.objects.filter(participant_id = sample.participant_id,
+						sample_received = True,
+						holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True)
+					for matching_sample in matching_samples:
+						if matching_sample not in all_cancer_samples:
+							matching_cancer_samples_not_selected.add(matching_sample)
+				if matching_cancer_samples_not_selected:
+					cancer_sample_info = '<ul>'
+					for sample in matching_cancer_samples_not_selected:
+						if hasattr(sample, 'holding_rack_well'):
+							if sample.holding_rack_well.holding_rack.plate:
+								cancer_sample_info += "<li> " + sample.laboratory_sample_id + " in plate " + \
+									sample.holding_rack_well.holding_rack.plate.plate_id + " in well " + \
+									sample.holding_rack_well.well_id + '</li>'
+							else:
+								cancer_sample_info += "<li> " + sample.laboratory_sample_id + " in holding rack " + \
+									sample.holding_rack_well.holding_rack.holding_rack_id + " in well " + \
+									sample.holding_rack_well.well_id + '</li>'
+						else:
+							cancer_sample_info += "<li> " + sample.laboratory_sample_id + " in GMC rack " + \
+								sample.receiving_rack.receiving_rack_id + " in well " + \
+								sample.receiving_rack_well + '</li>'
+					cancer_sample_info += ' </ul>'
+					messages.error(request, "All synchronous multi-tumour samples must be sent in the same consignment." + 
+							"The following samples need to be sent in the same consignment as the plates you have selected:<br>" +
+							cancer_sample_info, extra_tags='safe')
+				matching_rare_disease_samples_not_selected = set()
+				for sample in all_rare_disease_samples:
+					matching_samples = Sample.objects.filter(group_id = sample.group_id,
+						sample_received = True,
+						holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True)
+					for matching_sample in matching_samples:
+						if matching_sample not in all_rare_disease_samples:
+							matching_rare_disease_samples_not_selected.add(matching_sample)
+				if matching_rare_disease_samples_not_selected:
+					rare_disease_sample_info = '<ul>'
+					for sample in matching_rare_disease_samples_not_selected:
+						if hasattr(sample, 'holding_rack_well'):
+							if sample.holding_rack_well.holding_rack.plate:
+								rare_disease_sample_info += "<li> " + sample.laboratory_sample_id + " in plate " + \
+									sample.holding_rack_well.holding_rack.plate.plate_id + " in well " + \
+									sample.holding_rack_well.well_id + '</li>'
+							else:
+								rare_disease_sample_info += "<li> " + sample.laboratory_sample_id + " in holding rack " + \
+									sample.holding_rack_well.holding_rack.holding_rack_id + " in well " + \
+									sample.holding_rack_well.well_id + '</li>'
+						else:
+							rare_disease_sample_info += "<li> " + sample.laboratory_sample_id + " in GMC rack " + \
+								sample.receiving_rack.receiving_rack_id + " in well " + \
+								sample.receiving_rack_well + '</li>'
+					rare_disease_sample_info += ' </ul>'
+					messages.error(request, "All family member samples must be sent in the same consignment as the proband." + 
+							"The following samples need to be sent in the same consignment as the plates you have selected:<br>" +
+							rare_disease_sample_info, extra_tags='safe')
+				else:
+					consignment_number = gel1008_form.cleaned_data.get('consignment_number')
+					date_of_dispatch = gel1008_form.cleaned_data.get('date_of_dispatch')
+					directory = LoadConfig().load()['gel1008path']
+					datetime_now = datetime.now(pytz.timezone('UTC'))
+					filename = "ngis_bio_to_gel_sample_dispatch_" + datetime.now(pytz.timezone('UTC')).strftime("%Y%m%d_%H%M%S") + ".csv"
+					gel_1008_csv = Gel1008Csv.objects.create(
+						filename = filename,
+						report_generated_datetime = datetime_now,
+						consignment_number = consignment_number,
+						date_of_dispatch = date_of_dispatch)
+					holding_racks = []
+					for pk in plate_pks:
+						plate = Plate.objects.get(pk=pk)
+						plate.gel_1008_csv = gel_1008_csv
+						plate.save()
+						holding_racks.append(plate.holding_rack)
+					path = directory + filename
+					doc = SimpleDocTemplate(path[:-3] + 'pdf')
+					doc.pagesize = landscape(A4)
+					elements = []
+					data = [['Participant ID', 'Laboratory Sample ID', 'Plate ID', 'Well ID', 
+							'Plate Consignment Number', 'Plate Date of Dispatch']]
+					with open(path, 'w', newline='') as csvfile:
+						writer = csv.writer(csvfile, delimiter=',',
+							quotechar=',', quoting=csv.QUOTE_MINIMAL)
+						writer.writerow(['Participant ID', 'Laboratory Sample ID', 'Plate ID',
+							'Normalised Biorepository Sample Volume', 'Normalised Biorepository Concentration',
+							'Well ID', 'Plate Consignment Number', 'Plate Date of Dispatch'])
+						for holding_rack in holding_racks:
+							samples = Sample.objects.filter(holding_rack_well__holding_rack=holding_rack).order_by('holding_rack_well__well_id')
+							for sample in samples:
+								writer.writerow([sample.participant_id, sample.laboratory_sample_id, 
+									sample.holding_rack_well.holding_rack.plate.plate_id,
+									sample.norm_biorep_sample_vol, sample.norm_biorep_conc,
+									sample.holding_rack_well.well_id, gel_1008_csv.consignment_number, 
+									gel_1008_csv.date_of_dispatch.replace(microsecond=0).isoformat().replace('+00:00', 'Z')])
+								data.append([sample.participant_id, sample.laboratory_sample_id,
+									sample.holding_rack_well.holding_rack.plate.plate_id,
+									sample.holding_rack_well.well_id, gel_1008_csv.consignment_number, 
+									gel_1008_csv.date_of_dispatch.replace(microsecond=0).isoformat().replace('+00:00', 'Z')])
+					flowObjects = list()
+					styles=getSampleStyleSheet()
+					table_header = "Sample summary for consignment: " + str(consignment_number)
+					flowObjects.append(Paragraph(table_header,styles["h4"]))
+					t1=Table(data,hAlign="LEFT")
+					t1.setStyle(TableStyle([('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
+								('BOX', (0,0), (-1,-1), 0.25, colors.black),
+								('BACKGROUND',(0,0),(-1,0),colors.gray),
+								('TEXTCOLOR',(0,0),(-1,0),colors.black),
+								]))
+					flowObjects.append(t1)
+					doc.build(flowObjects)
 
-				messages.info(request, "GEL1008 csv produced.")
+					messages.info(request, "GEL1008 csv produced.")
 			else:
 				messages.warning(request, "No plates selected!")
 			return HttpResponseRedirect('/ready-to-dispatch/')

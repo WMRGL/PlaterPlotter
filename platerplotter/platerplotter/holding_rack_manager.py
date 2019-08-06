@@ -38,23 +38,6 @@ class HoldingRackManager():
 				raise Exception("Multiple samples have been assigned to same well")
 			else:
 				self.well_contents[well_index] = sample
-			# alt_well_index = self.alt_well_labels.index(sample.plate_well_id)
-			# if self.alt_well_contents[alt_well_index]:
-			# 	raise Exception("Multiple samples have been assigned to same well")
-			# else:
-			# 	self.alt_well_contents[alt_well_index] = sample
-		# buffer_wells = Buffer.objects.filter(plate=self.plate)
-		# for buffer_well in buffer_wells:
-		# 	well_index = self.well_labels.index(buffer_well.well_id)
-		# 	if self.well_contents[well_index]:
-		# 		raise Exception("Multiple samples have been assigned to same well")
-		# 	else:
-		# 		self.well_contents[well_index] = buffer_well
-		# 	alt_well_index = self.alt_well_labels.index(buffer_well.well_id)
-		# 	if self.alt_well_contents[alt_well_index]:
-		# 		raise Exception("Multiple samples have been assigned to same well")
-		# 	else:
-		# 		self.alt_well_contents[alt_well_index] = buffer_well
 
 	def lookup_alt_index(self, index):
 		well_label = self.well_labels[index]
@@ -254,7 +237,7 @@ class HoldingRackManager():
 				if matching_germline_samples:
 					matching_germline_sample_found = True
 					for matching_germline_sample in matching_germline_samples:
-						if matching_germline_sample.holding_rack_well.holding_rack.plate.plate_id:	
+						if matching_germline_sample.holding_rack_well.holding_rack.plate:	
 							messages.info(request, "Matching germline sample found and has already been plated on plate: " +
 								matching_germline_sample.holding_rack_well.holding_rack.plate.plate_id + " in well " + 
 								matching_germline_sample.holding_rack_well.well_id + ". These samples must be sent in the same consignment.")
@@ -362,11 +345,3 @@ class HoldingRackManager():
 					holding_rack_well.buffer_added = True
 					holding_rack_well.save()
 				index_count += 1
-
-	# def get_well_contents(self):
-	# 	print(self.well_contents)
-	# 	print(self.alt_well_contents)
-	# 	return(self.alt_well_contents)
-
-
-

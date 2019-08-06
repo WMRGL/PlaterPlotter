@@ -5,6 +5,7 @@ from django.forms import ModelForm
 from datetime import datetime
 from platerplotter.models import Plate, Sample, Gel1008Csv
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 class HoldingRackForm(forms.Form):
 	holding_rack_id = forms.CharField(label='', widget=forms.TextInput(attrs={'autofocus': 'autofocus'}))
@@ -85,6 +86,10 @@ class Gel1008Form(ModelForm):
 	def clean_date_of_dispatch(self):
 		if self.cleaned_data['date_of_dispatch']:
 			date_of_dispatch = self.cleaned_data['date_of_dispatch']
+			if date_of_dispatch <= timezone.now() - timezone.timedelta(days=1):
+				raise forms.ValidationError("The date cannot be in the past")
+			if date_of_dispatch > timezone.now() + timezone.timedelta(days=14):
+				raise forms.ValidationError("The date must be within 2 weeks of today's date")
 			return date_of_dispatch
 		else:
 			raise ValidationError("Required field.")
