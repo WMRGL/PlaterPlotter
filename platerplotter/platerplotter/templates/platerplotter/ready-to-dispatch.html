@@ -50,19 +50,6 @@
               <td>{{ holding_rack.sample_count }}</td>
               <td style="text-align:center">
                 <input type="checkbox" name="selected_plate" value="{{holding_rack.plate.pk}}">
-<!--                 <form role='form' action='' method="POST" class='form'>
-                  {% csrf_token %}
-                  <div class="form-group">
-                    <div>
-                      <button class='btn btn-primary-outline btn-xsl' type="submit" name='sample-received' value='{{ plate.pk }}'>
-                        <label class="switch">
-                          <input type="checkbox">
-                          <span class="slider round"></span>
-                        </label>
-                      </button>
-                    </div>
-                  </div>
-                </form> -->
               </td>
             </tr>
             {% endfor %}

@@ -421,6 +421,8 @@ def problem_samples(request, holding_rack_id=None):
 		current_holding_racks_dict[current_holding_rack] = Sample.objects.filter(holding_rack_well__holding_rack=current_holding_rack).count()
 	assigned_well_list = []
 	holding_rack_samples_form_dict = {}
+	holding_rack = None
+	holding_rack_samples = None
 	if holding_rack_id:
 		holding_rack = HoldingRack.objects.get(holding_rack_id=holding_rack_id, holding_rack_type='Problem', plate__isnull=True)
 		holding_rack_samples = Sample.objects.filter(holding_rack_well__holding_rack=holding_rack)
@@ -428,9 +430,6 @@ def problem_samples(request, holding_rack_id=None):
 		for sample in holding_rack_samples:
 			assigned_well_list.append(sample.holding_rack_well.well_id)
 			holding_rack_samples_form_dict[sample] = ResolveIssueForm(instance=sample)
-	else:
-		holding_rack = None
-		holding_rack_samples = None
 	if request.method == 'POST':
 		if 'holding' in request.POST:
 			sample_select_form = SampleSelectForm()
@@ -574,7 +573,6 @@ def awaiting_holding_rack_assignment(request):
 
 @login_required()
 def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=None):
-	print(holding_rack_id)
 	holding_rack_rows = ['A','B','C','D','E','F','G','H']
 	holding_rack_columns = ['01','02','03','04','05','06','07','08','09','10','11','12']
 	if gel1004:
@@ -599,6 +597,9 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
 		current_holding_racks_dict[current_holding_rack] = Sample.objects.filter(holding_rack_well__holding_rack=current_holding_rack).count()
 	assigned_well_list = []
 	holding_rack_samples_form_dict = {}
+	holding_rack = None
+	holding_rack_samples = None
+	problem_samples_in_holding_rack = False
 	if holding_rack_id:
 		holding_rack = HoldingRack.objects.get(holding_rack_id=holding_rack_id, plate__isnull=True)
 		holding_rack_samples = Sample.objects.filter(holding_rack_well__holding_rack=holding_rack)
@@ -606,10 +607,8 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
 		for sample in holding_rack_samples:
 			assigned_well_list.append(sample.holding_rack_well.well_id)
 			holding_rack_samples_form_dict[sample] = LogIssueForm(instance=sample)
-	else:
-		holding_rack = None
-		holding_rack_samples = None
-	print(holding_rack)
+			if sample.issue_outcome == "Not resolved":
+				problem_samples_in_holding_rack = True
 	if request.method == 'POST':
 		if 'holding' in request.POST:
 			sample_select_form = SampleSelectForm()
@@ -773,7 +772,130 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
 		"sample_form_dict" : sample_form_dict,
 		"holding_rack" : holding_rack,
 		"holding_rack_samples" : holding_rack_samples,
+		"problem_samples_in_holding_rack" : problem_samples_in_holding_rack,
 		"holding_rack_samples_form_dict" : holding_rack_samples_form_dict,
+		"assigned_well_list" : assigned_well_list,
+		"current_holding_racks_dict" : current_holding_racks_dict,
+		"holding_rack_rows": holding_rack_rows,
+		"holding_rack_columns": holding_rack_columns})
+
+@login_required()
+def holding_racks(request, holding_rack_id=None):
+	holding_rack_rows = ['A','B','C','D','E','F','G','H']
+	holding_rack_columns = ['01','02','03','04','05','06','07','08','09','10','11','12']
+
+
+	current_holding_racks = HoldingRack.objects.filter(plate__isnull=True).exclude(holding_rack_type='Problem')
+	current_holding_racks_dict = {}
+	for current_holding_rack in current_holding_racks:
+		current_holding_racks_dict[current_holding_rack] = Sample.objects.filter(holding_rack_well__holding_rack=current_holding_rack).count()
+	assigned_well_list = []
+	holding_rack_samples_form_dict = {}
+	holding_rack = None
+	holding_rack_samples = None
+	problem_samples_in_holding_rack = False
+	if holding_rack_id:
+		holding_rack = HoldingRack.objects.get(holding_rack_id=holding_rack_id, plate__isnull=True)
+		holding_rack_samples = Sample.objects.filter(holding_rack_well__holding_rack=holding_rack)
+		holding_rack_manager = HoldingRackManager(holding_rack)
+		for sample in holding_rack_samples:
+			assigned_well_list.append(sample.holding_rack_well.well_id)
+			holding_rack_samples_form_dict[sample] = LogIssueForm(instance=sample)
+			if sample.issue_outcome == "Not resolved":
+				problem_samples_in_holding_rack = True
+	if request.method == 'POST':
+		if 'holding' in request.POST:
+			holding_rack_form = HoldingRackForm(request.POST)
+			if holding_rack_form.is_valid():
+				error = False
+				holding_rack_id = holding_rack_form.cleaned_data.get('holding_rack_id')
+				try:
+					holding_rack = HoldingRack.objects.get(holding_rack_id=holding_rack_id, plate__isnull=True)
+					if holding_rack.holding_rack_type == "Problem":
+						messages.error(request, "You have scanned a holding rack being used for Problem samples. Please scan an exisiting Holding rack.")
+						error = True
+				except:
+					messages.error(request, "Holding rack not found with ID: " + holding_rack_id)
+					error = True
+				if holding_rack and not error:
+					url = reverse('holding_racks', kwargs={
+							'holding_rack_id' : holding_rack.holding_rack_id,
+							})
+				else:
+					url = reverse('holding_racks')
+				return HttpResponseRedirect(url)
+		if 'rack-scanner' in request.POST:
+			holding_rack_form = HoldingRackForm()
+			rack_scan()
+			rack_scanner = RackScanner.objects.filter(scanned_id=holding_rack.holding_rack_id,
+				acknowledged=False).order_by('-date_modified')
+			if rack_scanner:
+				rack_scanner_samples = RackScannerSample.objects.filter(rack_scanner=rack_scanner[0])
+				samples_in_wrong_position = []
+				extra_samples = []
+				missing_samples = []
+				for sample in holding_rack_samples:
+					found = False
+					for rack_scanner_sample in rack_scanner_samples:
+						if sample.laboratory_sample_id == rack_scanner_sample.sample_id:
+							found = True
+							if sample.holding_rack_well.well_id == rack_scanner_sample.position:
+								rack_scanner_sample.matched = True
+								rack_scanner_sample.save()
+							else:
+								samples_in_wrong_position.append(sample)
+					if not found:
+						missing_samples.append(sample)
+				for rack_scanner_sample in rack_scanner_samples:
+					if not rack_scanner_sample.matched:
+						extra_samples.append(rack_scanner_sample)
+				if samples_in_wrong_position or extra_samples or missing_samples:
+					messages.error(request, "Scanned rack does not match with assigned rack wells for this rack!")
+				else:
+					messages.info(request, "Positions confirmed and correct.")
+				for rack_scanner_item in rack_scanner:
+					rack_scanner_item.acknowledged = True
+					rack_scanner_item.save()
+			else:
+				messages.error(request, "Rack " + holding_rack.holding_rack_id + " not found in Rack scanner CSV. Has the rack been scanned?")
+		if 'ready' in request.POST:
+			holding_rack_form = HoldingRackForm()
+			sample_select_form = SampleSelectForm()
+			pk = request.POST['ready']
+			holding_rack = HoldingRack.objects.get(pk=pk)
+			# assign buffer wells
+			holding_rack_manager.assign_buffer()
+			buffer_wells = HoldingRackWell.objects.filter(holding_rack=holding_rack, buffer_added = True).order_by('well_id')
+			holding_rack.ready_to_plate = True
+			holding_rack.save()
+			messages.info(request, "Holding rack has been marked as ready for plating.")
+			if buffer_wells:
+				buffer_wells_list = ''
+				for buffer_well in buffer_wells:
+					buffer_wells_list += buffer_well.well_id + ', '
+				messages.warning(request, "Buffer will need to be added to the following wells during plating: " + buffer_wells_list)		
+		if 'log-issue' in request.POST:
+			log_issue_form = LogIssueForm(request.POST)
+			if log_issue_form.is_valid():
+				pk = request.POST['log-issue']
+				comment = log_issue_form.cleaned_data.get('comment')
+				sample = Sample.objects.get(pk=pk)
+				sample.issue_identified = True
+				sample.comment = comment
+				sample.issue_outcome = "Not resolved"
+				sample.save()
+				url = reverse('holding_racks', kwargs={
+							'holding_rack_id' : holding_rack.holding_rack_id,
+							})
+				return HttpResponseRedirect(url)
+	else:
+		holding_rack_form = HoldingRackForm()
+	return render(request, 'platerplotter/holding-racks.html', {
+		"holding_rack_form" : holding_rack_form,
+		"holding_rack" : holding_rack,
+		"holding_rack_samples" : holding_rack_samples,
+		"holding_rack_samples_form_dict" : holding_rack_samples_form_dict,
+		"problem_samples_in_holding_rack" : problem_samples_in_holding_rack,
 		"assigned_well_list" : assigned_well_list,
 		"current_holding_racks_dict" : current_holding_racks_dict,
 		"holding_rack_rows": holding_rack_rows,
@@ -901,7 +1023,7 @@ def ready_to_dispatch(request):
 								sample.receiving_rack.receiving_rack_id + " in well " + \
 								sample.receiving_rack_well + '</li>'
 					cancer_sample_info += ' </ul>'
-					messages.error(request, "All synchronous multi-tumour samples must be sent in the same consignment." + 
+					messages.error(request, "All synchronous multi-tumour samples must be sent in the same consignment. " + 
 							"The following samples need to be sent in the same consignment as the plates you have selected:<br>" +
 							cancer_sample_info, extra_tags='safe')
 				matching_rare_disease_samples_not_selected = set()
@@ -929,7 +1051,7 @@ def ready_to_dispatch(request):
 								sample.receiving_rack.receiving_rack_id + " in well " + \
 								sample.receiving_rack_well + '</li>'
 					rare_disease_sample_info += ' </ul>'
-					messages.error(request, "All family member samples must be sent in the same consignment as the proband." + 
+					messages.error(request, "All family member samples must be sent in the same consignment as the proband. " + 
 							"The following samples need to be sent in the same consignment as the plates you have selected:<br>" +
 							rare_disease_sample_info, extra_tags='safe')
 				else:

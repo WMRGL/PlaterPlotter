@@ -59,6 +59,9 @@
 	                    <a class="nav-link {% if url_name == 'awaiting_holding_rack_assignment' or url_name == 'assign_samples_to_holding_rack' or url_name == 'assign_problem_samples_to_holding_rack' %}active{% endif %}" href="{% url 'awaiting_holding_rack_assignment' %}">Awaiting Plating</a>
 	                </li>
 	                <li class="nav nav-item">
+	                    <a class="nav-link {% if url_name == 'holding_racks' %}active{% endif %}" href="{% url 'holding_racks' %}">Holding Racks</a>
+	                </li>
+	                <li class="nav nav-item">
 	                    <a class="nav-link {% if url_name == 'ready_to_plate' %}active{% endif %}" href="{% url 'ready_to_plate' %}">Ready to Plate</a>
 	                </li>
 	                <li class="nav nav-item">
