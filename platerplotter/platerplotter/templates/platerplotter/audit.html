@@ -19,6 +19,7 @@
           <table class="table table-bordered" id="dataTablePag">
             <thead>
               <tr>
+                <th>Laboratory Sample ID</th>
               	<th>Participant ID</th>
               	<th>Group ID</th>
               	<th>Disease Area</th>
@@ -28,7 +29,7 @@
                 <th>GEL1005 sent</th>  
                 <th>Holding Rack, Well</th>  
                 <th>Holding Rack Type</th>    
-                <th>Plate ID</th>
+                <th>Plate ID, Well</th>
                 <th>GEL1008 sent</th>
                 <th>Consignment Number</th>
                 <th>Date of Dispatch</th>
@@ -39,16 +40,17 @@
             <tbody>
             {% for sample in samples %}
             <tr>
+              <td>{{ sample.laboratory_sample_id }}</td>
               <td>{{ sample.participant_id }}</td>
               <td>{{ sample.group_id }}</td>
               <td>{{ sample.disease_area }}</td>
-              <td>{{ sample.receiving_rack.receiving_rack_id }}, {{ sample.receiving_rack_well }}</td>
+              <td>{{ sample.receiving_rack.receiving_rack_id }} {{ sample.receiving_rack_well }}</td>
               <td>{{ sample.receiving_rack.laboratory_id }}</td>
               <td>{{ sample.sample_received_datetime }}</td>
               <td>{{ sample.receiving_rack.gel_1004_csv.gel_1005_csv.report_generated_datetime }}</td>
-              <td>{{ sample.holding_rack_well.holding_rack.holding_rack_id }}, {{ sample.holding_rack_well.well_id }}</td>
+              <td>{{ sample.holding_rack_well.holding_rack.holding_rack_id }} {{ sample.holding_rack_well.well_id }}</td>
               <td>{{ sample.holding_rack_well.holding_rack.holding_rack_type }}</td>
-              <td>{{ sample.holding_rack_well.holding_rack.plate.plate_id }}</td>
+              <td>{{ sample.holding_rack_well.holding_rack.plate.plate_id }} {{ sample.holding_rack_well.well_id }}</td>
               <td>{{ sample.holding_rack_well.holding_rack.plate.gel_1008_csv.report_generated_datetime }}</td>
               <td>{{ sample.holding_rack_well.holding_rack.plate.gel_1008_csv.consignment_number }}</td>
               <td>{{ sample.holding_rack_well.holding_rack.plate.gel_1008_csv.date_of_dispatch }}</td>

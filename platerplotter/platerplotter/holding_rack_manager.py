@@ -104,8 +104,9 @@ class HoldingRackManager():
 
 	def assign_holding_rack_well(self, request, sample, well_index):
 		if hasattr(sample, 'holding_rack_well'):
-			sample.holding_rack_well.delete()
-			sample.save()
+			current_well = sample.holding_rack_well
+			current_well.sample = None
+			current_well.save()
 		holding_rack_well = HoldingRackWell.objects.get(
 			holding_rack = self.holding_rack,
 			well_id = self.well_labels[well_index])

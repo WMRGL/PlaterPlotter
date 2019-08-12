@@ -1054,7 +1054,7 @@ def ready_to_dispatch(request):
 					messages.error(request, "All family member samples must be sent in the same consignment as the proband. " + 
 							"The following samples need to be sent in the same consignment as the plates you have selected:<br>" +
 							rare_disease_sample_info, extra_tags='safe')
-				else:
+				if not matching_rare_disease_samples_not_selected and not matching_cancer_samples_not_selected:
 					consignment_number = gel1008_form.cleaned_data.get('consignment_number')
 					date_of_dispatch = gel1008_form.cleaned_data.get('date_of_dispatch')
 					directory = LoadConfig().load()['gel1008path']
@@ -1075,26 +1075,53 @@ def ready_to_dispatch(request):
 					doc = SimpleDocTemplate(path[:-3] + 'pdf')
 					doc.pagesize = landscape(A4)
 					elements = []
-					data = [['Participant ID', 'Laboratory Sample ID', 'Plate ID', 'Well ID', 
-							'Plate Consignment Number', 'Plate Date of Dispatch']]
+					data = [['Plate ID', 'Plate Consignment Number', 'Plate Date of Dispatch', 'Well ID', 
+							'Well Type', 'Participant ID', 'Laboratory Sample ID']]
 					with open(path, 'w', newline='') as csvfile:
 						writer = csv.writer(csvfile, delimiter=',',
 							quotechar=',', quoting=csv.QUOTE_MINIMAL)
-						writer.writerow(['Participant ID', 'Laboratory Sample ID', 'Plate ID',
-							'Normalised Biorepository Sample Volume', 'Normalised Biorepository Concentration',
-							'Well ID', 'Plate Consignment Number', 'Plate Date of Dispatch'])
+						writer.writerow(['Plate ID', 'Plate Consignment Number', 'Plate Date of Dispatch',
+							'Well ID', 'Well Type', 'Participant ID' 'Laboratory Sample ID',
+							'Normalised Biorepository Sample Volume', 'Normalised Biorepository Concentration'])
 						for holding_rack in holding_racks:
-							samples = Sample.objects.filter(holding_rack_well__holding_rack=holding_rack).order_by('holding_rack_well__well_id')
-							for sample in samples:
-								writer.writerow([sample.participant_id, sample.laboratory_sample_id, 
-									sample.holding_rack_well.holding_rack.plate.plate_id,
-									sample.norm_biorep_sample_vol, sample.norm_biorep_conc,
-									sample.holding_rack_well.well_id, gel_1008_csv.consignment_number, 
-									gel_1008_csv.date_of_dispatch.replace(microsecond=0).isoformat().replace('+00:00', 'Z')])
-								data.append([sample.participant_id, sample.laboratory_sample_id,
-									sample.holding_rack_well.holding_rack.plate.plate_id,
-									sample.holding_rack_well.well_id, gel_1008_csv.consignment_number, 
-									gel_1008_csv.date_of_dispatch.replace(microsecond=0).isoformat().replace('+00:00', 'Z')])
+							holding_rack_wells = HoldingRackWell.objects.filter(holding_rack=holding_rack).order_by('well_id')
+							for holding_rack_well in holding_rack_wells:
+								if holding_rack_well.sample or holding_rack_well.buffer_added:
+									plate_id = holding_rack_well.holding_rack.plate.plate_id
+									plate_consignment_number = gel_1008_csv.consignment_number
+									plate_date_of_dispatch = gel_1008_csv.date_of_dispatch.replace(microsecond=0).isoformat().replace('+00:00', 'Z')
+									well_id = holding_rack_well.well_id
+									if holding_rack_well.sample and not holding_rack_well.buffer_added:
+										well_type = "Sample"
+										participant_id = holding_rack_well.sample.participant_id
+										laboratory_sample_id = holding_rack_well.sample.laboratory_sample_id
+										norm_biorep_sample_vol = holding_rack_well.sample.norm_biorep_sample_vol
+										norm_biorep_conc = holding_rack_well.sample.norm_biorep_conc
+									elif holding_rack_well.buffer_added:
+										well_type = "Buffer"
+										participant_id = ""
+										laboratory_sample_id = ""
+										norm_biorep_sample_vol = ""
+										norm_biorep_conc = ""
+									else:
+										raise ValueError('Well contents invalid. Reported to contain sample and buffer')
+									writer.writerow([plate_id, plate_consignment_number, plate_date_of_dispatch, well_id, 
+										well_type, participant_id, laboratory_sample_id, norm_biorep_sample_vol, norm_biorep_conc])
+									data.append([plate_id, plate_consignment_number, plate_date_of_dispatch, well_id, 
+										well_type, participant_id, laboratory_sample_id])
+							
+							#samples = Sample.objects.filter(holding_rack_well__holding_rack=holding_rack).order_by('holding_rack_well__well_id')
+							# for sample in samples:
+
+							# 	writer.writerow([sample.participant_id, sample.laboratory_sample_id, 
+							# 		sample.holding_rack_well.holding_rack.plate.plate_id,
+							# 		sample.norm_biorep_sample_vol, sample.norm_biorep_conc,
+							# 		sample.holding_rack_well.well_id, gel_1008_csv.consignment_number, 
+							# 		gel_1008_csv.date_of_dispatch.replace(microsecond=0).isoformat().replace('+00:00', 'Z')])
+							# 	data.append([sample.participant_id, sample.laboratory_sample_id,
+							# 		sample.holding_rack_well.holding_rack.plate.plate_id,
+							# 		sample.holding_rack_well.well_id, gel_1008_csv.consignment_number, 
+							# 		gel_1008_csv.date_of_dispatch.replace(microsecond=0).isoformat().replace('+00:00', 'Z')])
 					flowObjects = list()
 					styles=getSampleStyleSheet()
 					table_header = "Sample summary for consignment: " + str(consignment_number)
