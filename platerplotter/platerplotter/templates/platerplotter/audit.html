@@ -50,7 +50,11 @@
               <td>{{ sample.receiving_rack.gel_1004_csv.gel_1005_csv.report_generated_datetime }}</td>
               <td>{{ sample.holding_rack_well.holding_rack.holding_rack_id }} {{ sample.holding_rack_well.well_id }}</td>
               <td>{{ sample.holding_rack_well.holding_rack.holding_rack_type }}</td>
-              <td>{{ sample.holding_rack_well.holding_rack.plate.plate_id }} {{ sample.holding_rack_well.well_id }}</td>
+              <td>{{ sample.holding_rack_well.holding_rack.plate.plate_id }} 
+                {% if sample.holding_rack_well.holding_rack.plate.plate_id %}
+                  {{ sample.holding_rack_well.well_id }}
+                {% endif %}
+              </td>
               <td>{{ sample.holding_rack_well.holding_rack.plate.gel_1008_csv.report_generated_datetime }}</td>
               <td>{{ sample.holding_rack_well.holding_rack.plate.gel_1008_csv.consignment_number }}</td>
               <td>{{ sample.holding_rack_well.holding_rack.plate.gel_1008_csv.date_of_dispatch }}</td>

@@ -1002,7 +1002,9 @@ def ready_to_dispatch(request):
 				for sample in all_cancer_samples:
 					matching_samples = Sample.objects.filter(participant_id = sample.participant_id,
 						sample_received = True,
-						holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True)
+						holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True).exclude(
+						issue_outcome="Sample returned to extracting GLH").exclude(
+						issue_outcome="Sample destroyed")
 					for matching_sample in matching_samples:
 						if matching_sample not in all_cancer_samples:
 							matching_cancer_samples_not_selected.add(matching_sample)
@@ -1030,7 +1032,9 @@ def ready_to_dispatch(request):
 				for sample in all_rare_disease_samples:
 					matching_samples = Sample.objects.filter(group_id = sample.group_id,
 						sample_received = True,
-						holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True)
+						holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True).exclude(
+						issue_outcome="Sample returned to extracting GLH").exclude(
+						issue_outcome="Sample destroyed")
 					for matching_sample in matching_samples:
 						if matching_sample not in all_rare_disease_samples:
 							matching_rare_disease_samples_not_selected.add(matching_sample)
