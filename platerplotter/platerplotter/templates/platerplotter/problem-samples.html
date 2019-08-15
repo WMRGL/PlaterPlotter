@@ -20,6 +20,7 @@
           {% csrf_token %}
           <div class="form-group">
             <a class="btn btn-primary btn-lg" href="/problem-samples/" role="button">Change Problem Rack</a>
+            <button type="submit" name='rack-scanner' value='{{ holding_rack.pk }}' class="btn btn-success btn-lg">Rack Scanner</button>    
           </div>
         </form>
       </div>

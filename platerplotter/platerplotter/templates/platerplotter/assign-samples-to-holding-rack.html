@@ -22,12 +22,20 @@
         <form role='form' action='' method="POST", class='justify-content-center'>
           {% csrf_token %}
           <div class="form-group">
-            <a class="btn btn-primary btn-lg" href="/assign-samples-to-holding-rack/{{rack.gel_1004_csv.pk}}/{{rack.receiving_rack_id}}" role="button">Change Holding Rack</a>
-            <button type="submit" name='rack-scanner' value='{{ holding_rack.pk }}' class="btn btn-success btn-lg">Rack Scanner</button>
-            {% if problem_samples_in_holding_rack %} 
-              <button type="submit" name='ready' value='{{ holding_rack.pk }}' class="btn btn-success btn-lg" disabled title="Holding rack contains unresolved problem samples">Ready to Plate</button>
+            {% if rack %}
+              <a class="btn btn-primary btn-lg" href="/assign-samples-to-holding-rack/{{rack.gel_1004_csv.pk}}/{{rack.receiving_rack_id}}" role="button">Change Holding Rack</a>
+            {% elif problem_holding_rack %}
+              <a class="btn btn-primary btn-lg" href="/assign-samples-to-holding-rack/{{problem_holding_rack.holding_rack_id}}" role="button">Change Holding Rack</a>
+            {% endif %}
+            {% if holding_rack.ready_to_plate %}
+              <button type="submit" name='reopen-rack' value='{{ holding_rack.pk }}' class="btn btn-success btn-lg">Reopen Rack</button>
             {% else %}
-              <button type="submit" name='ready' value='{{ holding_rack.pk }}' class="btn btn-success btn-lg">Ready to Plate</button>
+              <button type="submit" name='rack-scanner' value='{{ holding_rack.pk }}' class="btn btn-success btn-lg">Rack Scanner</button>
+              {% if problem_samples_in_holding_rack %} 
+                <button type="submit" name='ready' value='{{ holding_rack.pk }}' class="btn btn-success btn-lg" disabled title="Holding rack contains unresolved problem samples">Ready to Plate</button>
+              {% else %}
+                <button type="submit" name='ready' value='{{ holding_rack.pk }}' class="btn btn-success btn-lg">Ready to Plate</button>
+              {% endif %}
             {% endif %}
           </div>
         </form>
