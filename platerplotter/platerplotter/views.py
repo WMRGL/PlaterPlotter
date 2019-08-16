@@ -47,6 +47,12 @@ def pad_zeros(well):
 	else: 
 		return well
 
+def strip_zeros(well):
+	if well[1] == '0':
+		return well[0] + well[2]
+	else:
+		return well
+
 def check_plating_organisation(plating_organisation):
 	if plating_organisation != 'wwm':
 		raise ValueError('Plating orgnaisation entered as {}. Expected "wmm".'.format(plating_organisation.lower()))
@@ -259,9 +265,6 @@ def confirm_sample_positions(request, rack, rack_samples, first_check=False,
 			rack_scanner_item.save()
 	else:
 		messages.error(request, "Rack " + rack_id + " not found in Rack scanner CSV. Has the rack been scanned?")
-
-
-
 
 @login_required()
 def import_acks(request):
@@ -953,8 +956,24 @@ def plate_holding_rack(request, holding_rack_pk):
 				holding_rack.save()
 				# generate output for robot
 				holding_rack_wells = HoldingRackWell.objects.filter(holding_rack=holding_rack).order_by('well_id')
-				for well in holding_rack_wells:
-					print(well.well_id)
+				directory = LoadConfig().load()['plate_plots_path']
+				filename = holding_rack.holding_rack_id + '_' + plate_id + '.csv'
+				path = directory + filename
+				with open(path, 'w', newline='') as csvfile:
+					writer = csv.writer(csvfile, delimiter=',',
+						quotechar=',', quoting=csv.QUOTE_MINIMAL)
+					for holding_rack_well in holding_rack_wells:
+						well_id = strip_zeros(holding_rack_well.well_id)
+						if holding_rack_well.sample or holding_rack_well.buffer_added:
+							if holding_rack_well.sample and not holding_rack_well.buffer_added:
+								well_contents = holding_rack_well.sample.laboratory_sample_id
+							elif holding_rack_well.buffer_added and not holding_rack_well.sample:
+								well_contents = "BUFFER"
+							else:
+								raise ValueError('Well contents invalid. Reported to contain sample and buffer')
+						else:
+							well_contents = "NO READ"
+						writer.writerow([well_id, well_contents, ' 2d_rackid_1', holding_rack.holding_rack_id])
 	else:
 		plating_form = PlatingForm()
 	return render(request, 'platerplotter/plate-holding-rack.html', {
@@ -1091,7 +1110,7 @@ def ready_to_dispatch(request):
 										laboratory_sample_id = holding_rack_well.sample.laboratory_sample_id
 										norm_biorep_sample_vol = holding_rack_well.sample.norm_biorep_sample_vol
 										norm_biorep_conc = holding_rack_well.sample.norm_biorep_conc
-									elif holding_rack_well.buffer_added:
+									elif holding_rack_well.buffer_added and not holding_rack_well.sample:
 										well_type = "Buffer"
 										participant_id = ""
 										laboratory_sample_id = ""
@@ -1115,7 +1134,6 @@ def ready_to_dispatch(request):
 								]))
 					flowObjects.append(t1)
 					doc.build(flowObjects)
-
 					messages.info(request, "GEL1008 csv produced.")
 			else:
 				messages.warning(request, "No plates selected!")

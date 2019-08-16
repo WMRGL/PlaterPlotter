@@ -166,29 +166,32 @@ class HoldingRackManager():
 						messages.error(request, "No more valid positions available in this rack. Please assign " + 
 							sample.laboratory_sample_id + " to a new rack.")
 		elif self.holding_rack.holding_rack_type == "Family":
-			matching_proband_sample_found = False
-			matching_proband_samples = Sample.objects.filter(sample_type = "Proband", group_id = sample.group_id, holding_rack_well__isnull = True)
-			if matching_proband_samples:
-				matching_proband_sample_found = True
-				for matching_proband_sample in matching_proband_samples:
-					messages.warning(request, "Matching proband sample found in GMC rack: " +
-						matching_proband_sample.receiving_rack.receiving_rack_id + " in well " + 
-						matching_proband_sample.receiving_rack_well + " but not yet assigned to holding rack. These samples must be sent in the same consignment.")
-			else:
-				matching_proband_samples = Sample.objects.filter(sample_type = "Proband", group_id = sample.group_id, holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True)
+			matching_proband_sample_found = True
+			# all new family samples must have a matching proband
+			if sample.is_repeat == "New":
+				matching_proband_sample_found = False
+				matching_proband_samples = Sample.objects.filter(sample_type = "Proband", group_id = sample.group_id, holding_rack_well__isnull = True)
 				if matching_proband_samples:
 					matching_proband_sample_found = True
 					for matching_proband_sample in matching_proband_samples:
-						if matching_proband_sample.holding_rack_well.holding_rack.plate:	
-							messages.info(request, "Matching proband sample found and has already been plated on plate: " +
-								matching_proband_sample.holding_rack_well.holding_rack.plate.plate_id + " in well " + 
-								matching_proband_sample.holding_rack_well.well_id + ". These samples must be sent in the same consignment.")
-						else:
-							messages.info(request, "Matching proband sample found and has been assigned to holding rack: " +
-								matching_proband_sample.holding_rack_well.holding_rack.holding_rack_id + " in well " + 
-								matching_proband_sample.holding_rack_well.well_id + ". These samples must be sent in the same consignment.")
-			if not matching_proband_sample_found:
-				messages.error(request, "No matching proband sample found for this sample. Unable to assign to holding rack.")
+						messages.warning(request, "Matching proband sample found in GMC rack: " +
+							matching_proband_sample.receiving_rack.receiving_rack_id + " in well " + 
+							matching_proband_sample.receiving_rack_well + " but not yet assigned to holding rack. These samples must be sent in the same consignment.")
+				else:
+					matching_proband_samples = Sample.objects.filter(sample_type = "Proband", group_id = sample.group_id, holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True)
+					if matching_proband_samples:
+						matching_proband_sample_found = True
+						for matching_proband_sample in matching_proband_samples:
+							if matching_proband_sample.holding_rack_well.holding_rack.plate:	
+								messages.info(request, "Matching proband sample found and has already been plated on plate: " +
+									matching_proband_sample.holding_rack_well.holding_rack.plate.plate_id + " in well " + 
+									matching_proband_sample.holding_rack_well.well_id + ". These samples must be sent in the same consignment.")
+							else:
+								messages.info(request, "Matching proband sample found and has been assigned to holding rack: " +
+									matching_proband_sample.holding_rack_well.holding_rack.holding_rack_id + " in well " + 
+									matching_proband_sample.holding_rack_well.well_id + ". These samples must be sent in the same consignment.")
+				if not matching_proband_sample_found:
+					messages.error(request, "No matching proband sample found for this sample. Unable to assign to holding rack.")
 			no_samples_with_same_participant_id = True
 			well_indices_to_avoid = []
 			index_count = 0
@@ -225,29 +228,32 @@ class HoldingRackManager():
 						messages.error(request, "No more valid positions available in this rack. Please assign " + 
 							sample.laboratory_sample_id + " to a new rack.")
 		elif self.holding_rack.holding_rack_type == "Tumour":
-			matching_germline_sample_found = False
-			matching_germline_samples = Sample.objects.filter(sample_type = "Cancer Germline", participant_id = sample.participant_id, holding_rack_well__isnull = True)
-			if matching_germline_samples:
-				matching_germline_sample_found = True
-				for matching_germline_sample in matching_germline_samples:
-					messages.warning(request, "Matching germline sample found in GMC rack: " +
-						matching_germline_sample.receiving_rack.receiving_rack_id + " in well " + 
-						matching_germline_sample.receiving_rack_well + " but not yet assigned to holding rack. These samples must be sent in the same consignment.")
-			else:
-				matching_germline_samples = Sample.objects.filter(sample_type = "Cancer Germline", participant_id = sample.participant_id, holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True)
+			matching_germline_sample_found = True
+			# all new tumour samples must have a matching germline sample from the same patient
+			if sample.is_repeat == "New":
+				matching_germline_sample_found = False
+				matching_germline_samples = Sample.objects.filter(sample_type = "Cancer Germline", participant_id = sample.participant_id, holding_rack_well__isnull = True)
 				if matching_germline_samples:
 					matching_germline_sample_found = True
 					for matching_germline_sample in matching_germline_samples:
-						if matching_germline_sample.holding_rack_well.holding_rack.plate:	
-							messages.info(request, "Matching germline sample found and has already been plated on plate: " +
-								matching_germline_sample.holding_rack_well.holding_rack.plate.plate_id + " in well " + 
-								matching_germline_sample.holding_rack_well.well_id + ". These samples must be sent in the same consignment.")
-						else:
-							messages.info(request, "Matching germline sample found and has been assigned to holding rack: " +
-								matching_germline_sample.holding_rack_well.holding_rack.holding_rack_id + " in well " + 
-								matching_germline_sample.holding_rack_well.well_id + ". These samples must be sent in the same consignment.")
-			if not matching_germline_sample_found:
-				messages.error(request, "No matching germline sample found for this sample. Unable to assign to holding rack.")
+						messages.warning(request, "Matching germline sample found in GMC rack: " +
+							matching_germline_sample.receiving_rack.receiving_rack_id + " in well " + 
+							matching_germline_sample.receiving_rack_well + " but not yet assigned to holding rack. These samples must be sent in the same consignment.")
+				else:
+					matching_germline_samples = Sample.objects.filter(sample_type = "Cancer Germline", participant_id = sample.participant_id, holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True)
+					if matching_germline_samples:
+						matching_germline_sample_found = True
+						for matching_germline_sample in matching_germline_samples:
+							if matching_germline_sample.holding_rack_well.holding_rack.plate:	
+								messages.info(request, "Matching germline sample found and has already been plated on plate: " +
+									matching_germline_sample.holding_rack_well.holding_rack.plate.plate_id + " in well " + 
+									matching_germline_sample.holding_rack_well.well_id + ". These samples must be sent in the same consignment.")
+							else:
+								messages.info(request, "Matching germline sample found and has been assigned to holding rack: " +
+									matching_germline_sample.holding_rack_well.holding_rack.holding_rack_id + " in well " + 
+									matching_germline_sample.holding_rack_well.well_id + ". These samples must be sent in the same consignment.")
+				if not matching_germline_sample_found:
+					messages.error(request, "No matching germline sample found for this sample. Unable to assign to holding rack.")
 			well_indices_to_avoid = []
 			index_count = 0
 			for well_content in self.well_contents:
@@ -286,29 +292,32 @@ class HoldingRackManager():
 						no_samples_with_same_participant_id = False
 						messages.error(request, "Unable to add sample " + sample.laboratory_sample_id + 
 							" to this rack as a sample with the same participant ID is already assigned to this rack.")
-			matching_tumour_sample_found = False
-			matching_tumour_samples = Sample.objects.filter(sample_type = "Tumour", participant_id = sample.participant_id, holding_rack_well__isnull = True)
-			if matching_tumour_samples:
-				matching_tumour_sample_found = True
-				for matching_tumour_sample in matching_tumour_samples:
-					messages.warning(request, "Matching tumour sample found in GMC rack: " +
-						matching_tumour_sample.receiving_rack.receiving_rack_id + " in well " + 
-						matching_tumour_sample.receiving_rack_well + " but not yet assigned to holding rack. These samples must be sent in the same consignment.")
-			else:
-				matching_tumour_samples = Sample.objects.filter(sample_type = "Tumour", participant_id = sample.participant_id, holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True)
+			matching_tumour_sample_found = True
+			# all new tumour samples must have a matching germline sample from the same patient
+			if sample.is_repeat == "New":
+				matching_tumour_sample_found = False
+				matching_tumour_samples = Sample.objects.filter(sample_type = "Tumour", participant_id = sample.participant_id, holding_rack_well__isnull = True)
 				if matching_tumour_samples:
 					matching_tumour_sample_found = True
 					for matching_tumour_sample in matching_tumour_samples:
-						if matching_tumour_sample.holding_rack_well.holding_rack.plate.plate_id:	
-							messages.info(request, "Matching tumour sample found and has already been plated on plate: " +
-								matching_tumour_sample.holding_rack_well.holding_rack.plate.plate_id + " in well " + 
-								matching_tumour_sample.holding_rack_well.well_id + ". These samples must be sent in the same consignment.")
-						else:
-							messages.info(request, "Matching tumour sample found and has been assigned to holding rack: " +
-								matching_tumour_sample.holding_rack_well.holding_rack.holding_rack_id + " in well " + 
-								matching_tumour_sample.holding_rack_well.well_id + ". These samples must be sent in the same consignment.")
-			if not matching_tumour_sample_found:
-				messages.error(request, "No matching tumour sample found for this sample. Unable to assign to holding rack.")
+						messages.warning(request, "Matching tumour sample found in GMC rack: " +
+							matching_tumour_sample.receiving_rack.receiving_rack_id + " in well " + 
+							matching_tumour_sample.receiving_rack_well + " but not yet assigned to holding rack. These samples must be sent in the same consignment.")
+				else:
+					matching_tumour_samples = Sample.objects.filter(sample_type = "Tumour", participant_id = sample.participant_id, holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True)
+					if matching_tumour_samples:
+						matching_tumour_sample_found = True
+						for matching_tumour_sample in matching_tumour_samples:
+							if matching_tumour_sample.holding_rack_well.holding_rack.plate.plate_id:	
+								messages.info(request, "Matching tumour sample found and has already been plated on plate: " +
+									matching_tumour_sample.holding_rack_well.holding_rack.plate.plate_id + " in well " + 
+									matching_tumour_sample.holding_rack_well.well_id + ". These samples must be sent in the same consignment.")
+							else:
+								messages.info(request, "Matching tumour sample found and has been assigned to holding rack: " +
+									matching_tumour_sample.holding_rack_well.holding_rack.holding_rack_id + " in well " + 
+									matching_tumour_sample.holding_rack_well.well_id + ". These samples must be sent in the same consignment.")
+				if not matching_tumour_sample_found:
+					messages.error(request, "No matching tumour sample found for this sample. Unable to assign to holding rack.")
 			if no_samples_with_same_participant_id and matching_tumour_sample_found:
 				if well:
 					well_index = self.well_labels.index(well)
