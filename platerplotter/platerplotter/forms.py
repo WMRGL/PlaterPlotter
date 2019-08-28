@@ -27,6 +27,16 @@ class SampleSelectForm(forms.Form):
 		else:
 			return lab_sample_id
 
+class PlateSelectForm(forms.Form):
+	plate_id = forms.CharField(label='', widget=forms.TextInput(attrs={'autofocus': 'autofocus'}))
+
+	def clean_plate_id(self):
+		plate_id = self.cleaned_data['plate_id']
+		if not re.match(r'^LP\d{7}-DNA$', plate_id):
+			raise ValidationError("Invalid Plate ID")
+		else:
+			return plate_id
+
 class LogIssueForm(forms.ModelForm):
 	class Meta:
 		model = Sample

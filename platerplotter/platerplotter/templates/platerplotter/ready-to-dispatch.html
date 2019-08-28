@@ -3,28 +3,42 @@
     Acknowledge Samples - {{ block.super }}
 {% endblock title %}
 {% load bootstrap4 %}
-
+{% load crispy_forms_tags %}
 
 {% block content %}
   <div class="container-fluid">
     <div class="row">
-      <div class="col-6">
+      <div class="col-3">
         <h3>Plates ready for dispatch</h3>
         <p>Assign racks to consignment and send GEL1008</p>
       </div>
+      <div class="col-3">
+        <div align='left'>
+          <h6>Scan or type Plate ID</h6>
+        </div>
+        <form role='form' action='' method="POST", class='form-inline'>
+          {% csrf_token %}
+          {{ plate_select_form|crispy }}
+          <div class="form-group">
+            <div class="col-lg-5 col-sm-offset-5">
+              <button type="submit" name='plate' class="btn btn-primary">Go</button>
+            </div>
+          </div>
+        </form>
+      </div>
       <div class="col-6">
         <form role='form' method="POST" class='form-inline float-right' enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="col-lg-4">
-              {% bootstrap_field gel1008_form.consignment_number %}
-            </div>
-            <div class="col-lg-4">
-              {% bootstrap_field gel1008_form.date_of_dispatch %}
-            </div>
-            <div class="col-lg-4">
-              <br>
-              <button type="submit" name="gel1008" class="btn btn-primary btn-block">Send GEL1008</button>
-            </div>
+          {% csrf_token %}
+          <div class="col-lg-4">
+            {% bootstrap_field gel1008_form.consignment_number %}
+          </div>
+          <div class="col-lg-4">
+            {% bootstrap_field gel1008_form.date_of_dispatch %}
+          </div>
+          <div class="col-lg-4">
+            <br>
+            <button type="submit" name="gel1008" class="btn btn-primary btn-block">Send GEL1008</button>
+          </div>    
       </div>
     <div class="col-12">
       <div class="tab-pane active">
