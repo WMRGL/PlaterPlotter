@@ -18,10 +18,11 @@
         </div>
         <form role='form' action='' method="POST", class='form-inline'>
           {% csrf_token %}
+          <input type="hidden" id="selected_plates" name="selected_plates">
           {{ plate_select_form|crispy }}
           <div class="form-group">
             <div class="col-lg-5 col-sm-offset-5">
-              <button type="submit" name='plate' class="btn btn-primary">Go</button>
+              <button onclick="myFunction()" type="submit" name='plate' class="btn btn-primary">Go</button>
             </div>
           </div>
         </form>
@@ -63,7 +64,7 @@
               <td>{{ holding_rack.full }}</td>
               <td>{{ holding_rack.sample_count }}</td>
               <td style="text-align:center">
-                <input type="checkbox" name="selected_plate" value="{{holding_rack.plate.pk}}">
+                <input type="checkbox" class="selected_plate" name="selected_plate" value="{{holding_rack.plate.pk}}">
               </td>
             </tr>
             {% endfor %}
@@ -73,5 +74,41 @@
       </div> 
     </div>     
   </div>
+
+<script>
+var form = document.getElementById('selected_plates');
+form.value = '';
+console.log("running");
+var already_selected = {{selected_plates_list}};
+console.log(already_selected);
+var all_ready_plates = document.getElementsByClassName("selected_plate");
+for(var i=0; i<already_selected.length; i++){
+  console.log(already_selected[i].value)
+  if(all_ready_plates.includes(already_selected[i].value)){
+    console.log(all_ready_plates[i].value)
+    all_ready_plates[i].checked = true;
+  }
+}
+
+function myFunction() {
+  console.log("clicked");
+  var all_ready_plates = document.getElementsByClassName("selected_plate");
+  var currently_selected = []
+  console.log(all_ready_plates.length);
+  for(var i=0; i<all_ready_plates.length; i++){
+    if(all_ready_plates[i].checked){
+      currently_selected.push(all_ready_plates[i])
+    }
+  }
+  console.log(currently_selected.length);
+  currently_selected_list = '';
+  for(var i=0; i<currently_selected.length; i++){
+    currently_selected_list = currently_selected_list.concat(currently_selected[i].value, ',')
+    console.log(currently_selected[i].value);
+  }
+  console.log(currently_selected_list);
+  form.value = currently_selected_list
+}
+</script>
 
 {% endblock content %}

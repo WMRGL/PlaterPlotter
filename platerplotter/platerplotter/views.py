@@ -996,18 +996,19 @@ def plate_holding_rack(request, holding_rack_pk):
 		"plating_form" : plating_form})
 
 @login_required()
-def ready_to_dispatch(request, selected_plates_list=None):
+def ready_to_dispatch(request):
 	"""
 	Renders page displaying plates that are ready for dispatch
 	"""
-	if not selected_plates_list:
-		selected_plates_list = []
 	ready_to_dispatch = HoldingRack.objects.filter(ready_to_plate=True, plate__isnull=False, plate__gel_1008_csv__isnull=True)
 	plate_ids_ready_to_dispatch = []
+	plates_ready_to_dispatch = []
 	for holding_rack in ready_to_dispatch:
 		plate_ids_ready_to_dispatch.append(holding_rack.plate.plate_id)
-	for holding_rack in ready_to_dispatch:
+		plates_ready_to_dispatch.append(holding_rack.plate)
 		holding_rack.sample_count = Sample.objects.filter(holding_rack_well__holding_rack=holding_rack).count
+	# for holding_rack in ready_to_dispatch:
+	# 	holding_rack.sample_count = Sample.objects.filter(holding_rack_well__holding_rack=holding_rack).count
 	if request.method == 'POST':
 		if "gel1008" in request.POST:
 			plate_select_form = PlateSelectForm()
@@ -1158,19 +1159,28 @@ def ready_to_dispatch(request, selected_plates_list=None):
 				else:
 					messages.warning(request, "No plates selected!")
 				return HttpResponseRedirect('/ready-to-dispatch/')
-		# if "plate" in request.POST:
-		# 	# under development
-		# 	gel1008_form = Gel1008Form()
-		# 	plate_select_form = PlateSelectForm(request.POST)
-		# 	if plate_select_form.is_valid():
-		# 		plate_id = plate_select_form.cleaned_data.get('plate_id')
-		# 		if plate_id in plate_ids_ready_to_dispatch:
-		# 			selected_plates_list.append(plate_id)
-		# 			# url = reverse('ready_to_dispatch', kwargs={'selected_plates_list' : selected_plates_list})
-		# 			# return HttpResponseRedirect(url)
-		# 		else:
-		# 			messages.error(request, "Plate ID not found in list of plates ready for dispatch.")
+		if "plate" in request.POST:
+			# under development
+			gel1008_form = Gel1008Form()
+			plate_select_form = PlateSelectForm(request.POST)
+			selected_plates = request.POST['selected_plates']
+			selected_plates_list = selected_plates.split(',')
+			selected_plates_list.pop()
+			selected_plates_list = list(map(int, selected_plates_list))
+			print(selected_plates_list)
+			if plate_select_form.is_valid():
+				plate_id = plate_select_form.cleaned_data.get('plate_id')
+				if plate_id in plate_ids_ready_to_dispatch:
+					for plate_ready_to_dispatch in plates_ready_to_dispatch:
+						if plate_ready_to_dispatch.plate_id == plate_id:
+							selected_plates_list.append(plate_ready_to_dispatch.pk)
+					print(selected_plates_list)
+					# url = reverse('ready_to_dispatch', kwargs={'selected_plates_list' : selected_plates_list})
+					# return HttpResponseRedirect(url)
+				else:
+					messages.error(request, "Plate ID not found in list of plates ready for dispatch.")
 	else:
+		selected_plates_list = []
 		plate_select_form = PlateSelectForm()
 		gel1008_form = Gel1008Form()
 	return render(request, 'platerplotter/ready-to-dispatch.html', {
