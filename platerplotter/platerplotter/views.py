@@ -16,6 +16,7 @@ import csv
 import os
 import pytz
 import re
+import time
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Flowable, Paragraph, SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
@@ -1091,36 +1092,33 @@ def ready_to_dispatch(request, selected_plates_list=None):
 						consignment_number = gel1008_form.cleaned_data.get('consignment_number')
 						date_of_dispatch = gel1008_form.cleaned_data.get('date_of_dispatch')
 						directory = LoadConfig().load()['gel1008path']
-						datetime_now = datetime.now(pytz.timezone('UTC'))
-						filename = "ngis_bio_to_gel_sample_dispatch_" + datetime.now(pytz.timezone('UTC')).strftime("%Y%m%d_%H%M%S") + ".csv"
-						gel_1008_csv = Gel1008Csv.objects.create(
-							filename = filename,
-							report_generated_datetime = datetime_now,
-							consignment_number = consignment_number,
-							date_of_dispatch = date_of_dispatch)
-						holding_racks = []
 						for pk in plate_pks:
+							datetime_now = datetime.now(pytz.timezone('UTC'))
+							filename = "ngis_bio_to_gel_sample_dispatch_" + datetime.now(pytz.timezone('UTC')).strftime("%Y%m%d_%H%M%S") + ".csv"
+							gel_1008_csv = Gel1008Csv.objects.create(
+								filename = filename,
+								report_generated_datetime = datetime_now,
+								consignment_number = consignment_number,
+								date_of_dispatch = date_of_dispatch)
 							plate = Plate.objects.get(pk=pk)
 							plate.gel_1008_csv = gel_1008_csv
 							plate.save()
-							holding_racks.append(plate.holding_rack)
-						path = directory + filename
-						doc = SimpleDocTemplate(path[:-3] + 'pdf')
-						doc.pagesize = landscape(A4)
-						elements = []
-						data = [['Plate ID', 'Plate Consignment Number', 'Plate Date of Dispatch', 'Well ID', 
-								'Well Type', 'Participant ID', 'Laboratory Sample ID']]
-						with open(path, 'w', newline='') as csvfile:
-							writer = csv.writer(csvfile, delimiter=',',
-								quotechar=',', quoting=csv.QUOTE_MINIMAL)
-							writer.writerow(['Plate ID', 'Plate Consignment Number', 'Plate Date of Dispatch',
-								'Well ID', 'Well Type', 'Participant ID' 'Laboratory Sample ID',
-								'Normalised Biorepository Sample Volume', 'Normalised Biorepository Concentration'])
-							for holding_rack in holding_racks:
-								holding_rack_wells = HoldingRackWell.objects.filter(holding_rack=holding_rack).order_by('well_id')
+							path = directory + filename
+							doc = SimpleDocTemplate(path[:-3] + 'pdf')
+							doc.pagesize = landscape(A4)
+							elements = []
+							data = [['Plate ID', 'Plate Consignment Number', 'Plate Date of Dispatch', 'Well ID', 
+									'Well Type', 'Participant ID', 'Laboratory Sample ID']]
+							with open(path, 'w', newline='') as csvfile:
+								writer = csv.writer(csvfile, delimiter=',',
+									quotechar=',', quoting=csv.QUOTE_MINIMAL)
+								writer.writerow(['Plate ID', 'Plate Consignment Number', 'Plate Date of Dispatch',
+									'Well ID', 'Well Type', 'Participant ID' 'Laboratory Sample ID',
+									'Normalised Biorepository Sample Volume', 'Normalised Biorepository Concentration'])
+								holding_rack_wells = HoldingRackWell.objects.filter(holding_rack=plate.holding_rack).order_by('well_id')
 								for holding_rack_well in holding_rack_wells:
 									if holding_rack_well.sample or holding_rack_well.buffer_added:
-										plate_id = holding_rack_well.holding_rack.plate.plate_id
+										plate_id = plate.plate_id
 										plate_consignment_number = gel_1008_csv.consignment_number
 										plate_date_of_dispatch = gel_1008_csv.date_of_dispatch.replace(microsecond=0).isoformat().replace('+00:00', 'Z')
 										well_id = holding_rack_well.well_id
@@ -1142,18 +1140,20 @@ def ready_to_dispatch(request, selected_plates_list=None):
 											well_type, participant_id, laboratory_sample_id, norm_biorep_sample_vol, norm_biorep_conc])
 										data.append([plate_id, plate_consignment_number, plate_date_of_dispatch, well_id, 
 											well_type, participant_id, laboratory_sample_id])
-						flowObjects = list()
-						styles=getSampleStyleSheet()
-						table_header = "Sample summary for consignment: " + str(consignment_number)
-						flowObjects.append(Paragraph(table_header,styles["h4"]))
-						t1=Table(data,hAlign="LEFT")
-						t1.setStyle(TableStyle([('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
-									('BOX', (0,0), (-1,-1), 0.25, colors.black),
-									('BACKGROUND',(0,0),(-1,0),colors.gray),
-									('TEXTCOLOR',(0,0),(-1,0),colors.black),
-									]))
-						flowObjects.append(t1)
-						doc.build(flowObjects)
+							flowObjects = list()
+							styles=getSampleStyleSheet()
+							table_header = "Sample summary for consignment: " + str(consignment_number)
+							flowObjects.append(Paragraph(table_header,styles["h4"]))
+							t1=Table(data,hAlign="LEFT")
+							t1.setStyle(TableStyle([('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
+										('BOX', (0,0), (-1,-1), 0.25, colors.black),
+										('BACKGROUND',(0,0),(-1,0),colors.gray),
+										('TEXTCOLOR',(0,0),(-1,0),colors.black),
+										]))
+							flowObjects.append(t1)
+							doc.build(flowObjects)
+							# need to wait 1 second to make sure filenames for GEL1008s are different
+							time.sleep(1)
 						messages.info(request, "GEL1008 csv produced.")
 				else:
 					messages.warning(request, "No plates selected!")
