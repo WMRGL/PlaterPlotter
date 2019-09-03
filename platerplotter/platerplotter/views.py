@@ -1160,25 +1160,28 @@ def ready_to_dispatch(request):
 					messages.warning(request, "No plates selected!")
 				return HttpResponseRedirect('/ready-to-dispatch/')
 		if "plate" in request.POST:
-			# under development
 			gel1008_form = Gel1008Form()
 			plate_select_form = PlateSelectForm(request.POST)
 			selected_plates = request.POST['selected_plates']
 			selected_plates_list = selected_plates.split(',')
-			selected_plates_list.pop()
-			selected_plates_list = list(map(int, selected_plates_list))
 			print(selected_plates_list)
+			for selected_plate in selected_plates_list:
+				if selected_plate == "":
+					selected_plates_list.remove(selected_plate)
+			print(selected_plates_list)
+			selected_plates_list = list(map(int, selected_plates_list))
 			if plate_select_form.is_valid():
 				plate_id = plate_select_form.cleaned_data.get('plate_id')
 				if plate_id in plate_ids_ready_to_dispatch:
 					for plate_ready_to_dispatch in plates_ready_to_dispatch:
 						if plate_ready_to_dispatch.plate_id == plate_id:
-							selected_plates_list.append(plate_ready_to_dispatch.pk)
-					print(selected_plates_list)
-					# url = reverse('ready_to_dispatch', kwargs={'selected_plates_list' : selected_plates_list})
-					# return HttpResponseRedirect(url)
+							if plate_ready_to_dispatch.pk in selected_plates_list:
+								messages.warning(request, plate_id + " already selected for this consignment.")
+							else:
+								selected_plates_list.append(plate_ready_to_dispatch.pk)
+								messages.info(request, plate_id + " added to the consignment list.")
 				else:
-					messages.error(request, "Plate ID not found in list of plates ready for dispatch.")
+					messages.error(request, plate_id + " not found in list of plates ready for dispatch.")
 	else:
 		selected_plates_list = []
 		plate_select_form = PlateSelectForm()
