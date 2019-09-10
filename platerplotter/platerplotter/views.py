@@ -691,18 +691,17 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
 					if holding_rack_id == rack.receiving_rack_id:
 						messages.error(request, "You have scanned the GMC Rack. Please scan the holding rack.")
 						error = True
-				else:
-					try:
-						holding_rack = HoldingRack.objects.get(holding_rack_id=holding_rack_id, plate__isnull=True)
-						if holding_rack.holding_rack_type == 'Problem':
-							messages.error(request, "You have scanned a holding rack for Problem samples. Please scan the correct holding rack.")
-							error = True
-					except:
-						holding_rack = HoldingRack.objects.create(holding_rack_id=holding_rack_id)
-						for holding_rack_row in holding_rack_rows:
-							for holding_rack_column in holding_rack_columns:
-								HoldingRackWell.objects.create(holding_rack=holding_rack,
-									well_id=holding_rack_row + holding_rack_column)
+				try:
+					holding_rack = HoldingRack.objects.get(holding_rack_id=holding_rack_id, plate__isnull=True)
+					if holding_rack.holding_rack_type == 'Problem':
+						messages.error(request, "You have scanned a holding rack for Problem samples. Please scan the correct holding rack.")
+						error = True
+				except:
+					holding_rack = HoldingRack.objects.create(holding_rack_id=holding_rack_id)
+					for holding_rack_row in holding_rack_rows:
+						for holding_rack_column in holding_rack_columns:
+							HoldingRackWell.objects.create(holding_rack=holding_rack,
+								well_id=holding_rack_row + holding_rack_column)
 				if holding_rack and not error:
 					if gel1004:
 						url = reverse('assign_samples_to_holding_rack', kwargs={
@@ -1114,7 +1113,7 @@ def ready_to_dispatch(request):
 								writer = csv.writer(csvfile, delimiter=',',
 									quotechar=',', quoting=csv.QUOTE_MINIMAL)
 								writer.writerow(['Plate ID', 'Plate Consignment Number', 'Plate Date of Dispatch',
-									'Well ID', 'Well Type', 'Participant ID' 'Laboratory Sample ID',
+									'Well ID', 'Well Type', 'Participant ID', 'Laboratory Sample ID',
 									'Normalised Biorepository Sample Volume', 'Normalised Biorepository Concentration'])
 								holding_rack_wells = HoldingRackWell.objects.filter(holding_rack=plate.holding_rack).order_by('well_id')
 								for holding_rack_well in holding_rack_wells:
@@ -1164,11 +1163,9 @@ def ready_to_dispatch(request):
 			plate_select_form = PlateSelectForm(request.POST)
 			selected_plates = request.POST['selected_plates']
 			selected_plates_list = selected_plates.split(',')
-			print(selected_plates_list)
 			for selected_plate in selected_plates_list:
 				if selected_plate == "":
 					selected_plates_list.remove(selected_plate)
-			print(selected_plates_list)
 			selected_plates_list = list(map(int, selected_plates_list))
 			if plate_select_form.is_valid():
 				plate_id = plate_select_form.cleaned_data.get('plate_id')
