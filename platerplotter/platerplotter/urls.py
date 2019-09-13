@@ -17,7 +17,8 @@ urlpatterns = [
     path('ready-to-plate/', views.ready_to_plate, name='ready_to_plate'),
     path('plate-holding-rack/<str:holding_rack_pk>', views.plate_holding_rack, name='plate_holding_rack'),
     path('ready-to-dispatch/', views.ready_to_dispatch, name='ready_to_dispatch'),
-    # path('ready-to-dispatch/<str:selected_plates_list>', views.ready_to_dispatch, name='ready_to_dispatch'),
     path('audit/', views.audit, name='audit'),
     path('register/', views.register, name='register'),
+    # paths to allow for alernative input directories for unit tests
+    path('<str:test_status>', views.import_acks, name='index'),
 ]

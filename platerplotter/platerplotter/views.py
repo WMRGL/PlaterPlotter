@@ -21,6 +21,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Flowable, Paragraph, SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import landscape, A4
+from pathlib import Path
 
 # def ajax_change_sample_received_status(request):
 #     sample_received = request.GET.get('sample_received', False)
@@ -55,49 +56,49 @@ def strip_zeros(well):
 		return well
 
 def check_plating_organisation(plating_organisation):
-	if plating_organisation != 'wwm':
+	if plating_organisation.lower() != 'wwm':
 		raise ValueError('Plating orgnaisation entered as {}. Expected "wmm".'.format(plating_organisation.lower()))
 	else:
 		return plating_organisation.lower()
 
 def check_rack_id(rack_id):
-	if 8 > len(rack_id) > 12:
+	if 8 > len(rack_id) or len(rack_id) > 12:
 		raise ValueError('Incorrect rack ID. Received {} which does not match the required specification.'.format(rack_id))
 	else:
 		return rack_id
 
 def check_laboratory_id(laboratory_id):
 	accepted_ids = ["yne", "now", "eme", "lnn", "lns", "wwm", "sow"]
-	if laboratory_id not in accepted_ids:
+	if laboratory_id.lower() not in accepted_ids:
 		raise ValueError('Incorrect laboratory ID. Received {} which is not on the list of accepted laboratory IDs.'.format(laboratory_id))
 	else:
-		return laboratory_id
+		return laboratory_id.lower()
 
 def check_participant_id(participant_id):
-	if not re.match(r'^[p,P]\d{11}$', participant_id):
+	if not re.match(r'^p\d{11}$', participant_id.lower()):
 		raise ValueError('Incorrect participant ID. Received {} which does not match the required specification.'.format(participant_id))
 	else:
-		return participant_id
+		return participant_id.lower()
 
 def check_group_id(group_id):
-	if not re.match(r'^[r,R]\d{11}$', group_id):
+	if not re.match(r'^r\d{11}$', group_id.lower()):
 		raise ValueError('Incorrect group ID. Received {} which does not match the required specification.'.format(group_id))
 	else:
-		return group_id
+		return group_id.lower()
 
 def check_priority(priority):
 	accepted_values = ['URGENT', 'ROUTINE']
 	if priority.upper() not in accepted_values:
 		raise ValueError('Incorrect priority. Received {}. Must be either routine or urgent.'.format(priority))
 	else:
-		return priority
+		return priority.upper()
 
 def check_disease_area(disease_area):
 	accepted_values = ['CANCER', 'RARE DISEASE']
 	if disease_area.upper() not in accepted_values:
-		raise ValueError('Incorrect disease area. Received {}. Must be either cancer or rare disease.'.format(priority))
+		raise ValueError('Incorrect disease area. Received {}. Must be either cancer or rare disease.'.format(disease_area))
 	else:
-		return disease_area
+		return disease_area.upper()
 
 def check_clinical_sample_type(clin_sample_type):
 	accepted_values = ["dna_blood_germline","dna_saliva","dna_fibroblast","dna_ff_germline",
@@ -116,10 +117,10 @@ def check_clinical_sample_type(clin_sample_type):
 		return clin_sample_type.lower()
 
 def check_glh_sample_consignment_number(glh_sample_consignment_number):
-	if not re.match(r'^[a-z,A-Z]{3}-\d{4}-\d{2}-\d{2}-\d{2}-[1,2]$', glh_sample_consignment_number):
+	if not re.match(r'^[a-z]{3}-\d{4}-\d{2}-\d{2}-\d{2}-[1,2]$', glh_sample_consignment_number.lower()):
 		raise ValueError('Incorrect GLH sample consignment number. Received {} which does not match the required specification.'.format(glh_sample_consignment_number))
 	else:
-		return glh_sample_consignment_number
+		return glh_sample_consignment_number.lower()
 
 def check_laboratory_sample_id(laboratory_sample_id):
 	if not re.match(r'^\d{10}$', laboratory_sample_id):
@@ -134,10 +135,10 @@ def check_laboratory_sample_volume(laboratory_sample_volume):
 		return laboratory_sample_volume
 
 def check_rack_well(rack_well):
-	if not re.match(r'^[A-H][0,1][0-9]$', rack_well):
+	if not re.match(r'^[A-H][0,1][0-9]$', rack_well.upper()):
 		raise ValueError('Invalid rack well for a 96 well rack. Received {}.'.format(rack_well))
 	else:
-		return rack_well
+		return rack_well.upper()
 
 def check_is_proband(is_proband):
 	if is_proband == "TRUE" or is_proband == "True":
@@ -151,10 +152,10 @@ def check_is_proband(is_proband):
 
 def check_is_repeat(is_repeat):
 	accepted_values = ['New', 'Retrospective', 'Repeat New', 'Repeat Retrospective']
-	if is_repeat not in accepted_values:
+	if is_repeat.title() not in accepted_values:
 		raise ValueError('Is repeat field not in list of accepted values. Received {}.'.format(is_repeat))
 	else:
-		return is_repeat
+		return is_repeat.title()
 
 def check_tissue_type(tissue_type):
 	accepted_values = ["Normal or Germline sample", "Liquid tumour sample", "Solid tumour sample", "Abnormal tissue sample", "Omics sample"]
@@ -163,8 +164,11 @@ def check_tissue_type(tissue_type):
 	else:
 		return tissue_type
 
-def rack_scan():
-	directory = LoadConfig().load()['rack_scanner_path']
+def rack_scan(test_status=False):
+	if test_status:
+		directory = str(Path.cwd().parent) + '/TestData/Inbound/RackScanner/'
+	else:	
+		directory = LoadConfig().load()['rack_scanner_path']
 	for filename in os.listdir(directory):
 		if filename.endswith(".csv"):
 			path = directory + filename
@@ -183,8 +187,8 @@ def rack_scan():
 			os.rename(path, directory + "processed/" + filename)
 
 def confirm_sample_positions(request, rack, rack_samples, first_check=False, 
-							final_check=False):
-	rack_scan()
+							final_check=False, test_status=False):
+	rack_scan(test_status=test_status)
 	if first_check:
 		rack_id = rack.receiving_rack_id
 	else:
@@ -268,16 +272,24 @@ def confirm_sample_positions(request, rack, rack_samples, first_check=False,
 		messages.error(request, "Rack " + rack_id + " not found in Rack scanner CSV. Has the rack been scanned?")
 
 @login_required()
-def import_acks(request):
+def import_acks(request, test_status=False):
 	"""
 	Renders import acks page. Allows users to import new GEL1004 acks
 	and acknowledge receipt of samples.
 	"""
 	if request.method == 'POST':
 		# import new notifications from the storage location
+		print(request)
+		print(request.POST)
 		if 'import-1004' in request.POST:
-			directory = LoadConfig().load()['gel1004path']
+			print("activated")
+			if test_status:
+				directory = str(Path.cwd().parent) + '/TestData/Inbound/GEL1004/'
+			else:
+				directory = LoadConfig().load()['gel1004path']
+			print(directory)
 			for filename in os.listdir(directory):
+				print(filename)
 				if filename.endswith(".csv"):
 					datetime_now = datetime.now(pytz.timezone('UTC'))
 					path = directory + filename

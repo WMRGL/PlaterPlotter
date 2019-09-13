@@ -1,6 +1,0 @@
-Participant ID,Group ID,Disease Area,GMC Rack ID,Clinic Sample Type,GLH Sample Consignment Number,Laboratory Sample ID,Laboratory ID,Laboratory Sample Volume,GMC Rack Well,Plating Organisation,Priority,Is Proband
-p19-1,r19-0,Rare Disease,AA12345678,dna_saliva,wwm-2019-02-07-01-1,0000000001,wwm,50,A1,wwm,Routine,True
-p19-2,r19-0,Rare Disease,AA12345678,dna_saliva,wwm-2019-02-07-01-1,0000000001,wwm,50,A1,wwm,Routine,False
-p19-3,r19-0,Rare Disease,AA12345678,dna_saliva,wwm-2019-02-07-01-1,0000000001,wwm,50,A1,wwm,Routine,0
-p19-4,r19-0,Rare Disease,AA12345678,dna_saliva,wwm-2019-02-07-01-1,0000000001,wwm,50,A1,wwm,Routine,0
-p19-5,r19-0,Rare Disease,AA12345678,dna_saliva,wwm-2019-02-07-01-1,0000000001,wwm,50,A1,wwm,Routine,1
