@@ -21,4 +21,6 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     # paths to allow for alernative input directories for unit tests
     path('<str:test_status>', views.import_acks, name='index'),
+    path('acknowledge-samples/<str:gel1004>/<str:rack>/<str:test_status>', views.acknowledge_samples, name='acknowledge_samples'),
+    path('problem-samples/<str:holding_rack_id>/<str:test_status>', views.problem_samples, name='problem_samples'),
 ]

@@ -47,6 +47,14 @@ class ReceivingRack(models.Model):
 	def __str__(self):
 		return self.receiving_rack_id
 
+	def is_empty(self):
+		samples = Sample.objects.filter(receiving_rack=self)
+		empty = True
+		for sample in samples:
+			if not hasattr(sample, 'holding_rack_well'):
+				empty = False
+		return empty
+
 class Plate(models.Model):
 	gel_1008_csv = models.ForeignKey(Gel1008Csv, on_delete=models.SET_NULL, null=True, blank=True, related_name='plate')
 	plate_id = models.CharField(max_length=13, unique=True)

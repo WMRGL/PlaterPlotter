@@ -1,8 +1,0 @@
-Participant ID,Group ID,Disease Area,GMC Rack ID,Clinic Sample Type,GLH Sample Consignment Number,Laboratory Sample ID,Laboratory ID,Laboratory Sample Volume,GMC Rack Well,Plating Organisation,Priority,Is Proband,Is Repeat,Sample Tissue Type
-p58482981986,r19331151986,Rare Disease,SA00795810,dna_edta_blood,eme-2010-05-05-10-1,1042942132,eme,543,A01,wwm,Urgent,TRUE,New,Normal or Germline sample
-p58482981987,r19331151987,Rare Disease,SA00795810,dna_edta_blood,eme-2010-05-05-10-1,1042942098,eme,543,B01,wwm,Urgent,TRUE,New,Normal or Germline sample
-p58482981988,r19331151988,Rare Disease,SA00795810,dna_edta_blood,eme-2010-05-05-10-1,1042942104,eme,543,C01,wwm,Urgent,TRUE,New,Normal or Germline sample
-p58482981989,r19331151988,Rare Disease,SA00795810,dna_edta_blood,eme-2010-05-05-10-1,1042942107,eme,543,D01,wwm,Urgent,TRUE,New,Normal or Germline sample
-p58482981990,r19331151989,Rare Disease,SA00795810,dna_edta_blood,eme-2010-05-05-10-1,1042942096,eme,543,E01,wwm,Urgent,TRUE,New,Normal or Germline sample
-p58482981991,r19331151990,Rare Disease,SA00795810,dna_edta_blood,eme-2010-05-05-10-1,1042942127,eme,543,F01,wwm,Urgent,TRUE,New,Normal or Germline sample
-p58482981992,r19331151991,Rare Disease,SA00795810,dna_edta_blood,eme-2010-05-05-10-1,1042942110,eme,543,G01,wwm,Urgent,TRUE,New,Normal or Germline sample

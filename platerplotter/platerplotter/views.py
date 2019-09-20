@@ -164,7 +164,7 @@ def check_tissue_type(tissue_type):
 	else:
 		return tissue_type
 
-def rack_scan(test_status=False):
+def old_rack_scan(test_status=False):
 	if test_status:
 		directory = str(Path.cwd().parent) + '/TestData/Inbound/RackScanner/'
 	else:	
@@ -185,6 +185,29 @@ def rack_scan(test_status=False):
 							sample_id=row[1].strip(),
 							position=pad_zeros(row[0].strip()))
 			os.rename(path, directory + "processed/" + filename)
+
+def rack_scan(test_status=False):
+	if test_status:
+		directory = str(Path.cwd().parent) + '/TestData/Inbound/RackScanner/'
+	else:	
+		directory = LoadConfig().load()['rack_scanner_path']
+	for filename in os.listdir(directory):
+		if filename.endswith(".csv"):
+			path = directory + filename
+			date_modified = datetime.fromtimestamp(os.path.getmtime(path), pytz.timezone('UTC'))
+			with open(path, 'r') as csvFile:
+				reader = csv.reader(csvFile, delimiter=',', skipinitialspace=True)
+				for row in reader:
+					if row[2] != '':
+						rack_scanner, created = RackScanner.objects.get_or_create(
+							filename=filename,
+							scanned_id=row[0].strip(),
+							date_modified=date_modified)
+						RackScannerSample.objects.get_or_create(rack_scanner=rack_scanner,
+							sample_id=row[2].strip(),
+							position=pad_zeros(row[1].strip()))
+			os.rename(path, directory + "processed/" + filename)
+
 
 def confirm_sample_positions(request, rack, rack_samples, first_check=False, 
 							final_check=False, test_status=False):
@@ -279,17 +302,12 @@ def import_acks(request, test_status=False):
 	"""
 	if request.method == 'POST':
 		# import new notifications from the storage location
-		print(request)
-		print(request.POST)
 		if 'import-1004' in request.POST:
-			print("activated")
 			if test_status:
 				directory = str(Path.cwd().parent) + '/TestData/Inbound/GEL1004/'
 			else:
 				directory = LoadConfig().load()['gel1004path']
-			print(directory)
 			for filename in os.listdir(directory):
-				print(filename)
 				if filename.endswith(".csv"):
 					datetime_now = datetime.now(pytz.timezone('UTC'))
 					path = directory + filename
@@ -355,7 +373,10 @@ def import_acks(request, test_status=False):
 			pk = request.POST['send-1005']
 			gel_1004 = Gel1004Csv.objects.get(pk=pk)
 			racks = ReceivingRack.objects.filter(gel_1004_csv=gel_1004)
-			directory = LoadConfig().load()['gel1005path']
+			if test_status:
+				directory = str(Path.cwd().parent) + '/TestData/Outbound/GEL1005/'
+			else:
+				directory = LoadConfig().load()['gel1005path']
 			datetime_now = datetime.now(pytz.timezone('UTC'))
 			filename = "ngis_bio_to_gel_samples_received_" + datetime.now(pytz.timezone('UTC')).strftime("%Y%m%d_%H%M%S") + ".csv"
 			gel_1005 = Gel1005Csv.objects.create(
@@ -398,7 +419,7 @@ def import_acks(request, test_status=False):
 	return render(request, 'platerplotter/import-acks.html', {"unacked_racks_dict" : unacked_racks_dict})
 
 @login_required()
-def acknowledge_samples(request, gel1004, rack):
+def acknowledge_samples(request, gel1004, rack, test_status=False):
 	rack = ReceivingRack.objects.get(gel_1004_csv=gel1004, receiving_rack_id=rack)
 	samples = Sample.objects.filter(receiving_rack=rack)
 	sample_select_form = SampleSelectForm()
@@ -408,7 +429,7 @@ def acknowledge_samples(request, gel1004, rack):
 		sample_form_dict[sample] = LogIssueForm(instance=sample)
 	if request.method == 'POST':
 		if 'rack-scanner' in request.POST:
-			confirm_sample_positions(request, rack, samples, first_check=True)
+			confirm_sample_positions(request, rack, samples, first_check=True, test_status=test_status)
 		if 'rack-acked' in request.POST:
 			rack.rack_acknowledged = True
 			rack.save()
@@ -465,6 +486,7 @@ def acknowledge_samples(request, gel1004, rack):
 				sample = Sample.objects.get(pk=pk)
 				sample.issue_identified = False
 				sample.comment = None
+				sample.issue_outcome = None
 				sample.save()
 				url = reverse('acknowledge_samples', kwargs={
 					"gel1004" : gel1004,
@@ -485,7 +507,7 @@ def acknowledge_samples(request, gel1004, rack):
 		"all_samples_received" : all_samples_received})
 
 @login_required()
-def problem_samples(request, holding_rack_id=None):
+def problem_samples(request, holding_rack_id=None, test_status=False):
 	holding_rack_rows = ['A','B','C','D','E','F','G','H']
 	holding_rack_columns = ['01','02','03','04','05','06','07','08','09','10','11','12']
 	samples = Sample.objects.filter(issue_identified = True, issue_outcome= "Not resolved").exclude(holding_rack_well__holding_rack__holding_rack_type='Problem')
@@ -515,16 +537,24 @@ def problem_samples(request, holding_rack_id=None):
 				error = False
 				holding_rack_id = holding_rack_form.cleaned_data.get('holding_rack_id')
 				try:
-					holding_rack = HoldingRack.objects.get(holding_rack_id=holding_rack_id, plate__isnull=True)
-					if holding_rack.holding_rack_type != "Problem":
-						messages.error(request, "You have scanned a holding rack being used for " + holding_rack.holding_rack_type + " samples. Please scan an exisiting or new Problem rack.")
+					receiving_rack = ReceivingRack.objects.get(receiving_rack_id=holding_rack_id)
+					if not receiving_rack.is_empty():
+						messages.error(request, "You have scanned an active receiving rack. Please scan an exisiting or new Problem rack.")
 						error = True
 				except:
-					holding_rack = HoldingRack.objects.create(holding_rack_id=holding_rack_id, holding_rack_type="Problem")
-					for holding_rack_row in holding_rack_rows:
-						for holding_rack_column in holding_rack_columns:
-							HoldingRackWell.objects.create(holding_rack=holding_rack,
-								well_id=holding_rack_row + holding_rack_column)
+					pass
+				if not error:
+					try:
+						holding_rack = HoldingRack.objects.get(holding_rack_id=holding_rack_id, plate__isnull=True)
+						if holding_rack.holding_rack_type != "Problem":
+							messages.error(request, "You have scanned a holding rack being used for " + holding_rack.holding_rack_type + " samples. Please scan an exisiting or new Problem rack.")
+							error = True
+					except:
+						holding_rack = HoldingRack.objects.create(holding_rack_id=holding_rack_id, holding_rack_type="Problem")
+						for holding_rack_row in holding_rack_rows:
+							for holding_rack_column in holding_rack_columns:
+								HoldingRackWell.objects.create(holding_rack=holding_rack,
+									well_id=holding_rack_row + holding_rack_column)
 				if holding_rack and not error:
 					url = reverse('problem_samples', kwargs={
 							'holding_rack_id' : holding_rack.holding_rack_id,
