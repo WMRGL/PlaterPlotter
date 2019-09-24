@@ -117,7 +117,8 @@ def check_clinical_sample_type(clin_sample_type):
 		return clin_sample_type.lower()
 
 def check_glh_sample_consignment_number(glh_sample_consignment_number):
-	if not re.match(r'^[a-z]{3}-\d{4}-\d{2}-\d{2}-\d{2}-[1,2]$', glh_sample_consignment_number.lower()):
+	if not re.match(r'^[a-z]{3}-\d{4}-\d{2}-\d{2}-\d{2}-[1,2]$', glh_sample_consignment_number.lower()) and not re.match(
+		r'^[a-z]{3}-\d{4}-\d{2}-\d{2}-[1,2]$', glh_sample_consignment_number.lower()):
 		raise ValueError('Incorrect GLH sample consignment number. Received {} which does not match the required specification.'.format(glh_sample_consignment_number))
 	else:
 		return glh_sample_consignment_number.lower()
@@ -677,7 +678,7 @@ def awaiting_holding_rack_assignment(request):
 	problem_holding_rack_dict = {}
 	for problem_sample in problem_samples:
 		if problem_sample.holding_rack_well.holding_rack in problem_holding_rack_dict:
-			problem_holding_rack_dict[problem_sample.holding_rack_well.holding_rack].append(sample)
+			problem_holding_rack_dict[problem_sample.holding_rack_well.holding_rack].append(problem_sample)
 		else:
 			problem_holding_rack_dict[problem_sample.holding_rack_well.holding_rack] = [problem_sample]
 	return render(request, 'platerplotter/awaiting-holding-rack-assignment.html', {
