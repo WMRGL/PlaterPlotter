@@ -308,7 +308,7 @@ class HoldingRackManager():
 					if matching_tumour_samples:
 						matching_tumour_sample_found = True
 						for matching_tumour_sample in matching_tumour_samples:
-							if matching_tumour_sample.holding_rack_well.holding_rack.plate.plate_id:	
+							if matching_tumour_sample.holding_rack_well.holding_rack.plate:	
 								messages.info(request, "Matching tumour sample found and has already been plated on plate: " +
 									matching_tumour_sample.holding_rack_well.holding_rack.plate.plate_id + " in well " + 
 									matching_tumour_sample.holding_rack_well.well_id + ". These samples must be sent in the same consignment.")

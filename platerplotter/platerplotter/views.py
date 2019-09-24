@@ -91,14 +91,14 @@ def check_priority(priority):
 	if priority.upper() not in accepted_values:
 		raise ValueError('Incorrect priority. Received {}. Must be either routine or urgent.'.format(priority))
 	else:
-		return priority.upper()
+		return priority.title()
 
 def check_disease_area(disease_area):
 	accepted_values = ['CANCER', 'RARE DISEASE']
 	if disease_area.upper() not in accepted_values:
 		raise ValueError('Incorrect disease area. Received {}. Must be either cancer or rare disease.'.format(disease_area))
 	else:
-		return disease_area.upper()
+		return disease_area.title()
 
 def check_clinical_sample_type(clin_sample_type):
 	accepted_values = ["dna_blood_germline","dna_saliva","dna_fibroblast","dna_ff_germline",
