@@ -23,4 +23,6 @@ urlpatterns = [
     path('<str:test_status>', views.import_acks, name='index'),
     path('acknowledge-samples/<str:gel1004>/<str:rack>/<str:test_status>', views.acknowledge_samples, name='acknowledge_samples'),
     path('problem-samples/<str:holding_rack_id>/<str:test_status>', views.problem_samples, name='problem_samples'),
+    path('plate-holding-rack/<str:holding_rack_pk>/<str:test_status>', views.plate_holding_rack, name='plate_holding_rack'),
+    path('ready-to-dispatch/<str:test_status>', views.ready_to_dispatch, name='ready_to_dispatch'),
 ]

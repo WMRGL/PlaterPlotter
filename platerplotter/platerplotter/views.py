@@ -87,15 +87,15 @@ def check_group_id(group_id):
 		return group_id.lower()
 
 def check_priority(priority):
-	accepted_values = ['URGENT', 'ROUTINE']
-	if priority.upper() not in accepted_values:
+	accepted_values = ['Urgent', 'Routine']
+	if priority.title() not in accepted_values:
 		raise ValueError('Incorrect priority. Received {}. Must be either routine or urgent.'.format(priority))
 	else:
 		return priority.title()
 
 def check_disease_area(disease_area):
-	accepted_values = ['CANCER', 'RARE DISEASE']
-	if disease_area.upper() not in accepted_values:
+	accepted_values = ['Cancer', 'Rare Disease']
+	if disease_area.title() not in accepted_values:
 		raise ValueError('Incorrect disease area. Received {}. Must be either cancer or rare disease.'.format(disease_area))
 	else:
 		return disease_area.title()
@@ -730,6 +730,13 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
 			if holding_rack_form.is_valid():
 				error = False
 				holding_rack_id = holding_rack_form.cleaned_data.get('holding_rack_id')
+				try:
+					receiving_rack = ReceivingRack.objects.get(receiving_rack_id=holding_rack_id)
+					if not receiving_rack.is_empty():
+						messages.error(request, "You have scanned an active receiving rack. Please scan an exisiting or new Problem rack.")
+						error = True
+				except:
+					pass
 				if gel1004:
 					if holding_rack_id == rack.receiving_rack_id:
 						messages.error(request, "You have scanned the GMC Rack. Please scan the holding rack.")
@@ -764,7 +771,7 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
 								'rack' : rack.receiving_rack_id,
 								})
 					else:
-						url = reverse('assign_problem_samples_to_holding_rack', kwargs={
+						url = reverse('assign_samples_to_holding_rack', kwargs={
 								'rack' : problem_holding_rack.holding_rack_id,
 								})
 				return HttpResponseRedirect(url)
@@ -850,7 +857,7 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
 									'holding_rack_id' : holding_rack.holding_rack_id,
 									})
 					else:
-						url = reverse('assign_problem_samples_to_holding_rack', kwargs={
+						url = reverse('assign_samples_to_holding_rack', kwargs={
 									'rack' : problem_holding_rack.holding_rack_id,
 									})
 				else:
@@ -913,6 +920,13 @@ def holding_racks(request, holding_rack_id=None):
 			if holding_rack_form.is_valid():
 				error = False
 				holding_rack_id = holding_rack_form.cleaned_data.get('holding_rack_id')
+				try:
+					receiving_rack = ReceivingRack.objects.get(receiving_rack_id=holding_rack_id)
+					if not receiving_rack.is_empty():
+						messages.error(request, "You have scanned an active receiving rack. Please scan an exisiting or new Problem rack.")
+						error = True
+				except:
+					pass
 				try:
 					holding_rack = HoldingRack.objects.get(holding_rack_id=holding_rack_id, plate__isnull=True)
 					if holding_rack.holding_rack_type == "Problem":
@@ -996,7 +1010,7 @@ def ready_to_plate(request):
 	return render(request, 'platerplotter/ready-to-plate.html', {"ready_to_plate" : ready_to_plate})
 
 @login_required()
-def plate_holding_rack(request, holding_rack_pk):
+def plate_holding_rack(request, holding_rack_pk, test_status=False):
 	holding_rack = HoldingRack.objects.get(pk=holding_rack_pk)
 	samples = Sample.objects.filter(holding_rack_well__holding_rack=holding_rack)
 	if request.method == 'POST':
@@ -1012,7 +1026,10 @@ def plate_holding_rack(request, holding_rack_pk):
 				holding_rack.save()
 				# generate output for robot
 				holding_rack_wells = HoldingRackWell.objects.filter(holding_rack=holding_rack).order_by('well_id')
-				directory = LoadConfig().load()['plate_plots_path']
+				if test_status:
+					directory = str(Path.cwd().parent) + '/TestData/Outbound/PlatePlots/'
+				else:
+					directory = LoadConfig().load()['plate_plots_path']
 				filename = holding_rack.holding_rack_id + '_' + plate_id + '.csv'
 				path = directory + filename
 				with open(path, 'w', newline='') as csvfile:
@@ -1038,7 +1055,7 @@ def plate_holding_rack(request, holding_rack_pk):
 		"plating_form" : plating_form})
 
 @login_required()
-def ready_to_dispatch(request):
+def ready_to_dispatch(request, test_status=False):
 	"""
 	Renders page displaying plates that are ready for dispatch
 	"""
@@ -1055,6 +1072,7 @@ def ready_to_dispatch(request):
 		if "gel1008" in request.POST:
 			plate_select_form = PlateSelectForm()
 			gel1008_form = Gel1008Form(request.POST)
+			selected_plates_list = []
 			if gel1008_form.is_valid():
 				if request.POST.getlist('selected_plate'):
 					plate_pks = request.POST.getlist('selected_plate')
@@ -1134,7 +1152,10 @@ def ready_to_dispatch(request):
 					if not matching_rare_disease_samples_not_selected and not matching_cancer_samples_not_selected:
 						consignment_number = gel1008_form.cleaned_data.get('consignment_number')
 						date_of_dispatch = gel1008_form.cleaned_data.get('date_of_dispatch')
-						directory = LoadConfig().load()['gel1008path']
+						if test_status:
+							directory = str(Path.cwd().parent) + '/TestData/Outbound/GEL1008/'
+						else:
+							directory = LoadConfig().load()['gel1008path']
 						for pk in plate_pks:
 							datetime_now = datetime.now(pytz.timezone('UTC'))
 							filename = "ngis_bio_to_gel_sample_dispatch_" + datetime.now(pytz.timezone('UTC')).strftime("%Y%m%d_%H%M%S") + ".csv"
