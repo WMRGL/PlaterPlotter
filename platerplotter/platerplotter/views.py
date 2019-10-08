@@ -1030,7 +1030,7 @@ def plate_holding_rack(request, holding_rack_pk, test_status=False):
 					directory = str(Path.cwd().parent) + '/TestData/Outbound/PlatePlots/'
 				else:
 					directory = LoadConfig().load()['plate_plots_path']
-				filename = holding_rack.holding_rack_id + '_' + plate_id + '.csv'
+				filename = holding_rack.holding_rack_id + '.csv'
 				path = directory + filename
 				with open(path, 'w', newline='') as csvfile:
 					writer = csv.writer(csvfile, delimiter=',',
