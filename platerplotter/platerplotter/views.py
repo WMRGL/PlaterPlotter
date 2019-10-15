@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, FileResponse, Http404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -708,6 +708,8 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
 	current_holding_racks = HoldingRack.objects.filter(plate__isnull=True).exclude(holding_rack_type='Problem')
 	current_holding_racks_dict = {}
 	for current_holding_rack in current_holding_racks:
+		HoldingRackManager(current_holding_rack).is_half_full()
+		HoldingRackManager(current_holding_rack).is_full()
 		current_holding_racks_dict[current_holding_rack] = Sample.objects.filter(holding_rack_well__holding_rack=current_holding_rack).count()
 	assigned_well_list = []
 	holding_rack_samples_form_dict = {}
@@ -899,6 +901,8 @@ def holding_racks(request, holding_rack_id=None):
 	current_holding_racks = HoldingRack.objects.filter(plate__isnull=True).exclude(holding_rack_type='Problem')
 	current_holding_racks_dict = {}
 	for current_holding_rack in current_holding_racks:
+		HoldingRackManager(current_holding_rack).is_half_full()
+		HoldingRackManager(current_holding_rack).is_full()
 		current_holding_racks_dict[current_holding_rack] = Sample.objects.filter(holding_rack_well__holding_rack=current_holding_rack).count()
 	assigned_well_list = []
 	holding_rack_samples_form_dict = {}
@@ -1006,6 +1010,8 @@ def ready_to_plate(request):
 	"""
 	ready_to_plate = HoldingRack.objects.filter(ready_to_plate=True, plate__isnull=True)
 	for rack in ready_to_plate:
+		HoldingRackManager(rack).is_half_full()
+		HoldingRackManager(rack).is_full()
 		rack.sample_count = Sample.objects.filter(holding_rack_well__holding_rack=rack).count
 	return render(request, 'platerplotter/ready-to-plate.html', {"ready_to_plate" : ready_to_plate})
 
@@ -1041,7 +1047,7 @@ def plate_holding_rack(request, holding_rack_pk, test_status=False):
 							if holding_rack_well.sample and not holding_rack_well.buffer_added:
 								well_contents = holding_rack_well.sample.laboratory_sample_id
 							elif holding_rack_well.buffer_added and not holding_rack_well.sample:
-								well_contents = "BUFFER"
+								well_contents = "NO READ" # previously read "BUFFER" but Hamilton robot needs reprogramming
 							else:
 								raise ValueError('Well contents invalid. Reported to contain sample and buffer')
 						else:
@@ -1062,7 +1068,10 @@ def ready_to_dispatch(request, test_status=False):
 	ready_to_dispatch = HoldingRack.objects.filter(ready_to_plate=True, plate__isnull=False, plate__gel_1008_csv__isnull=True)
 	plate_ids_ready_to_dispatch = []
 	plates_ready_to_dispatch = []
+	consignment_summaries = {}
 	for holding_rack in ready_to_dispatch:
+		HoldingRackManager(holding_rack).is_half_full()
+		HoldingRackManager(holding_rack).is_full()
 		plate_ids_ready_to_dispatch.append(holding_rack.plate.plate_id)
 		plates_ready_to_dispatch.append(holding_rack.plate)
 		holding_rack.sample_count = Sample.objects.filter(holding_rack_well__holding_rack=holding_rack).count
@@ -1168,7 +1177,9 @@ def ready_to_dispatch(request, test_status=False):
 							plate.gel_1008_csv = gel_1008_csv
 							plate.save()
 							path = directory + filename
-							doc = SimpleDocTemplate(path[:-3] + 'pdf')
+							pdf_filename = filename[:-3] + 'pdf'
+							pdf_path = path[:-3] + 'pdf'
+							doc = SimpleDocTemplate(pdf_path)
 							doc.pagesize = landscape(A4)
 							elements = []
 							data = [['Plate ID', 'Plate Consignment Number', 'Plate Date of Dispatch', 'Well ID', 
@@ -1216,9 +1227,16 @@ def ready_to_dispatch(request, test_status=False):
 										]))
 							flowObjects.append(t1)
 							doc.build(flowObjects)
+							consignment_summaries[pdf_filename] = pdf_path
 							# need to wait 1 second to make sure filenames for GEL1008s are different
 							time.sleep(1)
-						messages.info(request, "GEL1008 csv produced.")
+						manifests = '<ul>'
+						for manifest, path in consignment_summaries.items():
+							manifests += '<li><a href="/download/' + manifest + '" target="_blank">' + manifest + '</a></li>'
+						manifests += '</ul>'
+						messages.info(request, "GEL1008 csv produced.<br><br>" + 
+							"The following consignment manifests have been produced, click to download:<br>" +
+							manifests, extra_tags='safe')
 				else:
 					messages.warning(request, "No plates selected!")
 				return HttpResponseRedirect('/ready-to-dispatch/')
@@ -1278,3 +1296,10 @@ def register(request):
             u.save()
             created = True
     return render(request, 'registration/register.html', {'created': created, 'matching_users': matching_users})
+
+def download_manifest(request, filename):
+	directory = LoadConfig().load()['gel1008path']
+	with open(directory + filename, 'rb') as fh:
+		response = HttpResponse(fh.read(), content_type="application/pdf")
+		response['Content-Disposition'] = 'inline; filename=' + os.path.basename('output/' + filename)
+		return response

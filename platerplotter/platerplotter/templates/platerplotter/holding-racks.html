@@ -168,6 +168,8 @@
                   <th>Sample Type</th>
                   <th>Priority</th>
                   <th>Number of Samples</th>
+                  <th>Half Plate</th>
+                  <th>Full Plate</th>
                   <th>Ready to Plate</th>
                 </tr>
               </thead>
@@ -179,6 +181,20 @@
                 <td>{{ holding_rack.holding_rack_type }}</td>
                 <td>{{ holding_rack.priority }}</td>
                 <td>{{ count }}</td>
+                <td>
+                  {% if holding_rack.half_full %}
+                    <i class="fas fa-check-circle" style="color:green"></i>
+                  {% else %}
+                    <i class="fas fa-times-circle" style="color:red"></i>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if holding_rack.full %}
+                    <i class="fas fa-check-circle" style="color:green"></i>
+                  {% else %}
+                    <i class="fas fa-times-circle" style="color:red"></i>
+                  {% endif %}
+                </td>
                 <td>
                   {% if holding_rack.ready_to_plate %}
                     <i class="fas fa-check-circle" style="color:green"></i>

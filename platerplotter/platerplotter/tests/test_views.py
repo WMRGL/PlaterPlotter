@@ -238,7 +238,7 @@ class AcknowledgeSamplesTestCase(TestCase):
 		self.assertEqual(response.status_code, 200)
 		self.assertTemplateUsed(response, 'platerplotter/acknowledge-samples.html')
 		self.assertContains(response, 'Acknowledge Receipt of Samples')
-		
+
 	def test_acknowledge_samples(self):
 		directory = str(Path.cwd().parent) + '/TestData/'
 		os.rename(directory + 'TestFiles/rack_scan_test_2.csv', directory + 'Inbound/RackScanner/rack_scan_test_2.csv')
@@ -1061,7 +1061,7 @@ class ReadyToDispatchAndAuditTestCase(TestCase):
 			glh_sample_consignment_number='abc-1234-12-12-12-1',
 			rack_acknowledged=False, disease_area='Rare Disease',
 			rack_type='Proband', priority='Routine')
-		
+
 		plate = Plate.objects.create(plate_id = 'LP0000000-DNA')
 		holding_rack = HoldingRack.objects.create(holding_rack_id='HH12345678',
 			disease_area='Rare Disease', holding_rack_type='Proband', priority='Routine',

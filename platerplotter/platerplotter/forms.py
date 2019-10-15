@@ -11,8 +11,8 @@ class HoldingRackForm(forms.Form):
 	holding_rack_id = forms.CharField(label='', widget=forms.TextInput(attrs={'autofocus': 'autofocus'}))
 
 	def clean_holding_rack_id(self):
-		holding_rack_id = self.cleaned_data['holding_rack_id']
-		if not re.match(r'^[a-zA-Z]{2}\d{8}$', holding_rack_id):
+		holding_rack_id = self.cleaned_data['holding_rack_id'].upper()
+		if not re.match(r'^[A-Z]{2}\d{8}$', holding_rack_id):
 			raise ValidationError("Invalid rack ID")
 		else:
 			return holding_rack_id.upper()
@@ -31,11 +31,11 @@ class PlateSelectForm(forms.Form):
 	plate_id = forms.CharField(label='', widget=forms.TextInput(attrs={'autofocus': 'autofocus'}))
 
 	def clean_plate_id(self):
-		plate_id = self.cleaned_data['plate_id']
+		plate_id = self.cleaned_data['plate_id'].upper()
 		if not re.match(r'^LP\d{7}-DNA$', plate_id):
 			raise ValidationError("Invalid Plate ID")
 		else:
-			return plate_id
+			return plate_id.upper()
 
 class LogIssueForm(forms.ModelForm):
 	class Meta:
@@ -68,7 +68,7 @@ class PlatingForm(ModelForm):
 				raise ValidationError("Plate ID already used.")
 			if not re.match(r'^LP\d{7}-DNA$', plate_id):
 				raise ValidationError("Invalid Plate ID.")
-			return plate_id
+			return plate_id.upper()
 		else:
 			raise ValidationError("Required field.")
 

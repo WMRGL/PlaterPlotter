@@ -84,6 +84,7 @@ Group ID:            {{sample.group_id}}' style="background-color: black"><div c
               <th>Lab Sample ID</th>  
               <th>Participant ID</th>
               <th>Group ID</th>
+              <th>GLH</th>
               <th>Priority</th>
               <th>Disease Area</th>
               <th>Sample Type</th>          
@@ -98,6 +99,7 @@ Group ID:            {{sample.group_id}}' style="background-color: black"><div c
               <td>{{ sample.laboratory_sample_id }}</td>
               <td>{{ sample.participant_id }}</td>
               <td>{{ sample.group_id }}</td>
+              <td>{{ sample.receiving_rack.laboratory_id }}</td>
               <td>{{ sample.priority }}</td>
               <td>{{ sample.disease_area }}</td>
               <td>{{ sample.sample_type }}</td>

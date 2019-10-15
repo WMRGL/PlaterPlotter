@@ -355,3 +355,33 @@ class HoldingRackManager():
 					holding_rack_well.buffer_added = True
 					holding_rack_well.save()
 				index_count += 1
+
+	def is_full(self):
+		count = 0
+		for item in self.well_contents:
+			if item:
+				count += 1
+		if count == 96:
+			self.holding_rack.full = True
+			self.holding_rack.save()
+		else:
+			self.holding_rack.full = False
+			self.holding_rack.save()
+
+	def is_half_full(self):
+		count = 0
+		for item in self.well_contents[:48]:
+			if item:
+				count += 1
+		if count == 48:
+			self.holding_rack.half_full = True
+			self.holding_rack.save()
+		else:
+			self.holding_rack.half_full = False
+			self.holding_rack.save()
+
+
+
+
+
+
