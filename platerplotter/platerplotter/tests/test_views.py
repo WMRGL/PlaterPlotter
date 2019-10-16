@@ -1232,7 +1232,7 @@ class ReadyToDispatchAndAuditTestCase(TestCase):
 	def test_generate_gel1008_no_plates(self):
 		response = self.client.post(reverse(ready_to_dispatch, kwargs={
 			'test_status': True}), {
-			'gel1008': [''], 'selected_plate': [], 'consignment_number': '1234567890',
+			'generate-manifests': [''], 'selected_plate': [], 'consignment_number': '1234567890',
 			'date_of_dispatch': date.today()}, follow=True)
 		self.assertContains(response, 'No plates selected!')
 
@@ -1244,15 +1244,15 @@ class ReadyToDispatchAndAuditTestCase(TestCase):
 		plate_list_pk.append(Plate.objects.get(plate_id = 'LP0000003-DNA').pk)
 		response = self.client.post(reverse(ready_to_dispatch, kwargs={
 			'test_status': True}), {
-			'gel1008': [''], 'selected_plate': plate_list_pk, 'consignment_number': '1234567890',
+			'generate-manifests': [''], 'selected_plate': plate_list_pk, 'consignment_number': '1234567890',
 			'date_of_dispatch': date.today()}, follow=True)
-		self.assertContains(response, 'GEL1008 csv produced.')
-		directory = str(Path.cwd().parent) + '/TestData/Outbound/GEL1008/'
-		self.assertEqual(len(os.listdir(directory)), 8)
+		self.assertContains(response, 'The following consignment manifests have been produced')
+		directory = str(Path.cwd().parent) + '/TestData/Outbound/ConsignmentManifests/'
+		self.assertEqual(len(os.listdir(directory)), 4)
 		files = glob.glob(directory + '*')
 		for f in files:
 			os.remove(f)
-		directory = str(Path.cwd().parent) + '/TestData/Outbound/GEL1008/'
+		directory = str(Path.cwd().parent) + '/TestData/Outbound/ConsignmentManifests/'
 		self.assertEqual(len(os.listdir(directory)), 0)
 
 	def test_generate_gel1008_not_all_plates(self):
@@ -1261,11 +1261,11 @@ class ReadyToDispatchAndAuditTestCase(TestCase):
 		plate_list_pk.append(Plate.objects.get(plate_id = 'LP0000003-DNA').pk)
 		response = self.client.post(reverse(ready_to_dispatch, kwargs={
 			'test_status': True}), {
-			'gel1008': [''], 'selected_plate': plate_list_pk, 'consignment_number': '1234567890',
+			'generate-manifests': [''], 'selected_plate': plate_list_pk, 'consignment_number': '1234567890',
 			'date_of_dispatch': date.today()}, follow=True)
 		self.assertContains(response, 'All synchronous multi-tumour samples must be sent in the same consignment')
 		self.assertContains(response, 'All family member samples must be sent in the same consignment')
-		directory = str(Path.cwd().parent) + '/TestData/Outbound/GEL1008/'
+		directory = str(Path.cwd().parent) + '/TestData/Outbound/ConsignmentManifests/'
 		self.assertEqual(len(os.listdir(directory)), 0)
 
 	def test_scan_plate(self):

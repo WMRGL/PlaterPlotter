@@ -17,6 +17,7 @@ urlpatterns = [
     path('ready-to-plate/', views.ready_to_plate, name='ready_to_plate'),
     path('plate-holding-rack/<str:holding_rack_pk>', views.plate_holding_rack, name='plate_holding_rack'),
     path('ready-to-dispatch/', views.ready_to_dispatch, name='ready_to_dispatch'),
+    path('consignments-for-collection/', views.consignments_for_collection, name='consignments_for_collection'),
     path('audit/', views.audit, name='audit'),
     path('register/', views.register, name='register'),
     path('download/<str:filename>', views.download_manifest, name='download_manifest'),

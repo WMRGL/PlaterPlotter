@@ -67,6 +67,9 @@
 	                <li class="nav nav-item">
 	                    <a class="nav-link {% if url_name == 'ready_to_dispatch' %}active{% endif %}" href="{% url 'ready_to_dispatch' %}">Ready for Dispatch</a>
 	                </li>
+	               	<li class="nav nav-item">
+	                    <a class="nav-link {% if url_name == 'consignments_for_collection' %}active{% endif %}" href="{% url 'consignments_for_collection' %}">Consignments for Collection</a>
+	                </li>
 	                <li class="nav nav-item">
 	                    <a class="nav-link {% if url_name == 'audit' %}active{% endif %}" href="{% url 'audit' %}">Audit</a>
 	                </li>

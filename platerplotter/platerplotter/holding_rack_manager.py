@@ -362,11 +362,13 @@ class HoldingRackManager():
 			if item:
 				count += 1
 		if count == 96:
-			self.holding_rack.full = True
-			self.holding_rack.save()
+			if not self.holding_rack.full:
+				self.holding_rack.full = True
+				self.holding_rack.save()
 		else:
-			self.holding_rack.full = False
-			self.holding_rack.save()
+			if self.holding_rack.full:
+				self.holding_rack.full = False
+				self.holding_rack.save()
 
 	def is_half_full(self):
 		count = 0
@@ -374,11 +376,13 @@ class HoldingRackManager():
 			if item:
 				count += 1
 		if count == 48:
-			self.holding_rack.half_full = True
-			self.holding_rack.save()
+			if not self.holding_rack.half_full:
+				self.holding_rack.half_full = True
+				self.holding_rack.save()
 		else:
-			self.holding_rack.half_full = False
-			self.holding_rack.save()
+			if self.holding_rack.half_full:
+				self.holding_rack.half_full = False
+				self.holding_rack.save()
 
 
 

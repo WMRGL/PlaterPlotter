@@ -1075,10 +1075,8 @@ def ready_to_dispatch(request, test_status=False):
 		plate_ids_ready_to_dispatch.append(holding_rack.plate.plate_id)
 		plates_ready_to_dispatch.append(holding_rack.plate)
 		holding_rack.sample_count = Sample.objects.filter(holding_rack_well__holding_rack=holding_rack).count
-	# for holding_rack in ready_to_dispatch:
-	# 	holding_rack.sample_count = Sample.objects.filter(holding_rack_well__holding_rack=holding_rack).count
 	if request.method == 'POST':
-		if "gel1008" in request.POST:
+		if "generate-manifests" in request.POST:
 			plate_select_form = PlateSelectForm()
 			gel1008_form = Gel1008Form(request.POST)
 			selected_plates_list = []
@@ -1102,6 +1100,7 @@ def ready_to_dispatch(request, test_status=False):
 					for sample in all_cancer_samples:
 						matching_samples = Sample.objects.filter(participant_id = sample.participant_id,
 							sample_received = True,
+							disease_area = 'Cancer',
 							holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True).exclude(
 							issue_outcome="Sample returned to extracting GLH").exclude(
 							issue_outcome="Sample destroyed")
@@ -1132,6 +1131,7 @@ def ready_to_dispatch(request, test_status=False):
 					for sample in all_rare_disease_samples:
 						matching_samples = Sample.objects.filter(group_id = sample.group_id,
 							sample_received = True,
+							disease_area = 'Rare Disease',
 							holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True).exclude(
 							issue_outcome="Sample returned to extracting GLH").exclude(
 							issue_outcome="Sample destroyed")
@@ -1161,35 +1161,41 @@ def ready_to_dispatch(request, test_status=False):
 					if not matching_rare_disease_samples_not_selected and not matching_cancer_samples_not_selected:
 						consignment_number = gel1008_form.cleaned_data.get('consignment_number')
 						date_of_dispatch = gel1008_form.cleaned_data.get('date_of_dispatch')
-						if test_status:
-							directory = str(Path.cwd().parent) + '/TestData/Outbound/GEL1008/'
+						matching_gel_1008s = Gel1008Csv.objects.filter(consignment_number=consignment_number)
+						error = False
+						warning = False
+						for matching_gel_1008 in matching_gel_1008s:
+							if matching_gel_1008.message_generated:
+								warning = True
+							if matching_gel_1008.date_of_dispatch != date_of_dispatch and not matching_gel_1008.message_generated:
+								error = True
+						if warning:
+							messages.warning(request, "Warning, this consignment number has been used before.")
+						if error:
+							messages.error(request, "There is an open consignment with this number but the date of dispatch did not match.")
 						else:
-							directory = LoadConfig().load()['gel1008path']
-						for pk in plate_pks:
-							datetime_now = datetime.now(pytz.timezone('UTC'))
-							filename = "ngis_bio_to_gel_sample_dispatch_" + datetime.now(pytz.timezone('UTC')).strftime("%Y%m%d_%H%M%S") + ".csv"
-							gel_1008_csv = Gel1008Csv.objects.create(
-								filename = filename,
-								report_generated_datetime = datetime_now,
-								consignment_number = consignment_number,
-								date_of_dispatch = date_of_dispatch)
-							plate = Plate.objects.get(pk=pk)
-							plate.gel_1008_csv = gel_1008_csv
-							plate.save()
-							path = directory + filename
-							pdf_filename = filename[:-3] + 'pdf'
-							pdf_path = path[:-3] + 'pdf'
-							doc = SimpleDocTemplate(pdf_path)
-							doc.pagesize = landscape(A4)
-							elements = []
-							data = [['Plate ID', 'Plate Consignment Number', 'Plate Date of Dispatch', 'Well ID', 
-									'Well Type', 'Participant ID', 'Laboratory Sample ID']]
-							with open(path, 'w', newline='') as csvfile:
-								writer = csv.writer(csvfile, delimiter=',',
-									quotechar=',', quoting=csv.QUOTE_MINIMAL)
-								writer.writerow(['Plate ID', 'Plate Consignment Number', 'Plate Date of Dispatch',
-									'Well ID', 'Well Type', 'Participant ID', 'Laboratory Sample ID',
-									'Normalised Biorepository Sample Volume', 'Normalised Biorepository Concentration'])
+							if test_status:
+								directory = str(Path.cwd().parent) + '/TestData/Outbound/ConsignmentManifests/'
+							else:
+								directory = LoadConfig().load()['consignment_manifest_path']
+							for pk in plate_pks:
+								datetime_now = datetime.now(pytz.timezone('UTC'))
+								filename = "ngis_bio_to_gel_sample_dispatch_" + datetime.now(pytz.timezone('UTC')).strftime("%Y%m%d_%H%M%S") + ".csv"
+								gel_1008_csv = Gel1008Csv.objects.create(
+									filename = filename,
+									report_generated_datetime = datetime_now,
+									consignment_number = consignment_number,
+									date_of_dispatch = date_of_dispatch)
+								plate = Plate.objects.get(pk=pk)
+								plate.gel_1008_csv = gel_1008_csv
+								plate.save()
+								filename = consignment_number + '_' + plate.plate_id + '.pdf'
+								path = directory + filename
+								doc = SimpleDocTemplate(path)
+								doc.pagesize = landscape(A4)
+								elements = []
+								data = [['Plate ID', 'Plate Consignment Number', 'Plate Date of Dispatch', 'Well ID', 
+										'Well Type', 'Participant ID', 'Laboratory Sample ID']]
 								holding_rack_wells = HoldingRackWell.objects.filter(holding_rack=plate.holding_rack).order_by('well_id')
 								for holding_rack_well in holding_rack_wells:
 									if holding_rack_well.sample or holding_rack_well.buffer_added:
@@ -1211,32 +1217,27 @@ def ready_to_dispatch(request, test_status=False):
 											norm_biorep_conc = ""
 										else:
 											raise ValueError('Well contents invalid. Reported to contain sample and buffer')
-										writer.writerow([plate_id, plate_consignment_number, plate_date_of_dispatch, well_id, 
-											well_type, participant_id, laboratory_sample_id, norm_biorep_sample_vol, norm_biorep_conc])
 										data.append([plate_id, plate_consignment_number, plate_date_of_dispatch, well_id, 
 											well_type, participant_id, laboratory_sample_id])
-							flowObjects = list()
-							styles=getSampleStyleSheet()
-							table_header = "Sample summary for consignment: " + str(consignment_number)
-							flowObjects.append(Paragraph(table_header,styles["h4"]))
-							t1=Table(data,hAlign="LEFT")
-							t1.setStyle(TableStyle([('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
-										('BOX', (0,0), (-1,-1), 0.25, colors.black),
-										('BACKGROUND',(0,0),(-1,0),colors.gray),
-										('TEXTCOLOR',(0,0),(-1,0),colors.black),
-										]))
-							flowObjects.append(t1)
-							doc.build(flowObjects)
-							consignment_summaries[pdf_filename] = pdf_path
-							# need to wait 1 second to make sure filenames for GEL1008s are different
-							time.sleep(1)
-						manifests = '<ul>'
-						for manifest, path in consignment_summaries.items():
-							manifests += '<li><a href="/download/' + manifest + '" target="_blank">' + manifest + '</a></li>'
-						manifests += '</ul>'
-						messages.info(request, "GEL1008 csv produced.<br><br>" + 
-							"The following consignment manifests have been produced, click to download:<br>" +
-							manifests, extra_tags='safe')
+								flowObjects = list()
+								styles=getSampleStyleSheet()
+								table_header = "Sample summary for consignment: " + str(consignment_number)
+								flowObjects.append(Paragraph(table_header,styles["h4"]))
+								t1=Table(data,hAlign="LEFT")
+								t1.setStyle(TableStyle([('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
+											('BOX', (0,0), (-1,-1), 0.25, colors.black),
+											('BACKGROUND',(0,0),(-1,0),colors.gray),
+											('TEXTCOLOR',(0,0),(-1,0),colors.black),
+											]))
+								flowObjects.append(t1)
+								doc.build(flowObjects)
+								consignment_summaries[filename] = path
+							manifests = '<ul>'
+							for manifest, path in consignment_summaries.items():
+								manifests += '<li><a href="/download/' + manifest + '" target="_blank">' + manifest + '</a></li>'
+							manifests += '</ul>'
+							messages.info(request, "The following consignment manifests have been produced, click to download:<br>" +
+								manifests, extra_tags='safe')
 				else:
 					messages.warning(request, "No plates selected!")
 				return HttpResponseRedirect('/ready-to-dispatch/')
@@ -1272,6 +1273,74 @@ def ready_to_dispatch(request, test_status=False):
 		"selected_plates_list" : selected_plates_list})
 
 @login_required()
+def consignments_for_collection(request, test_status=False):
+	gel_1008s_to_generate = Gel1008Csv.objects.filter(message_generated=False)
+	consignment_no_dict = {}
+	for gel_1008 in gel_1008s_to_generate:
+		if gel_1008.consignment_number in consignment_no_dict:
+			consignment_no_dict[gel_1008.consignment_number].append(Plate.objects.get(gel_1008_csv=gel_1008))
+		else:
+			consignment_no_dict[gel_1008.consignment_number] = [Plate.objects.get(gel_1008_csv=gel_1008)] 
+	for consignment, plates in consignment_no_dict.items():
+		for plate in plates:
+			plate.sample_count = Sample.objects.filter(holding_rack_well__holding_rack__plate=plate).count()
+			HoldingRackManager(plate.holding_rack).is_half_full()
+			HoldingRackManager(plate.holding_rack).is_full()
+	if request.method == 'POST':
+		if "send-1008" in request.POST:
+			consignment = request.POST['send-1008']
+			#print((consignment.split('(')[0], datetime(consignment.split('(')[2].split(')')[0])))#.split(')')[0])
+			plates = consignment_no_dict[consignment]
+			if test_status:
+				directory = str(Path.cwd().parent) + '/TestData/Outbound/GEL1008/'
+			else:
+				directory = LoadConfig().load()['gel1008path']
+			for plate in plates:
+				datetime_now = datetime.now(pytz.timezone('UTC'))
+				filename = "ngis_bio_to_gel_sample_dispatch_" + datetime.now(pytz.timezone('UTC')).strftime("%Y%m%d_%H%M%S") + ".csv"
+				path = directory + filename
+				with open(path, 'w', newline='') as csvfile:
+					writer = csv.writer(csvfile, delimiter=',',
+						quotechar=',', quoting=csv.QUOTE_MINIMAL)
+					writer.writerow(['Plate ID', 'Plate Consignment Number', 'Plate Date of Dispatch',
+						'Well ID', 'Well Type', 'Participant ID', 'Laboratory Sample ID',
+						'Normalised Biorepository Sample Volume', 'Normalised Biorepository Concentration'])
+					holding_rack_wells = HoldingRackWell.objects.filter(holding_rack=plate.holding_rack).order_by('well_id')
+					for holding_rack_well in holding_rack_wells:
+						if holding_rack_well.sample or holding_rack_well.buffer_added:
+							plate_id = plate.plate_id
+							plate_consignment_number = plate.gel_1008_csv.consignment_number
+							plate_date_of_dispatch = plate.gel_1008_csv.date_of_dispatch.replace(microsecond=0).isoformat().replace('+00:00', 'Z')
+							well_id = holding_rack_well.well_id
+							if holding_rack_well.sample and not holding_rack_well.buffer_added:
+								well_type = "Sample"
+								participant_id = holding_rack_well.sample.participant_id
+								laboratory_sample_id = holding_rack_well.sample.laboratory_sample_id
+								norm_biorep_sample_vol = holding_rack_well.sample.norm_biorep_sample_vol
+								norm_biorep_conc = holding_rack_well.sample.norm_biorep_conc
+							elif holding_rack_well.buffer_added and not holding_rack_well.sample:
+								well_type = "Buffer"
+								participant_id = ""
+								laboratory_sample_id = ""
+								norm_biorep_sample_vol = ""
+								norm_biorep_conc = ""
+							else:
+								raise ValueError('Well contents invalid. Reported to contain sample and buffer')
+							writer.writerow([plate_id, plate_consignment_number, plate_date_of_dispatch, well_id, 
+								well_type, participant_id, laboratory_sample_id, norm_biorep_sample_vol, norm_biorep_conc])
+				plate.gel_1008_csv.filename = filename
+				plate.gel_1008_csv.report_generated_datetime = datetime_now
+				plate.gel_1008_csv.message_generated = True
+				plate.gel_1008_csv.save()
+				# need to wait 1 second to make sure filenames for GEL1008s are different
+				time.sleep(1)
+			messages.info(request, "GEL1008 messages generated.")
+		return HttpResponseRedirect('/consignments-for-collection/')
+	return render(request, 'platerplotter/consignments-for-collection.html', {
+		"consignment_no_dict" : consignment_no_dict
+		})
+
+@login_required()
 def audit(request):
 	"""
 	Renders the audit page showing all processed samples. 
@@ -1298,7 +1367,7 @@ def register(request):
     return render(request, 'registration/register.html', {'created': created, 'matching_users': matching_users})
 
 def download_manifest(request, filename):
-	directory = LoadConfig().load()['gel1008path']
+	directory = LoadConfig().load()['consignment_manifest_path']
 	with open(directory + filename, 'rb') as fh:
 		response = HttpResponse(fh.read(), content_type="application/pdf")
 		response['Content-Disposition'] = 'inline; filename=' + os.path.basename('output/' + filename)

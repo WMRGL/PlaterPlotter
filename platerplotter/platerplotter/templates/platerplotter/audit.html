@@ -30,7 +30,6 @@
                 <th>Holding Rack, Well</th>  
                 <th>Holding Rack Type</th>    
                 <th>Plate ID, Well</th>
-                <th>GEL1008 sent</th>
                 <th>Consignment Number</th>
                 <th>Date of Dispatch</th>
                 <th>Issue</th>
@@ -55,7 +54,6 @@
                   {{ sample.holding_rack_well.well_id }}
                 {% endif %}
               </td>
-              <td>{{ sample.holding_rack_well.holding_rack.plate.gel_1008_csv.report_generated_datetime }}</td>
               <td>{{ sample.holding_rack_well.holding_rack.plate.gel_1008_csv.consignment_number }}</td>
               <td>{{ sample.holding_rack_well.holding_rack.plate.gel_1008_csv.date_of_dispatch }}</td>
               <td>{{ sample.comment }}</td>

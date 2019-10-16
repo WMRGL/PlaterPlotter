@@ -24,6 +24,7 @@ class Gel1008Csv(models.Model):
 	report_generated_datetime = models.DateTimeField()
 	consignment_number = models.CharField(max_length=10, null=True, blank=True)
 	date_of_dispatch = models.DateTimeField(null=True, blank=True)
+	message_generated = models.BooleanField(default=False)
 
 	def __str__(self):
 		return self.filename
@@ -56,7 +57,7 @@ class ReceivingRack(models.Model):
 		return empty
 
 class Plate(models.Model):
-	gel_1008_csv = models.ForeignKey(Gel1008Csv, on_delete=models.SET_NULL, null=True, blank=True, related_name='plate')
+	gel_1008_csv = models.ForeignKey(Gel1008Csv, on_delete=models.SET_NULL, null=True, blank=True, related_name='related_plate')
 	plate_id = models.CharField(max_length=13, unique=True)
 
 	def __str__(self):
