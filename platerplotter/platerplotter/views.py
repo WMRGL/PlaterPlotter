@@ -309,131 +309,128 @@ def import_acks(request, test_status=False):
 	Renders import acks page. Allows users to import new GEL1004 acks
 	and acknowledge receipt of samples.
 	"""
-	if "MSIE" in request.META['HTTP_USER_AGENT']:
-		return render(request, 'platerplotter/incompatible-browser.html')
-	else:
-		if request.method == 'POST':
-			# import new notifications from the storage location
-			if 'import-1004' in request.POST:
-				if test_status:
-					directory = str(Path.cwd().parent) + '/TestData/Inbound/GEL1004/'
-				else:
-					directory = LoadConfig().load()['gel1004path']
-				for filename in os.listdir(directory):
-					if filename.endswith(".csv"):
-						datetime_now = datetime.now(pytz.timezone('UTC'))
-						path = directory + filename
-						with open(path) as csv_file:
-							csv_reader = csv.reader(csv_file, delimiter=',')
-							line_count=0
-							for row in csv_reader:
-								if line_count == 0:
-									line_count += 1
-								else:
-									# gets exiting, or creates new objects
-									try:
-										gel_1004_csv = Gel1004Csv.objects.get(
-											filename = filename,
-											plating_organisation=check_plating_organisation(row[10].strip()))
-									except:
-										gel_1004_csv = Gel1004Csv.objects.create(
-											filename = filename,
-											plating_organisation=check_plating_organisation(row[10].strip()),
-											report_received_datetime = datetime_now)
-									try:
-										rack = ReceivingRack.objects.get(
-											gel_1004_csv = gel_1004_csv,
-											receiving_rack_id = check_rack_id(row[3].strip()),
-											laboratory_id = check_laboratory_id(row[7].strip()))
-									except:
-										rack = ReceivingRack.objects.create(
-											gel_1004_csv = gel_1004_csv,
-											receiving_rack_id = check_rack_id(row[3].strip()),
-											laboratory_id = check_laboratory_id(row[7].strip()),
-											glh_sample_consignment_number = check_glh_sample_consignment_number(row[5].strip()))
-									# creates new Sample object
-									sample = Sample.objects.create(
-										receiving_rack = rack,
-										participant_id = check_participant_id(row[0].strip()),
-										group_id = check_group_id(row[1].strip()),
-										priority = check_priority(row[11].strip()),
-										disease_area = check_disease_area(row[2].strip()),
-										clin_sample_type = check_clinical_sample_type(row[4].strip()),
-										laboratory_sample_id = check_laboratory_sample_id(row[6].strip()),
-										laboratory_sample_volume = check_laboratory_sample_volume(row[8].strip()),
-										receiving_rack_well = check_rack_well(row[9].strip()),
-										is_proband=check_is_proband(row[12].strip()),
-										is_repeat = check_is_repeat(row[13].strip()),
-										tissue_type=check_tissue_type(row[14].strip()))
-									rack_type = check_rack_type(row[15].strip())
-									sample = Sample.objects.get(pk=sample.pk)
-									if sample.disease_area == 'Rare Disease':
-										if sample.is_proband and rack_type == 'RP':
-											sample.sample_type = 'Proband'
-										elif rack_type == 'RF':
-											sample.sample_type = 'Family'
-										else:
-											raise ValueError('Rack type does not match sample type for sample {}'.format(str(sample)))
-									elif sample.disease_area == 'Cancer':
-										if 'Normal or Germline sample' in sample.tissue_type and rack_type == 'CG':
-											sample.sample_type = 'Cancer Germline'
-										elif rack_type == 'CT':
-											sample.sample_type = 'Tumour'
-										else:
-											raise ValueError('Rack type does not match sample type for sample {}'.format(str(sample)))
-									sample.save()
-									line_count += 1
-						os.rename(path, directory + "processed/" + filename)
-				return HttpResponseRedirect('/')
-			# Generate GEL1005 acks for received samples
-			if 	'send-1005' in request.POST:
-				pk = request.POST['send-1005']
-				gel_1004 = Gel1004Csv.objects.get(pk=pk)
-				racks = ReceivingRack.objects.filter(gel_1004_csv=gel_1004)
-				if test_status:
-					directory = str(Path.cwd().parent) + '/TestData/Outbound/GEL1005/'
-				else:
-					directory = LoadConfig().load()['gel1005path']
-				datetime_now = datetime.now(pytz.timezone('UTC'))
-				filename = "ngis_bio_to_gel_samples_received_" + datetime.now(pytz.timezone('UTC')).strftime("%Y%m%d_%H%M%S") + ".csv"
-				gel_1005 = Gel1005Csv.objects.create(
-					filename=filename,
-					report_generated_datetime=datetime_now)
-				gel_1004.gel_1005_csv = gel_1005
-				gel_1004.save()
-				path = directory + filename
-				with open(path, 'w', newline='') as csvfile:
-					writer = csv.writer(csvfile, delimiter=',',
-						quotechar=',', quoting=csv.QUOTE_MINIMAL)
-					writer.writerow(['Participant ID', 'Laboratory ID',
-						'Sample Received', 'Sample Received DateTime',
-						'DateTime Report Generated', 'Laboratory Sample ID'])
-					for rack in racks:
-						samples = Sample.objects.filter(receiving_rack=rack)
-						for sample in samples:
-							if sample.sample_received:
-								sample_received = 'Yes'
+	if request.method == 'POST':
+		# import new notifications from the storage location
+		if 'import-1004' in request.POST:
+			if test_status:
+				directory = str(Path.cwd().parent) + '/TestData/Inbound/GEL1004/'
+			else:
+				directory = LoadConfig().load()['gel1004path']
+			for filename in os.listdir(directory):
+				if filename.endswith(".csv"):
+					datetime_now = datetime.now(pytz.timezone('UTC'))
+					path = directory + filename
+					with open(path) as csv_file:
+						csv_reader = csv.reader(csv_file, delimiter=',')
+						line_count=0
+						for row in csv_reader:
+							if line_count == 0:
+								line_count += 1
 							else:
-								sample_received = 'No'
-							received_datetime = ''
-							if sample.sample_received_datetime:
-								received_datetime = sample.sample_received_datetime.replace(microsecond=0).isoformat().replace('+00:00', 'Z')
-							writer.writerow([sample.participant_id, rack.laboratory_id,
-								sample_received, received_datetime,
-								gel_1005.report_generated_datetime.replace(microsecond=0).isoformat().replace('+00:00', 'Z'), sample.laboratory_sample_id])
-				return HttpResponseRedirect('/')
-		unacked_gel_1004 = Gel1004Csv.objects.filter(gel_1005_csv__isnull = True)
-		unacked_racks_dict = {}
-		for gel_1004 in unacked_gel_1004:
-			unacked_racks_dict[gel_1004] = ReceivingRack.objects.filter(gel_1004_csv=gel_1004)
-			for gel_1004, racks in unacked_racks_dict.items():
-				all_racks_acked = True
+								# gets exiting, or creates new objects
+								try:
+									gel_1004_csv = Gel1004Csv.objects.get(
+										filename = filename,
+										plating_organisation=check_plating_organisation(row[10].strip()))
+								except:
+									gel_1004_csv = Gel1004Csv.objects.create(
+										filename = filename,
+										plating_organisation=check_plating_organisation(row[10].strip()),
+										report_received_datetime = datetime_now)
+								try:
+									rack = ReceivingRack.objects.get(
+										gel_1004_csv = gel_1004_csv,
+										receiving_rack_id = check_rack_id(row[3].strip()),
+										laboratory_id = check_laboratory_id(row[7].strip()))
+								except:
+									rack = ReceivingRack.objects.create(
+										gel_1004_csv = gel_1004_csv,
+										receiving_rack_id = check_rack_id(row[3].strip()),
+										laboratory_id = check_laboratory_id(row[7].strip()),
+										glh_sample_consignment_number = check_glh_sample_consignment_number(row[5].strip()))
+								# creates new Sample object
+								sample = Sample.objects.create(
+									receiving_rack = rack,
+									participant_id = check_participant_id(row[0].strip()),
+									group_id = check_group_id(row[1].strip()),
+									priority = check_priority(row[11].strip()),
+									disease_area = check_disease_area(row[2].strip()),
+									clin_sample_type = check_clinical_sample_type(row[4].strip()),
+									laboratory_sample_id = check_laboratory_sample_id(row[6].strip()),
+									laboratory_sample_volume = check_laboratory_sample_volume(row[8].strip()),
+									receiving_rack_well = check_rack_well(row[9].strip()),
+									is_proband=check_is_proband(row[12].strip()),
+									is_repeat = check_is_repeat(row[13].strip()),
+									tissue_type=check_tissue_type(row[14].strip()))
+								rack_type = check_rack_type(row[15].strip())
+								sample = Sample.objects.get(pk=sample.pk)
+								if sample.disease_area == 'Rare Disease':
+									if sample.is_proband and rack_type == 'RP':
+										sample.sample_type = 'Proband'
+									elif rack_type == 'RF':
+										sample.sample_type = 'Family'
+									else:
+										raise ValueError('Rack type does not match sample type for sample {}'.format(str(sample)))
+								elif sample.disease_area == 'Cancer':
+									if 'Normal or Germline sample' in sample.tissue_type and rack_type == 'CG':
+										sample.sample_type = 'Cancer Germline'
+									elif rack_type == 'CT':
+										sample.sample_type = 'Tumour'
+									else:
+										raise ValueError('Rack type does not match sample type for sample {}'.format(str(sample)))
+								sample.save()
+								line_count += 1
+					os.rename(path, directory + "processed/" + filename)
+			return HttpResponseRedirect('/')
+		# Generate GEL1005 acks for received samples
+		if 	'send-1005' in request.POST:
+			pk = request.POST['send-1005']
+			gel_1004 = Gel1004Csv.objects.get(pk=pk)
+			racks = ReceivingRack.objects.filter(gel_1004_csv=gel_1004)
+			if test_status:
+				directory = str(Path.cwd().parent) + '/TestData/Outbound/GEL1005/'
+			else:
+				directory = LoadConfig().load()['gel1005path']
+			datetime_now = datetime.now(pytz.timezone('UTC'))
+			filename = "ngis_bio_to_gel_samples_received_" + datetime.now(pytz.timezone('UTC')).strftime("%Y%m%d_%H%M%S") + ".csv"
+			gel_1005 = Gel1005Csv.objects.create(
+				filename=filename,
+				report_generated_datetime=datetime_now)
+			gel_1004.gel_1005_csv = gel_1005
+			gel_1004.save()
+			path = directory + filename
+			with open(path, 'w', newline='') as csvfile:
+				writer = csv.writer(csvfile, delimiter=',',
+					quotechar=',', quoting=csv.QUOTE_MINIMAL)
+				writer.writerow(['Participant ID', 'Laboratory ID',
+					'Sample Received', 'Sample Received DateTime',
+					'DateTime Report Generated', 'Laboratory Sample ID'])
 				for rack in racks:
-					rack.no_samples = Sample.objects.filter(receiving_rack=rack).count()
-					if not rack.rack_acknowledged:
-						all_racks_acked = False
-				gel_1004.all_racks_acked = all_racks_acked
-		return render(request, 'platerplotter/import-acks.html', {"unacked_racks_dict" : unacked_racks_dict})
+					samples = Sample.objects.filter(receiving_rack=rack)
+					for sample in samples:
+						if sample.sample_received:
+							sample_received = 'Yes'
+						else:
+							sample_received = 'No'
+						received_datetime = ''
+						if sample.sample_received_datetime:
+							received_datetime = sample.sample_received_datetime.replace(microsecond=0).isoformat().replace('+00:00', 'Z')
+						writer.writerow([sample.participant_id, rack.laboratory_id,
+							sample_received, received_datetime,
+							gel_1005.report_generated_datetime.replace(microsecond=0).isoformat().replace('+00:00', 'Z'), sample.laboratory_sample_id])
+			return HttpResponseRedirect('/')
+	unacked_gel_1004 = Gel1004Csv.objects.filter(gel_1005_csv__isnull = True)
+	unacked_racks_dict = {}
+	for gel_1004 in unacked_gel_1004:
+		unacked_racks_dict[gel_1004] = ReceivingRack.objects.filter(gel_1004_csv=gel_1004)
+		for gel_1004, racks in unacked_racks_dict.items():
+			all_racks_acked = True
+			for rack in racks:
+				rack.no_samples = Sample.objects.filter(receiving_rack=rack).count()
+				if not rack.rack_acknowledged:
+					all_racks_acked = False
+			gel_1004.all_racks_acked = all_racks_acked
+	return render(request, 'platerplotter/import-acks.html', {"unacked_racks_dict" : unacked_racks_dict})
 
 @login_required()
 def acknowledge_samples(request, gel1004, rack, test_status=False):
@@ -1424,22 +1421,19 @@ def login_user(request):
 		)
 
 def register(request):
-	if "MSIE" in request.META['HTTP_USER_AGENT']:
-		return render(request, 'platerplotter/incompatible-browser.html')
-	else:
-		created = False
-		matching_users = []
-		if request.method == 'POST':
-			email = request.POST['email']
-			username = request.POST['username'].upper()
-			password = request.POST['password']
-			matching_users = User.objects.filter(username=username)
-			if not matching_users:
-				u = User.objects.create_user(username, email, password)
-				u.is_active = False
-				u.save()
-				created = True
-		return render(request, 'registration/register.html', {'created': created, 'matching_users': matching_users})
+	created = False
+	matching_users = []
+	if request.method == 'POST':
+		email = request.POST['email']
+		username = request.POST['username'].upper()
+		password = request.POST['password']
+		matching_users = User.objects.filter(username=username)
+		if not matching_users:
+			u = User.objects.create_user(username, email, password)
+			u.is_active = False
+			u.save()
+			created = True
+	return render(request, 'registration/register.html', {'created': created, 'matching_users': matching_users})
 
 def logout_user(request):
 	"""Log user out using Django's authentication system, and redirect to login page.
