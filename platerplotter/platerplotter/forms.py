@@ -87,7 +87,7 @@ class Gel1008Form(ModelForm):
 	def clean_consignment_number(self):
 		if self.cleaned_data['consignment_number']:
 			consignment_number = self.cleaned_data['consignment_number']
-			if not re.match(r'^\d{10}$', consignment_number):
+			if not re.match(r'^.*$', consignment_number):
 				raise ValidationError("Invalid consignment number")
 			return consignment_number
 		else:

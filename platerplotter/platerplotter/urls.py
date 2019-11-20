@@ -21,6 +21,8 @@ urlpatterns = [
     path('audit/', views.audit, name='audit'),
     path('register/', views.register, name='register'),
     path('download/<str:filename>', views.download_manifest, name='download_manifest'),
+    path('login/', views.login_user, name='login'),
+    path('logout/', views.logout_user, name='logout'),
     # paths to allow for alernative input directories for unit tests
     path('<str:test_status>', views.import_acks, name='index'),
     path('acknowledge-samples/<str:gel1004>/<str:rack>/<str:test_status>', views.acknowledge_samples, name='acknowledge_samples'),
