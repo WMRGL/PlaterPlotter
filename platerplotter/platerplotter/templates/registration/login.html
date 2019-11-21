@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'platerplotter/base.html' %}
 {% block content %}
 
 <div class="container-fluid">
@@ -7,8 +7,12 @@
             <h1><small>Login</small></h1>
             <form method="post">
                 {% csrf_token %}
-                {% if form.errors %}
-                <strong>Login details incorrect.</strong>
+                {% if errors %}
+                {% for error in errors %}
+                <div class="alert alert-danger">
+                    <strong>{{ error }}</strong>
+                </div>
+                {% endfor %}
                 {% endif %}
                 <div class="form-group">
                     <div class="input-group">

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'platerplotter/base.html' %}
 {% block title %}
     Acknowledge Samples - {{ block.super }}
 {% endblock title %}
@@ -28,9 +28,21 @@
             {% for rack in ready_to_plate %}
             <tr>
               <td><a href="/plate-holding-rack/{{ rack.pk }}">{{ rack.holding_rack_id }}</a></td>
-              <td>{{ rack.plate_type }}</td>
-              <td>{{ rack.half_full }}</td>
-              <td>{{ rack.full }}</td>
+              <td>{{ rack.holding_rack_type }}</td>
+              <td>
+                {% if holding_rack.half_full %}
+                  <i class="fas fa-check-circle" style="color:green"></i>
+                {% else %}
+                  <i class="fas fa-times-circle" style="color:red"></i>
+                {% endif %}
+              </td>
+              <td>
+                {% if holding_rack.full %}
+                  <i class="fas fa-check-circle" style="color:green"></i>
+                {% else %}
+                  <i class="fas fa-times-circle" style="color:red"></i>
+                {% endif %}
+              </td>
               <td>{{ rack.sample_count }}</td>
             </tr>
             {% endfor %}

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'platerplotter/base.html' %}
 {% block title %}
     Acknowledge Samples - {{ block.super }}
 {% endblock title %}
@@ -10,7 +10,7 @@
     <div class="row">
       <div class="col-4">
         <h3>Acknowledge Receipt of Samples</h3>
-        <h4>Rack: {{ rack.gmc_rack_id }}</h4>
+        <h4>Rack: {{ rack.receiving_rack_id }}</h4>
       </div>
       <div class="col-4" align='center'>
         <form role='form' action='' method="POST" class='form'>
@@ -78,7 +78,7 @@
             <tbody>
             {% for sample, form in sample_form_dict.items %}
             <tr>
-              <td>{{ sample.gmc_rack_well }}</td>
+              <td>{{ sample.receiving_rack_well }}</td>
               <td>{{ sample.participant_id }}</td>
               <td>{{ sample.group_id }}</td>
               <td>{{ sample.priority }}</td>
@@ -99,7 +99,7 @@
                       <button type="button" class="close" data-dismiss="modal"> X </button>
                     </div>
                     <div class="modal-body">
-                      <strong>Participant ID:</strong> {{ sample.participant_id }} {{ hist.delivery.opening_user.last_name }}
+                      <strong>Participant ID:</strong> {{ sample.participant_id }}
                       <form role='form' action='' method="POST", class='form'>
                         {% csrf_token %}
                         {{ form|crispy }}
@@ -127,7 +127,7 @@
                       <button type="button" class="close" data-dismiss="modal"> X </button>
                     </div>
                     <div class="modal-body">
-                      <strong>Participant ID:</strong> {{ sample.participant_id }} {{ hist.delivery.opening_user.last_name }}
+                      <strong>Participant ID:</strong> {{ sample.participant_id }}
                       <form role='form' action='' method="POST", class='form'>
                         {% csrf_token %}
                         {{ form|crispy }}

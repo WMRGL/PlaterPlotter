@@ -3,15 +3,16 @@ import pytz
 from django import forms
 from django.forms import ModelForm
 from datetime import datetime
-from platerplotter.models import Gel1004Csv, Rack, Plate, Sample, Gel1008Csv
+from platerplotter.models import Plate, Sample, Gel1008Csv
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 class HoldingRackForm(forms.Form):
 	holding_rack_id = forms.CharField(label='', widget=forms.TextInput(attrs={'autofocus': 'autofocus'}))
 
 	def clean_holding_rack_id(self):
-		holding_rack_id = self.cleaned_data['holding_rack_id']
-		if not re.match(r'^[a-zA-Z]{2}\d{8}$', holding_rack_id):
+		holding_rack_id = self.cleaned_data['holding_rack_id'].upper()
+		if not re.match(r'^[A-Z]{2}\d{8}$', holding_rack_id):
 			raise ValidationError("Invalid rack ID")
 		else:
 			return holding_rack_id.upper()
@@ -25,6 +26,16 @@ class SampleSelectForm(forms.Form):
 			raise ValidationError("Invalid Laboratory Sample ID")
 		else:
 			return lab_sample_id
+
+class PlateSelectForm(forms.Form):
+	plate_id = forms.CharField(label='', widget=forms.TextInput(attrs={'autofocus': 'autofocus'}))
+
+	def clean_plate_id(self):
+		plate_id = self.cleaned_data['plate_id'].upper()
+		if not re.match(r'^LP\d{7}-DNA$', plate_id):
+			raise ValidationError("Invalid Plate ID")
+		else:
+			return plate_id.upper()
 
 class LogIssueForm(forms.ModelForm):
 	class Meta:
@@ -42,20 +53,6 @@ class ResolveIssueForm(forms.ModelForm):
 				'issue_outcome' : "Outcome",}
 		widgets = {'comment': forms.Textarea(attrs={'rows':4, 'cols':50}),}
 
-
-	#issue_comment = forms.CharField(label='', widget=forms.Textarea(attrs={'rows':4, 'cols':55}))
-
-# class ParticipantIdForm(forms.Form):
-# 	participant_id = forms.CharField(label='', widget=forms.TextInput(attrs={'autofocus': 'autofocus'}))
-
-# 	def clean_participant_id(self):
-# 		participant_id = self.cleaned_data['participant_id'].lower()
-# 		if not re.match(r'^[p,P]\d{2}-\d*$', participant_id):
-# 			raise ValidationError("Invalid Participant ID")
-# 		else:
-# 			return participant_id
-
-
 class PlatingForm(ModelForm):
 	class Meta:
 		model = Plate
@@ -71,7 +68,7 @@ class PlatingForm(ModelForm):
 				raise ValidationError("Plate ID already used.")
 			if not re.match(r'^LP\d{7}-DNA$', plate_id):
 				raise ValidationError("Invalid Plate ID.")
-			return plate_id
+			return plate_id.upper()
 		else:
 			raise ValidationError("Required field.")
 
@@ -90,7 +87,7 @@ class Gel1008Form(ModelForm):
 	def clean_consignment_number(self):
 		if self.cleaned_data['consignment_number']:
 			consignment_number = self.cleaned_data['consignment_number']
-			if not re.match(r'^\d{10}$', consignment_number):
+			if not re.match(r'^.*$', consignment_number):
 				raise ValidationError("Invalid consignment number")
 			return consignment_number
 		else:
@@ -99,31 +96,10 @@ class Gel1008Form(ModelForm):
 	def clean_date_of_dispatch(self):
 		if self.cleaned_data['date_of_dispatch']:
 			date_of_dispatch = self.cleaned_data['date_of_dispatch']
+			if date_of_dispatch <= timezone.now() - timezone.timedelta(days=1):
+				raise forms.ValidationError("The date cannot be in the past")
+			if date_of_dispatch > timezone.now() + timezone.timedelta(days=14):
+				raise forms.ValidationError("The date must be within 2 weeks of today's date")
 			return date_of_dispatch
 		else:
 			raise ValidationError("Required field.")
-
-
-# class ReceivedSampleForm(ModelForm):
-# 	class Meta:
-# 		model = ReceivedSample
-# 		exclude = ['sampleReceivedDateTime']
-
-# 	def clean_gmcRackId(self):
-# 		gmcRackId = self.cleaned_data['gmcRackId']
-# 		if not re.match(r'^[A-Z]{2}\d{8}$', gmcRackId):
-# 			raise ValidationError("Invalid: should be two letters followed by 8 digits")
-# 		return gmcRackId
-
-# 	def clean_laboratorySampleId(self):
-# 		laboratorySampleId = self.cleaned_data['laboratorySampleId']
-# 		if not re.match(r'^\d{10}$', laboratorySampleId):
-# 			raise ValidationError("Invalid: should be 10 digits (left padded with 0's)")
-# 		return laboratorySampleId
-
-# 	def save(self, commit=True):
-# 		instance = super(ReceivedSampleForm, self).save(commit=False)
-# 		instance.sampleReceivedDateTime = datetime.now(pytz.timezone('Europe/London'))
-# 		if commit:
-# 			instance.save()
-# 		return instance

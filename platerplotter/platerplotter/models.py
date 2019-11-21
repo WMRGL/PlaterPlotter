@@ -9,6 +9,12 @@ class Gel1005Csv(models.Model):
 	def __str__(self):
 		return self.filename
 
+	class Meta:
+		app_label = 'platerplotter'
+		db_table = 'Gel1005Csv'
+		verbose_name = 'Gel1005 CSV'
+		verbose_name_plural = 'Gel1005 CSVs'
+
 class Gel1004Csv(models.Model):
 	gel_1005_csv = models.ForeignKey(Gel1005Csv, on_delete=models.CASCADE, null=True, blank=True)
 	filename = models.CharField(max_length=60)
@@ -18,43 +24,83 @@ class Gel1004Csv(models.Model):
 	def __str__(self):
 		return self.filename
 
+	class Meta:
+		app_label = 'platerplotter'
+		db_table = 'Gel1004Csv'
+		verbose_name = 'Gel1004 CSV'
+		verbose_name_plural = 'Gel1004 CSVs'
+
 
 class Gel1008Csv(models.Model):
 	filename = models.CharField(max_length=60)
 	report_generated_datetime = models.DateTimeField()
 	consignment_number = models.CharField(max_length=10, null=True, blank=True)
 	date_of_dispatch = models.DateTimeField(null=True, blank=True)
+	message_generated = models.BooleanField(default=False)
 
 	def __str__(self):
 		return self.filename
 
-class Rack(models.Model):
+	class Meta:
+		app_label = 'platerplotter'
+		db_table = 'Gel1008Csv'
+		verbose_name = 'Gel1008 CSV'
+		verbose_name_plural = 'Gel1008 CSVs'
+
+class ReceivingRack(models.Model):
 	gel_1004_csv = models.ForeignKey(Gel1004Csv, on_delete=models.CASCADE)
-	gmc_rack_id = models.CharField(max_length=12)
+	receiving_rack_id = models.CharField(max_length=12)
 	laboratory_id = models.CharField(max_length=3, choices=lab_ids)
+	glh_sample_consignment_number = models.CharField(max_length=20)
 	rack_acknowledged = models.BooleanField(default=False)
 	disease_area = models.CharField(max_length=12, choices = (
 			("Cancer", "Cancer"),
 			("Rare Disease", "Rare Disease"),
 			("Mixed", "Mixed")), null=True, blank=True)
-	plate_type = models.CharField(max_length=15, choices=(("Proband", "Proband"),
+	rack_type = models.CharField(max_length=15, choices=(("Proband", "Proband"),
 		("Family", "Family"), ("Cancer Germline", "Cancer Germline"),
 		("Tumour", "Tumour"), ("Mixed", "Mixed")), null=True, blank=True)
 	priority = models.CharField(max_length=10, choices=(("Routine", "Routine"),
 		("Urgent", "Urgent"), ("Mixed", "Mixed")), null=True, blank=True)	
 
 	def __str__(self):
-		return self.gmc_rack_id
+		return self.receiving_rack_id
+
+	def is_empty(self):
+		samples = Sample.objects.filter(receiving_rack=self)
+		empty = True
+		for sample in samples:
+			if not hasattr(sample, 'holding_rack_well'):
+				empty = False
+		return empty
+
+	class Meta:
+		app_label = 'platerplotter'
+		db_table = 'ReceivingRack'
+		verbose_name = 'Receiving rack'
+		verbose_name_plural = 'Receiving racks'
 
 class Plate(models.Model):
-	gel_1008_csv = models.ForeignKey(Gel1008Csv, on_delete=models.CASCADE, null=True, blank=True)
-	plate_id = models.CharField(max_length=13, null=True, blank=True)
+	gel_1008_csv = models.ForeignKey(Gel1008Csv, on_delete=models.SET_NULL, null=True, blank=True, related_name='related_plate')
+	plate_id = models.CharField(max_length=13, unique=True)
+
+	def __str__(self):
+		return self.plate_id
+
+	class Meta:
+		app_label = 'platerplotter'
+		db_table = 'Plate'
+		verbose_name = 'Plate'
+		verbose_name_plural = 'Plates'
+
+class HoldingRack(models.Model):
+	plate = models.OneToOneField(Plate, on_delete=models.CASCADE, null=True, blank=True, related_name='holding_rack')
 	holding_rack_id = models.CharField(max_length=11)
 	disease_area = models.CharField(max_length=12, choices = (
 			("Cancer", "Cancer"),
 			("Rare Disease", "Rare Disease"),
 			("Unassigned", "Unassigned")), default="Unassigned")
-	plate_type = models.CharField(max_length=15, choices=(("Proband", "Proband"),
+	holding_rack_type = models.CharField(max_length=15, choices=(("Proband", "Proband"),
 		("Family", "Family"), ("Cancer Germline", "Cancer Germline"),
 		("Tumour", "Tumour"), ("Problem", "Problem"), ("Unassigned", "Unassigned")), default="Unassigned")
 	priority = models.CharField(max_length=10, choices=(("Routine", "Routine"),
@@ -66,21 +112,17 @@ class Plate(models.Model):
 	positions_confirmed = models.BooleanField(default=False)
 
 	def __str__(self):
-		if self.plate_id:
-			return "Plate ID: " + self.plate_id
-		else:
-			return "Holding Rack ID: " + self.holding_rack_id
+		return "Holding Rack ID: " + self.holding_rack_id
 
-class Buffer(models.Model):
-	well_id = models.CharField(max_length=3, choices=well_ids)
-	plate = models.ForeignKey(Plate, on_delete=models.CASCADE, related_name='buffer_wells')
-
-	def __str__(self):
-		return self.well_id
+	class Meta:
+		app_label = 'platerplotter'
+		db_table = 'HoldingRack'
+		verbose_name = 'Holding rack'
+		verbose_name_plural = 'Holding racks'
 
 class Sample(models.Model):
-	rack = models.ForeignKey(Rack, on_delete=models.CASCADE)
-	plate = models.ForeignKey(Plate, on_delete=models.CASCADE, null=True, blank=True)
+	receiving_rack = models.ForeignKey(ReceivingRack, on_delete=models.CASCADE)
+	receiving_rack_well = models.CharField(max_length=3, choices=well_ids)
 	participant_id = models.CharField(max_length=20)
 	group_id = models.CharField(max_length=20)
 	priority = models.CharField(max_length=7, choices=(("Routine", "Routine"),
@@ -92,10 +134,8 @@ class Sample(models.Model):
 		("Family", "Family"), ("Cancer Germline", "Cancer Germline"),
 		("Tumour", "Tumour"), ("Unassigned", "Unassigned")), default="Unassigned")
 	clin_sample_type = models.CharField(max_length=44, choices = sample_types)
-	glh_sample_consignment_number = models.CharField(max_length=20)
 	laboratory_sample_id = models.CharField(max_length=10, unique=True)
 	laboratory_sample_volume = models.IntegerField()
-	gmc_rack_well = models.CharField(max_length=3, choices=well_ids)
 	is_proband = models.BooleanField()
 	is_repeat = models.CharField(max_length=50, choices=(("New", "New"),
 		("Retrospective", "Retrospective"), ("Repeat New", "Repeat New"),
@@ -108,7 +148,6 @@ class Sample(models.Model):
 	sample_received_datetime = models.DateTimeField(null=True)
 	norm_biorep_sample_vol = models.FloatField(null=True, blank=True)
 	norm_biorep_conc = models.FloatField(null=True, blank=True)
-	plate_well_id = models.CharField(max_length=3, choices=well_ids, null=True)
 	issue_identified = models.BooleanField(default=False)
 	comment = models.TextField(blank=True, null=True)
 	issue_outcome = models.CharField(max_length=64, choices=(("Not resolved", "Not resolved"),
@@ -119,6 +158,27 @@ class Sample(models.Model):
 	def __str__(self):
 		return self.laboratory_sample_id
 
+	class Meta:
+		app_label = 'platerplotter'
+		db_table = 'Sample'
+		verbose_name = 'Sample'
+		verbose_name_plural = 'Samples'
+
+class HoldingRackWell(models.Model):
+	holding_rack = models.ForeignKey(HoldingRack, on_delete=models.CASCADE, related_name = 'wells')
+	well_id = models.CharField(max_length=3, choices=well_ids)
+	buffer_added = models.BooleanField(default=False)
+	sample = models.OneToOneField(Sample, on_delete=models.SET_NULL, null=True, blank=True, related_name='holding_rack_well')
+
+	def __str__(self):
+		return self.holding_rack.holding_rack_id + ' ' + self.well_id
+
+	class Meta:
+		app_label = 'platerplotter'
+		db_table = 'HoldingRackWell'
+		verbose_name = 'Holding rack well'
+		verbose_name_plural = 'Holding rack wells'
+
 class RackScanner(models.Model):
 	filename = models.CharField(max_length=60)
 	scanned_id = models.CharField(max_length=13)
@@ -127,6 +187,10 @@ class RackScanner(models.Model):
 
 	class Meta:
 		unique_together = (('filename', 'scanned_id', 'date_modified'),)
+		app_label = 'platerplotter'
+		db_table = 'RackScanner'
+		verbose_name = 'Rack scanner'
+		verbose_name_plural = 'Rack scanners'
 
 	def __str__(self):
 		return self.filename + ' ' + str(self.date_modified)
@@ -140,6 +204,10 @@ class RackScannerSample(models.Model):
 
 	class Meta:
 		unique_together = (('rack_scanner', 'sample_id', 'position'))
+		app_label = 'platerplotter'
+		db_table = 'RackScannerSample'
+		verbose_name = 'Rack scanner sample'
+		verbose_name_plural = 'Rack scanner samples'
 
 	def __str__(self):
 		return self.rack_scanner.scanned_id + ': ' + self.sample_id

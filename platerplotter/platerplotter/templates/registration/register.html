@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'platerplotter/base.html' %}
 {% block content %}
 
 <div class="container-fluid">
@@ -8,7 +8,9 @@
             <form method="post">
                 {% csrf_token %}
                 {% if matching_users %}
-                <strong>Username already exists.</strong>
+                <div class="alert alert-danger">
+                    <strong>Username already exists.</strong>
+                </div>
                 {% endif %}
                 <div class="form-group">
                     <div class="input-group">

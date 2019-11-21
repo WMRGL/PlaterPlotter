@@ -1,0 +1,120 @@
+{% extends 'platerplotter/base.html' %}
+{% block title %}
+    Acknowledge Samples - {{ block.super }}
+{% endblock title %}
+{% load bootstrap4 %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-3">
+        <h3>Plates ready for dispatch</h3>
+        <p>Assign racks to consignment and send GEL1008</p>
+      </div>
+      <div class="col-3">
+        <div align='left'>
+          <h6>Scan or type Plate ID</h6>
+        </div>
+        <form role='form' action='' method="POST", class='form-inline'>
+          {% csrf_token %}
+          <input type="hidden" id="selected_plates" name="selected_plates">
+          {{ plate_select_form|crispy }}
+          <div class="form-group">
+            <div class="col-lg-5 col-sm-offset-5">
+              <button onclick="myFunction()" type="submit" name='plate' class="btn btn-primary">Go</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="col-6">
+        <form role='form' method="POST" class='form-inline float-right' enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="col-lg-4">
+            {% bootstrap_field gel1008_form.consignment_number %}
+          </div>
+          <div class="col-lg-4">
+            {% bootstrap_field gel1008_form.date_of_dispatch %}
+          </div>
+          <div class="col-lg-4">
+            <br>
+            <button type="submit" name="generate-manifests" class="btn btn-primary btn-block">Generate Manifests</button>
+          </div>    
+      </div>
+    <div class="col-12">
+      <div class="tab-pane active">
+        <br>
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Plate ID</th>
+                <th>Sample Type</th>
+                <th>Half Plate</th>
+                <th>Full Plate</th>
+                <th>Number of Samples</th>
+                <th>Assign Plate to Consignment</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for holding_rack in ready_to_dispatch %}
+            <tr>
+              <td>{{ holding_rack.plate.plate_id }}</td>
+              <td>{{ holding_rack.holding_rack_type }}</td>
+              <td>
+                {% if holding_rack.half_full %}
+                  <i class="fas fa-check-circle" style="color:green"></i>
+                {% else %}
+                  <i class="fas fa-times-circle" style="color:red"></i>
+                {% endif %}
+              </td>
+              <td>
+                {% if holding_rack.full %}
+                  <i class="fas fa-check-circle" style="color:green"></i>
+                {% else %}
+                  <i class="fas fa-times-circle" style="color:red"></i>
+                {% endif %}
+              </td>
+              <td>{{ holding_rack.sample_count }}</td>
+              <td style="text-align:center">
+                <input type="checkbox" class="selected_plate" name="selected_plate" value="{{holding_rack.plate.pk}}">
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        </form>
+      </div> 
+    </div>     
+  </div>
+
+<script>
+var form = document.getElementById('selected_plates');
+form.value = '';
+var already_selected = {{selected_plates_list}};
+var all_plates = document.getElementsByClassName("selected_plate");
+
+for(var i=0; i<all_plates.length; i++){
+  for(var j=0; j<already_selected.length; j++){
+    if(all_plates[i].value === already_selected[j].toString()){
+      all_plates[i].checked = true;
+    }
+  }
+}
+
+function myFunction() {
+  var all_ready_plates = document.getElementsByClassName("selected_plate");
+  var currently_selected = []
+  for(var i=0; i<all_ready_plates.length; i++){
+    if(all_ready_plates[i].checked){
+      currently_selected.push(all_ready_plates[i])
+    }
+  }
+  currently_selected_list = '';
+  for(var i=0; i<currently_selected.length; i++){
+    currently_selected_list = currently_selected_list.concat(currently_selected[i].value, ',')
+  }
+  form.value = currently_selected_list
+}
+</script>
+
+{% endblock content %}

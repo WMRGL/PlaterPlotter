@@ -56,13 +56,19 @@
 	                    <a class="nav-link {% if url_name == 'problem_samples' %}active{% endif %}" href="{% url 'problem_samples' %}">Problem Samples</a>
 	                </li>
 	                <li class="nav nav-item">
-	                    <a class="nav-link {% if url_name == 'awaiting_plating' or url_name == 'plate_samples' or url_name == 'plate_problem_samples' %}active{% endif %}" href="{% url 'awaiting_plating' %}">Awaiting Plating</a>
+	                    <a class="nav-link {% if url_name == 'awaiting_holding_rack_assignment' or url_name == 'assign_samples_to_holding_rack' or url_name == 'assign_problem_samples_to_holding_rack' %}active{% endif %}" href="{% url 'awaiting_holding_rack_assignment' %}">Awaiting Sorting</a>
+	                </li>
+	                <li class="nav nav-item">
+	                    <a class="nav-link {% if url_name == 'holding_racks' %}active{% endif %}" href="{% url 'holding_racks' %}">Holding Racks</a>
 	                </li>
 	                <li class="nav nav-item">
 	                    <a class="nav-link {% if url_name == 'ready_to_plate' %}active{% endif %}" href="{% url 'ready_to_plate' %}">Ready to Plate</a>
 	                </li>
 	                <li class="nav nav-item">
 	                    <a class="nav-link {% if url_name == 'ready_to_dispatch' %}active{% endif %}" href="{% url 'ready_to_dispatch' %}">Ready for Dispatch</a>
+	                </li>
+	               	<li class="nav nav-item">
+	                    <a class="nav-link {% if url_name == 'consignments_for_collection' %}active{% endif %}" href="{% url 'consignments_for_collection' %}">Consignments for Collection</a>
 	                </li>
 	                <li class="nav nav-item">
 	                    <a class="nav-link {% if url_name == 'audit' %}active{% endif %}" href="{% url 'audit' %}">Audit</a>
@@ -83,15 +89,27 @@
 	<div class="container-fluid">
 	    {% if messages %}
 	      {% for message in messages %}
-	        {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
-	          <div class="alert alert-danger" role="alert"><strong>{{ message }}</strong></div>
-	        {% endif %}
-	        {% if message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
-	          <div class="alert alert-warning" role="alert"><strong>{{ message }}</strong></div>
-	        {% endif %}
-	        {% if message.level == DEFAULT_MESSAGE_LEVELS.INFO %}
-	          <div class="alert alert-success" role="alert"><strong>{{ message }}</strong></div>
-	        {% endif %}
+	      	{% if 'safe' in message.tags %}
+		        {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+		          <div class="alert alert-danger" role="alert"><strong>{{ message|safe }}</strong></div>
+		        {% endif %}
+		        {% if message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
+		          <div class="alert alert-warning" role="alert"><strong>{{ message|safe }}</strong></div>
+		        {% endif %}
+		        {% if message.level == DEFAULT_MESSAGE_LEVELS.INFO %}
+		          <div class="alert alert-success" role="alert"><strong>{{ message|safe }}</strong></div>
+		        {% endif %}
+		    {% else %}
+		   		{% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+		          <div class="alert alert-danger" role="alert"><strong>{{ message }}</strong></div>
+		        {% endif %}
+		        {% if message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
+		          <div class="alert alert-warning" role="alert"><strong>{{ message }}</strong></div>
+		        {% endif %}
+		        {% if message.level == DEFAULT_MESSAGE_LEVELS.INFO %}
+		          <div class="alert alert-success" role="alert"><strong>{{ message }}</strong></div>
+		        {% endif %}
+		    {% endif %}
 	      {% endfor %}
 	    {% endif %}
 	</div>
