@@ -119,7 +119,8 @@ def check_clinical_sample_type(clin_sample_type):
 
 def check_glh_sample_consignment_number(glh_sample_consignment_number):
 	if not re.match(r'^[a-z]{3}-\d{4}-\d{2}-\d{2}-\d{2}-[1,2]$', glh_sample_consignment_number.lower()) and not re.match(
-		r'^[a-z]{3}-\d{4}-\d{2}-\d{2}-[1,2]$', glh_sample_consignment_number.lower()):
+		r'^[a-z]{3}-\d{4}-\d{2}-\d{2}-[1,2]$', glh_sample_consignment_number.lower()) and not re.match(
+		r'^.*$', glh_sample_consignment_number.lower()):
 		raise ValueError('Incorrect GLH sample consignment number. Received {} which does not match the required specification.'.format(glh_sample_consignment_number))
 	else:
 		return glh_sample_consignment_number.lower()
