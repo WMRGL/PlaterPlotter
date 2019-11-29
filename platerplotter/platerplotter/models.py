@@ -34,7 +34,7 @@ class Gel1004Csv(models.Model):
 class Gel1008Csv(models.Model):
 	filename = models.CharField(max_length=60)
 	report_generated_datetime = models.DateTimeField()
-	consignment_number = models.CharField(max_length=10, null=True, blank=True)
+	consignment_number = models.CharField(max_length=50, null=True, blank=True)
 	date_of_dispatch = models.DateTimeField(null=True, blank=True)
 	message_generated = models.BooleanField(default=False)
 
@@ -51,7 +51,7 @@ class ReceivingRack(models.Model):
 	gel_1004_csv = models.ForeignKey(Gel1004Csv, on_delete=models.CASCADE)
 	receiving_rack_id = models.CharField(max_length=12)
 	laboratory_id = models.CharField(max_length=3, choices=lab_ids)
-	glh_sample_consignment_number = models.CharField(max_length=20)
+	glh_sample_consignment_number = models.CharField(max_length=50)
 	rack_acknowledged = models.BooleanField(default=False)
 	disease_area = models.CharField(max_length=12, choices = (
 			("Cancer", "Cancer"),
