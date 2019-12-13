@@ -1314,10 +1314,6 @@ def consignments_for_collection(request, test_status=False):
 			consignment = request.POST['send-1008']
 			#print((consignment.split('(')[0], datetime(consignment.split('(')[2].split(')')[0])))#.split(')')[0])
 			plates = consignment_no_dict[consignment]
-			if test_status:
-				directory = str(Path.cwd().parent) + '/TestData/Outbound/GEL1008/'
-			else:
-				directory = LoadConfig().load()['gel1008path']
 			for plate in plates:
 				datetime_now = datetime.now(pytz.timezone('UTC'))
 				plate_type = plate.holding_rack.holding_rack_type
@@ -1329,6 +1325,13 @@ def consignments_for_collection(request, test_status=False):
 					type_of_case = 'CG'
 				elif plate_type == 'Tumour':
 					type_of_case = 'CT'
+				if test_status:
+					directory = str(Path.cwd().parent) + '/TestData/Outbound/GEL1008/'
+				else:
+					if type_of_case == 'RP' or type_of_case == 'CG':
+						directory = LoadConfig().load()['gel1008path'] + 'RP-CG/'
+					else:
+						directory = LoadConfig().load()['gel1008path'] + 'RF-CT/'
 				filename = "ngis_bio_to_gel_sample_dispatch_" + type_of_case + "_" + datetime.now(pytz.timezone('UTC')).strftime("%Y%m%d_%H%M%S") + ".csv"
 				path = directory + filename
 				with open(path, 'w', newline='') as csvfile:
