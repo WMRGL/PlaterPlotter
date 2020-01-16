@@ -48,11 +48,11 @@ $.fn.dataTable.enum( [ 'Proband', 'Family', 'Cancer Germline', 'Tumour' ] );
 			dom: 'lBfrtip',
 	        buttons: [ {
 	            extend: 'excelHtml5',
-	            title: "ValidationListExport"
+	            title: "ReadyForPlatingExport"
 	        },
 	        {
 	            extend: 'csvHtml5',
-	            title: "ValidationListExport"
+	            title: "ReadyForPlatingExport"
 	        }],
 	    });
 	});
@@ -65,11 +65,11 @@ $(document).ready(function() {
 		dom: 'lBfrtip',
         buttons: [ {
             extend: 'excelHtml5',
-            title: "ValidationListExport"
+            title: "DataExport"
         },
         {
             extend: 'csvHtml5',
-            title: "ValidationListExport"
+            title: "DataExport"
         }],
     });
 });
