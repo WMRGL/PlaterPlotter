@@ -121,6 +121,7 @@ class HoldingRack(models.Model):
 		verbose_name_plural = 'Holding racks'
 
 class Sample(models.Model):
+	uid = models.CharField(max_length=100, unique=True)
 	receiving_rack = models.ForeignKey(ReceivingRack, on_delete=models.CASCADE)
 	receiving_rack_well = models.CharField(max_length=3, choices=well_ids)
 	participant_id = models.CharField(max_length=20)
@@ -134,7 +135,7 @@ class Sample(models.Model):
 		("Family", "Family"), ("Cancer Germline", "Cancer Germline"),
 		("Tumour", "Tumour"), ("Unassigned", "Unassigned")), default="Unassigned")
 	clin_sample_type = models.CharField(max_length=44, choices = sample_types)
-	laboratory_sample_id = models.CharField(max_length=10, unique=True)
+	laboratory_sample_id = models.CharField(max_length=10)
 	laboratory_sample_volume = models.IntegerField()
 	is_proband = models.BooleanField()
 	is_repeat = models.CharField(max_length=50, choices=(("New", "New"),

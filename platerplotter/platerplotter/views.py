@@ -351,6 +351,7 @@ def import_acks(request, test_status=False):
 										glh_sample_consignment_number = check_glh_sample_consignment_number(row[5].strip()))
 								# creates new Sample object
 								sample = Sample.objects.create(
+									uid = check_laboratory_sample_id(row[6].strip()),
 									receiving_rack = rack,
 									participant_id = check_participant_id(row[0].strip()),
 									group_id = check_group_id(row[1].strip()),
@@ -413,6 +414,9 @@ def import_acks(request, test_status=False):
 							sample_received = 'Yes'
 						else:
 							sample_received = 'No'
+							# change primary key to allow sample with same LSID to be sent in future consignment
+							sample.uid = sample.uid + '_' + sample.receiving_rack.gel_1004_csv.filename
+							sample.save()
 						received_datetime = ''
 						if sample.sample_received_datetime:
 							received_datetime = sample.sample_received_datetime.replace(microsecond=0).isoformat().replace('+00:00', 'Z')

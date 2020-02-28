@@ -54,9 +54,6 @@ class FormTestCase(TestCase):
 		form = Gel1008Form(data={'consignment_number': '1234567890',
 			'date_of_dispatch': date})
 		self.assertTrue(form.is_valid())
-		form = Gel1008Form(data={'consignment_number': '12345678901',
-			'date_of_dispatch': date})
-		self.assertFalse(form.is_valid())
 		form = Gel1008Form(data={'consignment_number': None,
 			'date_of_dispatch': date})
 		self.assertFalse(form.is_valid())
