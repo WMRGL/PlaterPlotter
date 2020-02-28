@@ -64,8 +64,6 @@ class ViewGEL1004InputValidationTestCase(TestCase):
 
 	def test_check_glh_sample_consignment_number(self):
 		self.assertEqual(check_glh_sample_consignment_number('ABC-1234-12-12-12-1'), 'abc-1234-12-12-12-1')
-		with self.assertRaises(ValueError):
-			check_glh_sample_consignment_number('ABC-1234-12-12-12-3')
 
 	def test_check_laboratory_sample_id(self):
 		self.assertEqual(check_laboratory_sample_id('1234567890'), '1234567890')
@@ -180,6 +178,7 @@ class SendGel1005TestCase(TestCase):
 			group_id='r12345678901', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567890',
+			uid='1234567890',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True,
 			sample_received_datetime=datetime.now(pytz.timezone('UTC')))
@@ -188,6 +187,7 @@ class SendGel1005TestCase(TestCase):
 			group_id='r12345678902', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567891',
+			uid='1234567891',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=False)
 
@@ -222,6 +222,7 @@ class AcknowledgeSamplesTestCase(TestCase):
 			group_id='r12345678901', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567890',
+			uid='1234567890',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=False)
 		sample_two = Sample.objects.create(receiving_rack=receiving_rack,
@@ -229,6 +230,7 @@ class AcknowledgeSamplesTestCase(TestCase):
 			group_id='r12345678902', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567891',
+			uid='1234567891',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=False)
 
@@ -330,6 +332,7 @@ class ProblemSamplesTestCase(TestCase):
 			group_id='r12345678901', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567890',
+			uid='1234567890',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True,
 			issue_identified=True, issue_outcome='Not resolved')
@@ -338,6 +341,7 @@ class ProblemSamplesTestCase(TestCase):
 			group_id='r12345678902', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567891',
+			uid='1234567891',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=False,
 			issue_identified=True, issue_outcome='Not resolved')
@@ -472,6 +476,7 @@ class AwaitingHoldingRackAssignmentTestCase(TestCase):
 			group_id='r12345678901', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567890',
+			uid='1234567890',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True,
 			issue_identified=False)
@@ -480,6 +485,7 @@ class AwaitingHoldingRackAssignmentTestCase(TestCase):
 			group_id='r12345678902', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567891',
+			uid='1234567891',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True,
 			issue_identified=False)
@@ -488,6 +494,7 @@ class AwaitingHoldingRackAssignmentTestCase(TestCase):
 			group_id='r12345678903', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567892',
+			uid='1234567892',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=False,
 			issue_identified=False)
@@ -498,6 +505,7 @@ class AwaitingHoldingRackAssignmentTestCase(TestCase):
 			group_id='r12345678904', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567893',
+			uid='1234567893',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True,
 			issue_identified=True, issue_outcome='Ready for plating')
@@ -506,6 +514,7 @@ class AwaitingHoldingRackAssignmentTestCase(TestCase):
 			group_id='r12345678905', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567894',
+			uid='1234567894',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True,
 			issue_identified=True, issue_outcome='Ready for plating')
@@ -520,7 +529,7 @@ class AwaitingHoldingRackAssignmentTestCase(TestCase):
 		response = self.client.get(reverse(awaiting_holding_rack_assignment))
 		self.assertEqual(response.status_code, 200)
 		self.assertTemplateUsed(response, 'platerplotter/awaiting-holding-rack-assignment.html')
-		self.assertContains(response, 'Samples awaiting plating')
+		self.assertContains(response, 'Samples awaiting sorting')
 		self.assertContains(response, 'GLH Racks')
 		self.assertContains(response, '2')
 		self.assertContains(response, 'Problem Racks')
@@ -563,6 +572,7 @@ class AssignSamplesToHoldingRackTestCase(TestCase):
 			group_id='r12345678901', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567890',
+			uid='1234567890',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True)
 		sample_two = Sample.objects.create(receiving_rack=receiving_rack,
@@ -570,6 +580,7 @@ class AssignSamplesToHoldingRackTestCase(TestCase):
 			group_id='r12345678902', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567891',
+			uid='1234567891',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=False)
 		sample_three = Sample.objects.create(receiving_rack=receiving_rack,
@@ -577,6 +588,7 @@ class AssignSamplesToHoldingRackTestCase(TestCase):
 			group_id='r12345678908', priority='Routine',
 			disease_area='Cancer', sample_type='Tumour',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567897',
+			uid='1234567897',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True)
 		receiving_rack_two = ReceivingRack.objects.create(gel_1004_csv=gel_1004_csv,
@@ -591,6 +603,7 @@ class AssignSamplesToHoldingRackTestCase(TestCase):
 			group_id='r12345678904', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567893',
+			uid='1234567893',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True,
 			issue_identified=True, issue_outcome='Ready for plating')
@@ -599,6 +612,7 @@ class AssignSamplesToHoldingRackTestCase(TestCase):
 			group_id='r12345678905', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567894',
+			uid='1234567894',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True,
 			issue_identified=True, issue_outcome='Ready for plating')
@@ -618,6 +632,7 @@ class AssignSamplesToHoldingRackTestCase(TestCase):
 			group_id='r12345678906', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567895',
+			uid='1234567895',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True)
 		sample_seven = Sample.objects.create(receiving_rack=receiving_rack,
@@ -625,6 +640,7 @@ class AssignSamplesToHoldingRackTestCase(TestCase):
 			group_id='r12345678907', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567896',
+			uid='1234567896',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True,
 			issue_identified=True, issue_outcome='Not resolved')
@@ -833,6 +849,7 @@ class HoldingRackTestCase(TestCase):
 			group_id='r12345678901', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567890',
+			uid='1234567890',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True)
 		sample_two = Sample.objects.create(receiving_rack=receiving_rack,
@@ -840,6 +857,7 @@ class HoldingRackTestCase(TestCase):
 			group_id='r12345678902', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567891',
+			uid='1234567891',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=False)
 		sample_three = Sample.objects.create(receiving_rack=receiving_rack,
@@ -847,6 +865,7 @@ class HoldingRackTestCase(TestCase):
 			group_id='r12345678908', priority='Routine',
 			disease_area='Cancer', sample_type='Tumour',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567897',
+			uid='1234567897',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True)
 		receiving_rack_two = ReceivingRack.objects.create(gel_1004_csv=gel_1004_csv,
@@ -864,6 +883,7 @@ class HoldingRackTestCase(TestCase):
 			group_id='r12345678906', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567895',
+			uid='1234567895',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True)
 		sample_seven = Sample.objects.create(receiving_rack=receiving_rack,
@@ -871,6 +891,7 @@ class HoldingRackTestCase(TestCase):
 			group_id='r12345678907', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567896',
+			uid='1234567896',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True,
 			issue_identified=True, issue_outcome='Not resolved')
@@ -979,6 +1000,7 @@ class ReadyToPlateAndPlateHoldingRackTestCase(TestCase):
 			group_id='r12345678906', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567895',
+			uid='1234567895',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True)
 		sample_seven = Sample.objects.create(receiving_rack=receiving_rack,
@@ -986,6 +1008,7 @@ class ReadyToPlateAndPlateHoldingRackTestCase(TestCase):
 			group_id='r12345678907', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567896',
+			uid='1234567896',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True,
 			issue_identified=True, issue_outcome='Not resolved')
@@ -1075,6 +1098,7 @@ class ReadyToDispatchAndAuditTestCase(TestCase):
 			group_id='r12345678906', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567895',
+			uid='1234567895',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True,
 			sample_matched=True)
@@ -1083,6 +1107,7 @@ class ReadyToDispatchAndAuditTestCase(TestCase):
 			group_id='r12345678907', priority='Routine',
 			disease_area='Rare Disease', sample_type='Proband',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567896',
+			uid='1234567896',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True,
 			sample_matched=True)
@@ -1115,6 +1140,7 @@ class ReadyToDispatchAndAuditTestCase(TestCase):
 			group_id='r12345678906', priority='Routine',
 			disease_area='Rare Disease', sample_type='Family',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567897',
+			uid='1234567897',
 			laboratory_sample_volume=10, is_proband=False, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True,
 			sample_matched=True)
@@ -1123,6 +1149,7 @@ class ReadyToDispatchAndAuditTestCase(TestCase):
 			group_id='r12345678906', priority='Routine',
 			disease_area='Rare Disease', sample_type='Family',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567898',
+			uid='1234567898',
 			laboratory_sample_volume=10, is_proband=False, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True,
 			sample_matched=True)
@@ -1155,6 +1182,7 @@ class ReadyToDispatchAndAuditTestCase(TestCase):
 			group_id='r12345678908', priority='Routine',
 			disease_area='Cancer', sample_type='Cancer Germline',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567899',
+			uid='1234567899',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True,
 			sample_matched=True)
@@ -1163,6 +1191,7 @@ class ReadyToDispatchAndAuditTestCase(TestCase):
 			group_id='r12345678909', priority='Routine',
 			disease_area='Cancer', sample_type='Cancer Germline',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567900',
+			uid='1234567900',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Normal or Germline sample', sample_received=True,
 			sample_matched=True)
@@ -1195,6 +1224,7 @@ class ReadyToDispatchAndAuditTestCase(TestCase):
 			group_id='r12345678909', priority='Routine',
 			disease_area='Cancer', sample_type='Tumour',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567901',
+			uid='1234567901',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Solid tumour sample', sample_received=True,
 			sample_matched=True)
@@ -1203,6 +1233,7 @@ class ReadyToDispatchAndAuditTestCase(TestCase):
 			group_id='r12345678909', priority='Routine',
 			disease_area='Cancer', sample_type='Tumour',
 			clin_sample_type='dna_saliva', laboratory_sample_id='1234567902',
+			uid='1234567902',
 			laboratory_sample_volume=10, is_proband=True, is_repeat='New',
 			tissue_type='Solid tumour sample', sample_received=True,
 			sample_matched=True)
