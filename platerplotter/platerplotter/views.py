@@ -57,51 +57,53 @@ def strip_zeros(well):
 		return well
 
 def check_plating_organisation(plating_organisation):
+	error = None
 	if plating_organisation.lower() != 'wwm':
-		raise ValueError('Plating orgnaisation entered as {}. Expected "wmm".'.format(plating_organisation.lower()))
-	else:
-		return plating_organisation.lower()
+		error = 'Plating orgnaisation entered as {}. Expected "wmm".'.format(plating_organisation.lower())
+	return plating_organisation.lower(), error
 
 def check_rack_id(rack_id):
+	error = None
 	if 8 > len(rack_id) or len(rack_id) > 12:
-		raise ValueError('Incorrect rack ID. Received {} which does not match the required specification.'.format(rack_id))
-	else:
-		return rack_id
+		error = 'Incorrect rack ID. Received {} which does not match the required specification.'.format(rack_id)
+	return rack_id, error
 
 def check_laboratory_id(laboratory_id):
+	error = None
 	accepted_ids = ["yne", "now", "eme", "lnn", "lns", "wwm", "sow"]
 	if laboratory_id.lower() not in accepted_ids:
-		raise ValueError('Incorrect laboratory ID. Received {} which is not on the list of accepted laboratory IDs.'.format(laboratory_id))
-	else:
-		return laboratory_id.lower()
+		error = 'Incorrect laboratory ID. Received {} which is not on the list of accepted laboratory IDs.'.format(laboratory_id)
+	return laboratory_id.lower(), error
 
 def check_participant_id(participant_id):
+	error = None
 	if not re.match(r'^p\d{11}$', participant_id.lower()):
-		raise ValueError('Incorrect participant ID. Received {} which does not match the required specification.'.format(participant_id))
-	else:
-		return participant_id.lower()
+		error = 'Incorrect participant ID. Received {} which does not match the required specification.'.format(participant_id)
+		print(error)
+	return participant_id.lower(), error
 
 def check_group_id(group_id):
+	error = None
 	if not re.match(r'^r\d{11}$', group_id.lower()):
-		raise ValueError('Incorrect group ID. Received {} which does not match the required specification.'.format(group_id))
-	else:
-		return group_id.lower()
+		error = 'Incorrect group ID. Received {} which does not match the required specification.'.format(group_id)
+	return group_id.lower(), error
 
 def check_priority(priority):
+	error = None
 	accepted_values = ['Urgent', 'Routine']
 	if priority.title() not in accepted_values:
-		raise ValueError('Incorrect priority. Received {}. Must be either routine or urgent.'.format(priority))
-	else:
-		return priority.title()
+		error = 'Incorrect priority. Received {}. Must be either routine or urgent.'.format(priority)
+	return priority.title(), error
 
 def check_disease_area(disease_area):
+	error = None
 	accepted_values = ['Cancer', 'Rare Disease']
 	if disease_area.title() not in accepted_values:
-		raise ValueError('Incorrect disease area. Received {}. Must be either cancer or rare disease.'.format(disease_area))
-	else:
-		return disease_area.title()
+		error = 'Incorrect disease area. Received {}. Must be either cancer or rare disease.'.format(disease_area)
+	return disease_area.title(), error
 
 def check_clinical_sample_type(clin_sample_type):
+	error = None
 	accepted_values = ["dna_blood_germline","dna_saliva","dna_fibroblast","dna_ff_germline",
 		"dna_ffpe_tumour","dna_ff_tumour","dna_blood_tumour","dna_bone_marrow_aspirate_tumour_sorted_cells",
 		"dna_bone_marrow_aspirate_tumour_cells","tumour_tissue_ffpe","lysate_ffpe","lysate_ff",
@@ -113,66 +115,67 @@ def check_clinical_sample_type(clin_sample_type):
 		"dna_fresh_fluid_unsorted","dna_other","dna_fresh_frozen_tissue","dna_fresh_tissue_in_culture_medium",
 		"dna_fresh_fluid_tumour","dna_fresh_frozen_tumour"]
 	if clin_sample_type.lower() not in accepted_values:
-		raise ValueError('Clinical sample type not in list of accepted values. Received {}.'.format(clin_sample_type))
-	else:
-		return clin_sample_type.lower()
+		error = 'Clinical sample type not in list of accepted values. Received {}.'.format(clin_sample_type)
+	return clin_sample_type.lower(), error
 
 def check_glh_sample_consignment_number(glh_sample_consignment_number):
+	error = None
 	if not re.match(r'^[a-z]{3}-\d{4}-\d{2}-\d{2}-\d{2}-[1,2]$', glh_sample_consignment_number.lower()) and not re.match(
 		r'^[a-z]{3}-\d{4}-\d{2}-\d{2}-[1,2]$', glh_sample_consignment_number.lower()) and not re.match(
 		r'^.*$', glh_sample_consignment_number.lower()):
-		raise ValueError('Incorrect GLH sample consignment number. Received {} which does not match the required specification.'.format(glh_sample_consignment_number))
-	else:
-		return glh_sample_consignment_number.lower()
+		error = 'Incorrect GLH sample consignment number. Received {} which does not match the required specification.'.format(glh_sample_consignment_number)
+	return glh_sample_consignment_number.lower(), error
 
 def check_laboratory_sample_id(laboratory_sample_id):
+	error = None
 	if not re.match(r'^\d{10}$', laboratory_sample_id):
-		raise ValueError('Incorrect laboratory sample ID. Received {}. Should be 10 digits'.format(laboratory_sample_id))
-	else:
-		return laboratory_sample_id
+		error = 'Incorrect laboratory sample ID. Received {}. Should be 10 digits'.format(laboratory_sample_id)
+	return laboratory_sample_id, error
 
 def check_laboratory_sample_volume(laboratory_sample_volume):
+	error = None
 	if not re.match(r'^\d*$', laboratory_sample_volume):
-		raise ValueError('Incorrect laboratory sample volume. Received {}. Should be all digits'.format(laboratory_sample_volume))
-	else:
-		return laboratory_sample_volume
+		error = 'Incorrect laboratory sample volume. Received {}. Should be all digits'.format(laboratory_sample_volume)
+	return laboratory_sample_volume, error
 
 def check_rack_well(rack_well):
-	if not re.match(r'^[A-H][0,1][0-9]$', rack_well.upper()):
-		raise ValueError('Invalid rack well for a 96 well rack. Received {}.'.format(rack_well))
-	else:
-		return rack_well.upper()
+	error = None
+	if not re.match(r'^[A-H](01|02|03|04|05|06|07|08|09|10|11|12)$', rack_well.upper()):
+		error = 'Invalid rack well for a 96 well rack. Received {}.'.format(rack_well)
+	return rack_well.upper(), error
 
 def check_is_proband(is_proband):
+	error = None
 	if is_proband == "TRUE" or is_proband == "True":
-		return True
+		return True, error
 	if is_proband == "FALSE" or is_proband == "False":
-		return False
+		return False, error
 	if type(is_proband) == type(True):
-		return is_proband
+		return is_proband, error
 	else:
-		raise ValueError('Invalid value for Is Proband. Received {} but expected a boolean value'.format(is_proband))
+		error = 'Invalid value for Is Proband. Received {} but expected a boolean value'.format(is_proband)
+		return is_proband, error
 
 def check_is_repeat(is_repeat):
+	error = None
 	accepted_values = ['New', 'Retrospective', 'Repeat New', 'Repeat Retrospective']
 	if is_repeat.title() not in accepted_values:
-		raise ValueError('Is repeat field not in list of accepted values. Received {}.'.format(is_repeat))
-	else:
-		return is_repeat.title()
+		error = 'Is repeat field not in list of accepted values. Received {}.'.format(is_repeat)
+	return is_repeat.title(), error
 
 def check_tissue_type(tissue_type):
+	error = None
 	accepted_values = ["Normal or Germline sample", "Liquid tumour sample", "Solid tumour sample", "Abnormal tissue sample", "Omics sample"]
 	if tissue_type not in accepted_values:
-		raise ValueError('Tissue type not in list of accepted values. Received {}.'.format(tissue_type))
-	else:
-		return tissue_type
+		error = 'Tissue type not in list of accepted values. Received {}.'.format(tissue_type)
+	return tissue_type, error
 
 def check_rack_type(rack_type):
+	error = None
 	accepted_values = ['CG', 'CT', 'RF', 'RP']
 	if rack_type not in accepted_values:
-		raise ValueError('Rack type not in list of accepted_values. Received {}.'.format(rack_type))
-	else:
-		return rack_type
+		error = 'Rack type not in list of accepted_values. Received {}.'.format(rack_type)
+	return rack_type, error
 
 def old_rack_scan(test_status=False):
 	if test_status:
@@ -324,64 +327,148 @@ def import_acks(request, test_status=False):
 					with open(path) as csv_file:
 						csv_reader = csv.reader(csv_file, delimiter=',')
 						line_count=0
+						errors = []
 						for row in csv_reader:
 							if line_count == 0:
 								line_count += 1
 							else:
-								# gets exiting, or creates new objects
-								try:
-									gel_1004_csv = Gel1004Csv.objects.get(
-										filename = filename,
-										plating_organisation=check_plating_organisation(row[10].strip()))
-								except:
-									gel_1004_csv = Gel1004Csv.objects.create(
-										filename = filename,
-										plating_organisation=check_plating_organisation(row[10].strip()),
-										report_received_datetime = datetime_now)
-								try:
-									rack = ReceivingRack.objects.get(
-										gel_1004_csv = gel_1004_csv,
-										receiving_rack_id = check_rack_id(row[3].strip()),
-										laboratory_id = check_laboratory_id(row[7].strip()))
-								except:
-									rack = ReceivingRack.objects.create(
-										gel_1004_csv = gel_1004_csv,
-										receiving_rack_id = check_rack_id(row[3].strip()),
-										laboratory_id = check_laboratory_id(row[7].strip()),
-										glh_sample_consignment_number = check_glh_sample_consignment_number(row[5].strip()))
-								# creates new Sample object
-								sample = Sample.objects.create(
-									uid = check_laboratory_sample_id(row[6].strip()),
-									receiving_rack = rack,
-									participant_id = check_participant_id(row[0].strip()),
-									group_id = check_group_id(row[1].strip()),
-									priority = check_priority(row[11].strip()),
-									disease_area = check_disease_area(row[2].strip()),
-									clin_sample_type = check_clinical_sample_type(row[4].strip()),
-									laboratory_sample_id = check_laboratory_sample_id(row[6].strip()),
-									laboratory_sample_volume = check_laboratory_sample_volume(row[8].strip()),
-									receiving_rack_well = check_rack_well(row[9].strip()),
-									is_proband=check_is_proband(row[12].strip()),
-									is_repeat = check_is_repeat(row[13].strip()),
-									tissue_type=check_tissue_type(row[14].strip()))
-								rack_type = check_rack_type(row[15].strip())
-								sample = Sample.objects.get(pk=sample.pk)
-								if sample.disease_area == 'Rare Disease':
-									if sample.is_proband and rack_type == 'RP':
-										sample.sample_type = 'Proband'
-									elif rack_type == 'RF':
-										sample.sample_type = 'Family'
-									else:
-										raise ValueError('Rack type does not match sample type for sample {}'.format(str(sample)))
-								elif sample.disease_area == 'Cancer':
-									if 'Normal or Germline sample' in sample.tissue_type and rack_type == 'CG':
-										sample.sample_type = 'Cancer Germline'
-									elif rack_type == 'CT':
-										sample.sample_type = 'Tumour'
-									else:
-										raise ValueError('Rack type does not match sample type for sample {}'.format(str(sample)))
-								sample.save()
-								line_count += 1
+								participant_id, error = check_participant_id(row[0].strip())
+								if error:
+									errors.append(error)
+								group_id, error = check_group_id(row[1].strip())
+								if error:
+									errors.append(error)
+								disease_area, error = check_disease_area(row[2].strip())
+								if error:
+									errors.append(error)
+								receiving_rack_id, error = check_rack_id(row[3].strip())
+								if error:
+									errors.append(error)
+								clin_sample_type, error = check_clinical_sample_type(row[4].strip())
+								if error:
+									errors.append(error)
+								glh_sample_consignment_number, error = check_glh_sample_consignment_number(row[5].strip())
+								if error:
+									errors.append(error)
+								laboratory_sample_id, error = check_laboratory_sample_id(row[6].strip())
+								if error:
+									errors.append(error)
+								if Sample.objects.filter(uid=laboratory_sample_id).exists():
+									errors.append("A sample with LSID {} already exists in the database".format(laboratory_sample_id))
+								laboratory_id, error = check_laboratory_id(row[7].strip())
+								if error:
+									errors.append(error)
+								laboratory_sample_volume, error = check_laboratory_sample_volume(row[8].strip())
+								if error:
+									errors.append(error)
+								receiving_rack_well, error = check_rack_well(row[9].strip())
+								if error:
+									errors.append(error)
+								plating_organisation, error = check_plating_organisation(row[10].strip())
+								if error:
+									errors.append(error)
+								priority, error = check_priority(row[11].strip())
+								if error:
+									errors.append(error)
+								is_proband, error = check_is_proband(row[12].strip())
+								if error:
+									errors.append(error)
+								is_repeat, error = check_is_repeat(row[13].strip())
+								if error:
+									errors.append(error)
+								tissue_type, error = check_tissue_type(row[14].strip())
+								if error:
+									errors.append(error)
+								rack_type, error = check_rack_type(row[15].strip())
+								if error:
+									errors.append(error)
+								if disease_area == 'Rare Disease' and not (rack_type == 'RP' or rack_type == 'RF'):
+									errors.append('Rack type does not match sample type for sample {}'.format(str(laboratory_sample_id)))
+								if disease_area == 'Cancer' and not (rack_type == 'CG' or rack_type == 'CT'):
+									errors.append('Rack type does not match sample type for sample {}'.format(str(laboratory_sample_id)))
+						if errors:
+							error_message = "Unable to import {} due to the following errors:<ul>".format(filename)
+							for error in errors:
+								error_message += '<li>' + error
+							error_message += '</ul>'
+							messages.error(request, error_message, extra_tags='safe')
+							break
+						else:
+							line_count = 0
+							csv_file.seek(0)
+							for row in csv_reader:
+								if line_count == 0:
+									line_count += 1
+								else:
+									participant_id, error = check_participant_id(row[0].strip())
+									group_id, error = check_group_id(row[1].strip())
+									disease_area, error = check_disease_area(row[2].strip())
+									receiving_rack_id, error = check_rack_id(row[3].strip())
+									clin_sample_type, error = check_clinical_sample_type(row[4].strip())
+									glh_sample_consignment_number, error = check_glh_sample_consignment_number(row[5].strip())
+									laboratory_sample_id, error = check_laboratory_sample_id(row[6].strip())
+									laboratory_id, error = check_laboratory_id(row[7].strip())
+									laboratory_sample_volume, error = check_laboratory_sample_volume(row[8].strip())
+									receiving_rack_well, error = check_rack_well(row[9].strip())
+									plating_organisation, error = check_plating_organisation(row[10].strip())
+									priority, error = check_priority(row[11].strip())
+									is_proband, error = check_is_proband(row[12].strip())
+									is_repeat, error = check_is_repeat(row[13].strip())
+									tissue_type, error = check_tissue_type(row[14].strip())
+									rack_type, error = check_rack_type(row[15].strip())
+									# gets exiting, or creates new objects
+									try:
+										gel_1004_csv = Gel1004Csv.objects.get(
+											filename = filename,
+											plating_organisation=plating_organisation)
+									except:
+										gel_1004_csv = Gel1004Csv.objects.create(
+											filename = filename,
+											plating_organisation=plating_organisation,
+											report_received_datetime = datetime_now)
+									try:
+										rack = ReceivingRack.objects.get(
+											gel_1004_csv = gel_1004_csv,
+											receiving_rack_id = receiving_rack_id,
+											laboratory_id = laboratory_id)
+									except:
+										rack = ReceivingRack.objects.create(
+											gel_1004_csv = gel_1004_csv,
+											receiving_rack_id = receiving_rack_id,
+											laboratory_id = laboratory_id,
+											glh_sample_consignment_number = glh_sample_consignment_number)
+									# creates new Sample object
+									sample = Sample.objects.create(
+										uid = laboratory_sample_id,
+										receiving_rack = rack,
+										participant_id = participant_id,
+										group_id = group_id,
+										priority = priority,
+										disease_area = disease_area,
+										clin_sample_type = clin_sample_type,
+										laboratory_sample_id = laboratory_sample_id,
+										laboratory_sample_volume = laboratory_sample_volume,
+										receiving_rack_well = receiving_rack_well,
+										is_proband = is_proband,
+										is_repeat = is_repeat,
+										tissue_type = tissue_type)
+									sample = Sample.objects.get(pk=sample.pk)
+									if sample.disease_area == 'Rare Disease':
+										if sample.is_proband and rack_type == 'RP':
+											sample.sample_type = 'Proband'
+										elif rack_type == 'RF':
+											sample.sample_type = 'Family'
+										else:
+											raise ValueError('Rack type does not match sample type for sample {}'.format(str(sample)))
+									elif sample.disease_area == 'Cancer':
+										if 'Normal or Germline sample' in sample.tissue_type and rack_type == 'CG':
+											sample.sample_type = 'Cancer Germline'
+										elif rack_type == 'CT':
+											sample.sample_type = 'Tumour'
+										else:
+											raise ValueError('Rack type does not match sample type for sample {}'.format(str(sample)))
+									sample.save()
+									line_count += 1
 					os.rename(path, directory + "processed/" + filename)
 			return HttpResponseRedirect('/')
 		# Generate GEL1005 acks for received samples
@@ -1067,7 +1154,7 @@ def plate_holding_rack(request, holding_rack_pk, test_status=False):
 							elif holding_rack_well.buffer_added and not holding_rack_well.sample:
 								well_contents = "NO READ" # previously read "BUFFER" but Hamilton robot needs reprogramming
 							else:
-								raise ValueError('Well contents invalid. Reported to contain sample and buffer')
+								messages.error(request, 'Well contents invalid. Reported to contain sample and buffer')
 						else:
 							well_contents = "NO READ"
 						writer.writerow([well_id, well_contents, ' 2d_rackid_1', holding_rack.holding_rack_id])
@@ -1243,7 +1330,7 @@ def ready_to_dispatch(request, test_status=False):
 											norm_biorep_sample_vol = ""
 											norm_biorep_conc = ""
 										else:
-											raise ValueError('Well contents invalid. Reported to contain sample and buffer')
+											messages.error(request, 'Well contents invalid. Reported to contain sample and buffer')
 										data.append([plate_id, plate_consignment_number, plate_date_of_dispatch, type_of_case,
 											well_id, well_type, participant_id, laboratory_sample_id])
 								flowObjects = list()
@@ -1364,7 +1451,7 @@ def consignments_for_collection(request, test_status=False):
 								norm_biorep_sample_vol = ""
 								norm_biorep_conc = ""
 							else:
-								raise ValueError('Well contents invalid. Reported to contain sample and buffer')
+								messages.error(request, 'Well contents invalid. Reported to contain sample and buffer')
 							writer.writerow([plate_id, plate_consignment_number, plate_date_of_dispatch, type_of_case, well_id, 
 								well_type, participant_id, laboratory_sample_id, norm_biorep_sample_vol, norm_biorep_conc])
 				plate.gel_1008_csv.filename = filename

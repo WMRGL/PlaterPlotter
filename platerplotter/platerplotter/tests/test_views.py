@@ -20,85 +20,71 @@ class ViewGEL1004InputValidationTestCase(TestCase):
 		self.assertEqual(strip_zeros('A12'), 'A12')
 
 	def test_check_plating_organisation(self):
-		self.assertEqual(check_plating_organisation('WWM'), 'wwm')
-		with self.assertRaises(ValueError):
-			check_plating_organisation('abc')
+		self.assertEqual(check_plating_organisation('WWM'), ('wwm', None))
+		self.assertEqual(check_plating_organisation('abc'), ('abc', 'Plating orgnaisation entered as abc. Expected "wmm".'))
 
 	def test_check_rack_id(self):
-		self.assertEqual(check_rack_id('12345678'), '12345678')
-		self.assertEqual(check_rack_id('123456789012'), '123456789012')
-		with self.assertRaises(ValueError):
-			check_rack_id('1234567')
-		with self.assertRaises(ValueError):
-			check_rack_id('1234567890123')
+		self.assertEqual(check_rack_id('12345678'), ('12345678', None))
+		self.assertEqual(check_rack_id('123456789012'), ('123456789012', None))
+		self.assertEqual(check_rack_id('1234567'), ('1234567', 'Incorrect rack ID. Received 1234567 which does not match the required specification.'))
+		self.assertEqual(check_rack_id('1234567890123'), ('1234567890123', 'Incorrect rack ID. Received 1234567890123 which does not match the required specification.'))
 
 	def test_check_laboratory_id(self):
-		self.assertEqual(check_laboratory_id('NOW'), 'now')
-		with self.assertRaises(ValueError):
-			check_laboratory_id('NOO')
+		self.assertEqual(check_laboratory_id('NOW'), ('now', None))
+		self.assertEqual(check_laboratory_id('NOO'), ('noo', 'Incorrect laboratory ID. Received NOO which is not on the list of accepted laboratory IDs.'))
 
 	def test_check_participant_id(self):
-		self.assertEqual(check_participant_id('P12345678901'),'p12345678901')
-		with self.assertRaises(ValueError):
-			check_laboratory_id('P1234567890')
+		self.assertEqual(check_participant_id('P12345678901'),('p12345678901', None))
+		self.assertEqual(check_participant_id('P1234567890'),('p1234567890', 'Incorrect participant ID. Received P1234567890 which does not match the required specification.'))
 
 	def test_check_group_id(self):
-		self.assertEqual(check_group_id('R12345678901'),'r12345678901')
-		with self.assertRaises(ValueError):
-			check_group_id('R1234567890')
+		self.assertEqual(check_group_id('R12345678901'),('r12345678901', None))
+		self.assertEqual(check_group_id('R1234567890'),('r1234567890', 'Incorrect group ID. Received R1234567890 which does not match the required specification.'))
 
 	def test_check_priority(self):
-		self.assertEqual(check_priority('routine'), 'Routine')
-		with self.assertRaises(ValueError):
-			check_group_id('routinee')
+		self.assertEqual(check_priority('routine'), ('Routine', None))
+		self.assertEqual(check_priority('routinee'), ('Routinee', 'Incorrect priority. Received routinee. Must be either routine or urgent.'))
 
 	def test_check_disease_area(self):
-		self.assertEqual(check_disease_area('cancer'), 'Cancer')
-		with self.assertRaises(ValueError):
-			check_disease_area('cancerr')
+		self.assertEqual(check_disease_area('cancer'), ('Cancer', None))
+		self.assertEqual(check_disease_area('cancerr'), ('Cancerr', 'Incorrect disease area. Received cancerr. Must be either cancer or rare disease.'))
 
 	def test_check_clinical_sample_type(self):
-		self.assertEqual(check_clinical_sample_type('dna_saliva'), 'dna_saliva')
-		with self.assertRaises(ValueError):
-			check_clinical_sample_type('dna')
+		self.assertEqual(check_clinical_sample_type('dna_saliva'), ('dna_saliva', None))
+		self.assertEqual(check_clinical_sample_type('dna'), ('dna', 'Clinical sample type not in list of accepted values. Received dna.'))
 
 	def test_check_glh_sample_consignment_number(self):
-		self.assertEqual(check_glh_sample_consignment_number('ABC-1234-12-12-12-1'), 'abc-1234-12-12-12-1')
+		self.assertEqual(check_glh_sample_consignment_number('ABC-1234-12-12-12-1'), ('abc-1234-12-12-12-1', None))
 
 	def test_check_laboratory_sample_id(self):
-		self.assertEqual(check_laboratory_sample_id('1234567890'), '1234567890')
-		with self.assertRaises(ValueError):
-			check_laboratory_sample_id('123456789')
+		self.assertEqual(check_laboratory_sample_id('1234567890'), ('1234567890', None))
+		self.assertEqual(check_laboratory_sample_id('123456789'), ('123456789', 'Incorrect laboratory sample ID. Received 123456789. Should be 10 digits'))
 
 	def test_check_laboratory_sample_volume(self):
-		self.assertEqual(check_laboratory_sample_volume('129304'), '129304')
-		with self.assertRaises(ValueError):
-			check_laboratory_sample_volume('12930.4')
+		self.assertEqual(check_laboratory_sample_volume('129304'), ('129304', None))
+		self.assertEqual(check_laboratory_sample_volume('12930.4'), ('12930.4', 'Incorrect laboratory sample volume. Received 12930.4. Should be all digits'))
 
 	def test_check_rack_well(self):
-		self.assertEqual(check_rack_well('h12'), 'H12')
-		with self.assertRaises(ValueError):
-			check_rack_well('i12')
+		self.assertEqual(check_rack_well('h12'), ('H12', None))
+		self.assertEqual(check_rack_well('i12'), ('I12', 'Invalid rack well for a 96 well rack. Received i12.'))
+		self.assertEqual(check_rack_well('a19'), ('A19', 'Invalid rack well for a 96 well rack. Received a19.'))
 
 	def test_check_is_proband(self):
-		self.assertTrue(check_is_proband("TRUE"))
-		self.assertTrue(check_is_proband("True"))
-		self.assertFalse(check_is_proband("FALSE"))
-		self.assertFalse(check_is_proband("False"))
-		self.assertTrue(check_is_proband(True))
-		self.assertFalse(check_is_proband(False))
-		with self.assertRaises(ValueError):
-			check_is_proband(1)
+		self.assertEqual(check_is_proband("TRUE"), (True, None))
+		self.assertEqual(check_is_proband("True"), (True, None))
+		self.assertEqual(check_is_proband("FALSE"), (False, None))
+		self.assertEqual(check_is_proband("False"), (False, None))
+		self.assertEqual(check_is_proband(True), (True, None))
+		self.assertEqual(check_is_proband(False), (False, None))
+		self.assertEqual(check_is_proband(1), (1, 'Invalid value for Is Proband. Received 1 but expected a boolean value'))
 
 	def test_check_is_repeat(self):
-		self.assertEqual(check_is_repeat('REPEAT NEW'), 'Repeat New')
-		with self.assertRaises(ValueError):
-			check_is_repeat('REPEAT NE')
+		self.assertEqual(check_is_repeat('REPEAT NEW'), ('Repeat New', None))
+		self.assertEqual(check_is_repeat('REPEAT NE'), ('Repeat Ne', 'Is repeat field not in list of accepted values. Received REPEAT NE.'))
 
 	def test_check_tissue_type(self):
-		self.assertEqual(check_tissue_type("Normal or Germline sample"), "Normal or Germline sample")
-		with self.assertRaises(ValueError):
-			check_tissue_type("Normal or germline sample")
+		self.assertEqual(check_tissue_type("Normal or Germline sample"), ("Normal or Germline sample", None))
+		self.assertEqual(check_tissue_type("Normal or germline sample"), ("Normal or germline sample", 'Tissue type not in list of accepted values. Received Normal or germline sample.'))
 
 class ViewHelperFunctionsTestCase(TestCase):
 
