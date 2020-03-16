@@ -1263,13 +1263,19 @@ class ReadyToDispatchAndAuditTestCase(TestCase):
 			'test_status': True}), {
 			'generate-manifests': [''], 'selected_plate': plate_list_pk, 'consignment_number': '1234567890',
 			'date_of_dispatch': date.today()}, follow=True)
-		self.assertContains(response, 'The following consignment manifests have been produced')
-		directory = str(Path.cwd().parent) + '/TestData/Outbound/ConsignmentManifests/'
-		self.assertEqual(len(os.listdir(directory)), 4)
-		files = glob.glob(directory + '*')
+		self.assertContains(response, 'GEL1008 messages have been generated for the following consignment manifests')
+		directory = str(Path.cwd().parent) + '/TestData/Outbound/'
+		self.assertEqual(len(os.listdir(directory + 'ConsignmentManifests/')), 4)
+		self.assertEqual(len(os.listdir(directory + 'GEL1008/')), 4)
+		files = glob.glob(directory + 'ConsignmentManifests/' + '*')
+		for f in files:
+			os.remove(f)
+		files = glob.glob(directory + 'GEL1008/' + '*')
 		for f in files:
 			os.remove(f)
 		directory = str(Path.cwd().parent) + '/TestData/Outbound/ConsignmentManifests/'
+		self.assertEqual(len(os.listdir(directory)), 0)
+		directory = str(Path.cwd().parent) + '/TestData/Outbound/GEL1008/'
 		self.assertEqual(len(os.listdir(directory)), 0)
 
 	def test_generate_gel1008_not_all_plates(self):

@@ -30,14 +30,14 @@
               <td><a href="/plate-holding-rack/{{ rack.pk }}">{{ rack.holding_rack_id }}</a></td>
               <td>{{ rack.holding_rack_type }}</td>
               <td>
-                {% if holding_rack.half_full %}
+                {% if rack.half_full %}
                   <i class="fas fa-check-circle" style="color:green"></i>
                 {% else %}
                   <i class="fas fa-times-circle" style="color:red"></i>
                 {% endif %}
               </td>
               <td>
-                {% if holding_rack.full %}
+                {% if rack.full %}
                   <i class="fas fa-check-circle" style="color:green"></i>
                 {% else %}
                   <i class="fas fa-times-circle" style="color:red"></i>
