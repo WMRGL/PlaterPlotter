@@ -1406,7 +1406,7 @@ def ready_to_dispatch(request, test_status=False):
 
 @login_required()
 def consignments_for_collection(request, test_status=False):
-	consignments = Gel1008Csv.objects.filter(consignmnet_collected=False)
+	consignments = Gel1008Csv.objects.filter(consignment_collected=False)
 	consignment_no_dict = {}
 	for gel_1008 in consignments:
 		if gel_1008.consignment_number in consignment_no_dict:
