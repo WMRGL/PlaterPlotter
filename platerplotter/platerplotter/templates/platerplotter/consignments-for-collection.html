@@ -10,7 +10,6 @@
     <div class="row">
    	  <div class="col-12">
 	    <h3>Consignments for Collection</h3>
-	    <p>Please generate the GEL1008 messages once the conignment has been collected</p>
       </div>
     </div>
     <hr>
@@ -65,7 +64,7 @@
             {% csrf_token %}
             <div class="form-group">
               <div>
-                  <button type="submit" name='send-1008' value='{{ consignment_number }}' class="btn btn-success btn-block">Send GEL1008</button>
+                  <button type="submit" name='send-consignment' value='{{ consignment_number }}' class="btn btn-success btn-block">Send Consignment</button>
               </div>
             </div>
         </form>

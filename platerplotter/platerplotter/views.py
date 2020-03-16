@@ -79,7 +79,6 @@ def check_participant_id(participant_id):
 	error = None
 	if not re.match(r'^p\d{11}$', participant_id.lower()):
 		error = 'Incorrect participant ID. Received {} which does not match the required specification.'.format(participant_id)
-		print(error)
 	return participant_id.lower(), error
 
 def check_group_id(group_id):
@@ -1280,12 +1279,14 @@ def ready_to_dispatch(request, test_status=False):
 							messages.error(request, "There is an open consignment with this number but the date of dispatch did not match.")
 						else:
 							if test_status:
-								directory = str(Path.cwd().parent) + '/TestData/Outbound/ConsignmentManifests/'
+								manifest_directory = str(Path.cwd().parent) + '/TestData/Outbound/ConsignmentManifests/'
 							else:
-								directory = LoadConfig().load()['consignment_manifest_path']
+								manifest_directory = LoadConfig().load()['consignment_manifest_path']
 							for pk in plate_pks:
 								datetime_now = datetime.now(pytz.timezone('UTC'))
 								filename = "ngis_bio_to_gel_sample_dispatch_" + datetime.now(pytz.timezone('UTC')).strftime("%Y%m%d_%H%M%S") + ".csv"
+								# need to wait 1 second to make sure filenames for GEL1008s are different
+								time.sleep(1)
 								gel_1008_csv = Gel1008Csv.objects.create(
 									filename = filename,
 									report_generated_datetime = datetime_now,
@@ -1295,8 +1296,8 @@ def ready_to_dispatch(request, test_status=False):
 								plate.gel_1008_csv = gel_1008_csv
 								plate.save()
 								filename = consignment_number + '_' + plate.plate_id + '.pdf'
-								path = directory + filename
-								doc = SimpleDocTemplate(path)
+								manifest_path = manifest_directory + filename
+								doc = SimpleDocTemplate(manifest_path)
 								doc.pagesize = landscape(A4)
 								elements = []
 								data = [['Plate ID', 'Plate Consignment Number', 'Plate Date of Dispatch', 'Type of case',
@@ -1310,47 +1311,64 @@ def ready_to_dispatch(request, test_status=False):
 									type_of_case = 'CG'
 								elif plate_type == 'Tumour':
 									type_of_case = 'CT'
-								holding_rack_wells = HoldingRackWell.objects.filter(holding_rack=plate.holding_rack).order_by('well_id')
-								for holding_rack_well in holding_rack_wells:
-									if holding_rack_well.sample or holding_rack_well.buffer_added:
-										plate_id = plate.plate_id
-										plate_consignment_number = gel_1008_csv.consignment_number
-										plate_date_of_dispatch = gel_1008_csv.date_of_dispatch.replace(microsecond=0).isoformat().replace('+00:00', 'Z')
-										well_id = holding_rack_well.well_id
-										if holding_rack_well.sample and not holding_rack_well.buffer_added:
-											well_type = "Sample"
-											participant_id = holding_rack_well.sample.participant_id
-											laboratory_sample_id = holding_rack_well.sample.laboratory_sample_id
-											norm_biorep_sample_vol = holding_rack_well.sample.norm_biorep_sample_vol
-											norm_biorep_conc = holding_rack_well.sample.norm_biorep_conc
-										elif holding_rack_well.buffer_added and not holding_rack_well.sample:
-											well_type = "Buffer"
-											participant_id = ""
-											laboratory_sample_id = ""
-											norm_biorep_sample_vol = ""
-											norm_biorep_conc = ""
-										else:
-											messages.error(request, 'Well contents invalid. Reported to contain sample and buffer')
-										data.append([plate_id, plate_consignment_number, plate_date_of_dispatch, type_of_case,
-											well_id, well_type, participant_id, laboratory_sample_id])
-								flowObjects = list()
-								styles=getSampleStyleSheet()
-								table_header = "Sample summary for consignment: " + str(consignment_number)
-								flowObjects.append(Paragraph(table_header,styles["h4"]))
-								t1=Table(data,hAlign="LEFT")
-								t1.setStyle(TableStyle([('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
-											('BOX', (0,0), (-1,-1), 0.25, colors.black),
-											('BACKGROUND',(0,0),(-1,0),colors.gray),
-											('TEXTCOLOR',(0,0),(-1,0),colors.black),
-											]))
-								flowObjects.append(t1)
-								doc.build(flowObjects)
-								consignment_summaries[filename] = path
+								if test_status:
+									gel1008_directory = str(Path.cwd().parent) + '/TestData/Outbound/GEL1008/'
+								else:
+									if type_of_case == 'RP' or type_of_case == 'CG':
+										gel1008_directory = LoadConfig().load()['gel1008path'] + 'RP-CG/'
+									else:
+										gel1008_directory = LoadConfig().load()['gel1008path'] + 'RF-CT/'
+								filename = "ngis_bio_to_gel_sample_dispatch_" + type_of_case + "_" + datetime.now(pytz.timezone('UTC')).strftime("%Y%m%d_%H%M%S") + ".csv"
+								gel1008_path = gel1008_directory + filename
+								with open(gel1008_path, 'w', newline='') as csvfile:
+									writer = csv.writer(csvfile, delimiter=',',
+										quotechar=',', quoting=csv.QUOTE_MINIMAL)
+									writer.writerow(['Plate ID', 'Plate Consignment Number', 'Plate Date of Dispatch',
+										'type_of_case', 'Well ID', 'Well Type', 'Participant ID', 'Laboratory Sample ID',
+										'Normalised Biorepository Sample Volume', 'Normalised Biorepository Concentration'])
+									holding_rack_wells = HoldingRackWell.objects.filter(holding_rack=plate.holding_rack).order_by('well_id')
+									for holding_rack_well in holding_rack_wells:
+										if holding_rack_well.sample or holding_rack_well.buffer_added:
+											plate_id = plate.plate_id
+											plate_consignment_number = gel_1008_csv.consignment_number
+											plate_date_of_dispatch = gel_1008_csv.date_of_dispatch.replace(microsecond=0).isoformat().replace('+00:00', 'Z')
+											well_id = holding_rack_well.well_id
+											if holding_rack_well.sample and not holding_rack_well.buffer_added:
+												well_type = "Sample"
+												participant_id = holding_rack_well.sample.participant_id
+												laboratory_sample_id = holding_rack_well.sample.laboratory_sample_id
+												norm_biorep_sample_vol = holding_rack_well.sample.norm_biorep_sample_vol
+												norm_biorep_conc = holding_rack_well.sample.norm_biorep_conc
+											elif holding_rack_well.buffer_added and not holding_rack_well.sample:
+												well_type = "Buffer"
+												participant_id = ""
+												laboratory_sample_id = ""
+												norm_biorep_sample_vol = ""
+												norm_biorep_conc = ""
+											else:
+												messages.error(request, 'Well contents invalid. Reported to contain sample and buffer')
+											writer.writerow([plate_id, plate_consignment_number, plate_date_of_dispatch, type_of_case, well_id, 
+												well_type, participant_id, laboratory_sample_id, norm_biorep_sample_vol, norm_biorep_conc])
+											data.append([plate_id, plate_consignment_number, plate_date_of_dispatch, type_of_case,
+												well_id, well_type, participant_id, laboratory_sample_id])
+									flowObjects = list()
+									styles=getSampleStyleSheet()
+									table_header = "Sample summary for consignment: " + str(consignment_number)
+									flowObjects.append(Paragraph(table_header,styles["h4"]))
+									t1=Table(data,hAlign="LEFT")
+									t1.setStyle(TableStyle([('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
+												('BOX', (0,0), (-1,-1), 0.25, colors.black),
+												('BACKGROUND',(0,0),(-1,0),colors.gray),
+												('TEXTCOLOR',(0,0),(-1,0),colors.black),
+												]))
+									flowObjects.append(t1)
+									doc.build(flowObjects)
+									consignment_summaries[filename] = manifest_path
 							manifests = '<ul>'
 							for manifest, path in consignment_summaries.items():
 								manifests += '<li><a href="/download/' + manifest + '" target="_blank">' + manifest + '</a></li>'
 							manifests += '</ul>'
-							messages.info(request, "The following consignment manifests have been produced, click to download:<br>" +
+							messages.info(request, "GEL1008 messages have been generated for the following consignment manifests, click to download:<br>" +
 								manifests, extra_tags='safe')
 				else:
 					messages.warning(request, "No plates selected!")
@@ -1388,9 +1406,9 @@ def ready_to_dispatch(request, test_status=False):
 
 @login_required()
 def consignments_for_collection(request, test_status=False):
-	gel_1008s_to_generate = Gel1008Csv.objects.filter(message_generated=False)
+	consignments = Gel1008Csv.objects.filter(consignment_collected=False)
 	consignment_no_dict = {}
-	for gel_1008 in gel_1008s_to_generate:
+	for gel_1008 in consignments:
 		if gel_1008.consignment_number in consignment_no_dict:
 			consignment_no_dict[gel_1008.consignment_number].append(Plate.objects.get(gel_1008_csv=gel_1008))
 		else:
@@ -1401,66 +1419,13 @@ def consignments_for_collection(request, test_status=False):
 			HoldingRackManager(plate.holding_rack).is_half_full()
 			HoldingRackManager(plate.holding_rack).is_full()
 	if request.method == 'POST':
-		if "send-1008" in request.POST:
-			consignment = request.POST['send-1008']
-			#print((consignment.split('(')[0], datetime(consignment.split('(')[2].split(')')[0])))#.split(')')[0])
+		if "send-consignment" in request.POST:
+			consignment = request.POST['send-consignment']
 			plates = consignment_no_dict[consignment]
 			for plate in plates:
-				datetime_now = datetime.now(pytz.timezone('UTC'))
-				plate_type = plate.holding_rack.holding_rack_type
-				if plate_type == 'Proband':
-					type_of_case = 'RP'
-				elif plate_type == 'Family':
-					type_of_case = 'RF'
-				elif plate_type == 'Cancer Germline':
-					type_of_case = 'CG'
-				elif plate_type == 'Tumour':
-					type_of_case = 'CT'
-				if test_status:
-					directory = str(Path.cwd().parent) + '/TestData/Outbound/GEL1008/'
-				else:
-					if type_of_case == 'RP' or type_of_case == 'CG':
-						directory = LoadConfig().load()['gel1008path'] + 'RP-CG/'
-					else:
-						directory = LoadConfig().load()['gel1008path'] + 'RF-CT/'
-				filename = "ngis_bio_to_gel_sample_dispatch_" + type_of_case + "_" + datetime.now(pytz.timezone('UTC')).strftime("%Y%m%d_%H%M%S") + ".csv"
-				path = directory + filename
-				with open(path, 'w', newline='') as csvfile:
-					writer = csv.writer(csvfile, delimiter=',',
-						quotechar=',', quoting=csv.QUOTE_MINIMAL)
-					writer.writerow(['Plate ID', 'Plate Consignment Number', 'Plate Date of Dispatch',
-						'type_of_case', 'Well ID', 'Well Type', 'Participant ID', 'Laboratory Sample ID',
-						'Normalised Biorepository Sample Volume', 'Normalised Biorepository Concentration'])
-					holding_rack_wells = HoldingRackWell.objects.filter(holding_rack=plate.holding_rack).order_by('well_id')
-					for holding_rack_well in holding_rack_wells:
-						if holding_rack_well.sample or holding_rack_well.buffer_added:
-							plate_id = plate.plate_id
-							plate_consignment_number = plate.gel_1008_csv.consignment_number
-							plate_date_of_dispatch = plate.gel_1008_csv.date_of_dispatch.replace(microsecond=0).isoformat().replace('+00:00', 'Z')
-							well_id = holding_rack_well.well_id
-							if holding_rack_well.sample and not holding_rack_well.buffer_added:
-								well_type = "Sample"
-								participant_id = holding_rack_well.sample.participant_id
-								laboratory_sample_id = holding_rack_well.sample.laboratory_sample_id
-								norm_biorep_sample_vol = holding_rack_well.sample.norm_biorep_sample_vol
-								norm_biorep_conc = holding_rack_well.sample.norm_biorep_conc
-							elif holding_rack_well.buffer_added and not holding_rack_well.sample:
-								well_type = "Buffer"
-								participant_id = ""
-								laboratory_sample_id = ""
-								norm_biorep_sample_vol = ""
-								norm_biorep_conc = ""
-							else:
-								messages.error(request, 'Well contents invalid. Reported to contain sample and buffer')
-							writer.writerow([plate_id, plate_consignment_number, plate_date_of_dispatch, type_of_case, well_id, 
-								well_type, participant_id, laboratory_sample_id, norm_biorep_sample_vol, norm_biorep_conc])
-				plate.gel_1008_csv.filename = filename
-				plate.gel_1008_csv.report_generated_datetime = datetime_now
-				plate.gel_1008_csv.message_generated = True
+				plate.gel_1008_csv.consignment_collected = True
 				plate.gel_1008_csv.save()
-				# need to wait 1 second to make sure filenames for GEL1008s are different
-				time.sleep(1)
-			messages.info(request, "GEL1008 messages generated.")
+			messages.info(request, "Consignment collected.")
 		return HttpResponseRedirect('/consignments-for-collection/')
 	return render(request, 'platerplotter/consignments-for-collection.html', {
 		"consignment_no_dict" : consignment_no_dict

@@ -36,7 +36,7 @@ class Gel1008Csv(models.Model):
 	report_generated_datetime = models.DateTimeField()
 	consignment_number = models.CharField(max_length=50, null=True, blank=True)
 	date_of_dispatch = models.DateTimeField(null=True, blank=True)
-	message_generated = models.BooleanField(default=False)
+	consignment_collected = models.BooleanField(default=False)
 
 	def __str__(self):
 		return self.filename
@@ -155,6 +155,7 @@ class Sample(models.Model):
 		("Ready for plating", "Ready for plating"),
 		("Sample returned to extracting GLH", "Sample returned to extracting GLH"), 
 		("Sample destroyed", "Sample destroyed")), blank=True, null=True)
+	bypass_plating_rules = models.BooleanField(default=False)
 
 	def __str__(self):
 		return self.laboratory_sample_id
