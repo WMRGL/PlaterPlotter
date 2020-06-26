@@ -3,7 +3,7 @@ import pytz
 from django import forms
 from django.forms import ModelForm
 from datetime import datetime
-from platerplotter.models import Plate, Sample, Gel1008Csv
+from platerplotter.models import Plate, Sample, Gel1008Csv, ReceivingRack
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
@@ -52,6 +52,14 @@ class ResolveIssueForm(forms.ModelForm):
 		labels = {'comment': "", 
 				'issue_outcome' : "Outcome",}
 		widgets = {'comment': forms.Textarea(attrs={'rows':4, 'cols':50}),}
+
+class VolumeForm(forms.ModelForm):
+	volume_checked = forms.BooleanField()
+	class Meta:
+		model = ReceivingRack
+		fields = ('volume_checked',)
+		labels = {'volume_checked': ""}
+
 
 class PlatingForm(ModelForm):
 	class Meta:

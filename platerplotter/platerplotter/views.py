@@ -9,8 +9,9 @@ from platerplotter.models import (Gel1004Csv, Gel1005Csv, Gel1008Csv, ReceivingR
 	HoldingRack, Sample, RackScanner, RackScannerSample, HoldingRackWell)
 from platerplotter.config.load_config import LoadConfig
 from platerplotter.forms import (HoldingRackForm, SampleSelectForm, PlatingForm, 
-	Gel1008Form, LogIssueForm, ResolveIssueForm, PlateSelectForm)
+	Gel1008Form, LogIssueForm, ResolveIssueForm, PlateSelectForm, VolumeForm)
 from datetime import datetime
+from django.core import serializers
 from django.core.exceptions import ValidationError
 from platerplotter.holding_rack_manager import HoldingRackManager
 import csv
@@ -23,6 +24,22 @@ from reportlab.platypus import Flowable, Paragraph, SimpleDocTemplate, Table, Ta
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import landscape, A4
 from pathlib import Path
+
+
+def post_volume_check(request):
+	if request.is_ajax:
+		print(request.GET.get('rack_id'))
+		rack_id = request.GET.get('rack_id')
+		receiving_rack = ReceivingRack.objects.get(id=rack_id)
+		data = {}
+		data[rack_id] = receiving_rack.volume_checked
+		return JsonResponse(data)
+
+
+	# 	instance = 'pass'
+	# 	ser_instance = serializers.serialize('json', [ instance, ])
+	# 	return JsonResponse({'instance': ser_instance}, status=200)
+	# return JsonResponse({"error": ""}, status=400)
 
 # def ajax_change_sample_received_status(request):
 #	 sample_received = request.GET.get('sample_received', False)
@@ -512,6 +529,7 @@ def import_acks(request, test_status=False):
 			return HttpResponseRedirect('/')
 	unacked_gel_1004 = Gel1004Csv.objects.filter(gel_1005_csv__isnull = True)
 	unacked_racks_dict = {}
+	volume_form = VolumeForm(request.POST)
 	for gel_1004 in unacked_gel_1004:
 		unacked_racks_dict[gel_1004] = ReceivingRack.objects.filter(gel_1004_csv=gel_1004)
 		for gel_1004, racks in unacked_racks_dict.items():
@@ -521,7 +539,10 @@ def import_acks(request, test_status=False):
 				if not rack.rack_acknowledged:
 					all_racks_acked = False
 			gel_1004.all_racks_acked = all_racks_acked
-	return render(request, 'platerplotter/import-acks.html', {"unacked_racks_dict" : unacked_racks_dict})
+	return render(request, 'platerplotter/import-acks.html', {
+		"unacked_racks_dict" : unacked_racks_dict,
+		"volume_form" : volume_form
+		})
 
 @login_required()
 def acknowledge_samples(request, gel1004, rack, test_status=False):
