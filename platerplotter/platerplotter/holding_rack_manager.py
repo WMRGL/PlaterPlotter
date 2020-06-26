@@ -232,7 +232,7 @@ class HoldingRackManager():
 			# all new tumour samples must have a matching germline sample from the same patient
 			if sample.is_repeat == "New":
 				matching_germline_sample_found = False
-				matching_germline_samples = Sample.objects.filter(sample_type = "Cancer Germline", participant_id = sample.participant_id, holding_rack_well__isnull = True)
+				matching_germline_samples = Sample.objects.filter(sample_type = "Cancer Germline", participant_id = sample.participant_id, group_id = sample.group_id, holding_rack_well__isnull = True)
 				if matching_germline_samples:
 					matching_germline_sample_found = True
 					for matching_germline_sample in matching_germline_samples:
@@ -240,7 +240,7 @@ class HoldingRackManager():
 							matching_germline_sample.receiving_rack.receiving_rack_id + " in well " + 
 							matching_germline_sample.receiving_rack_well + " but not yet assigned to holding rack. These samples must be sent in the same consignment.")
 				else:
-					matching_germline_samples = Sample.objects.filter(sample_type = "Cancer Germline", participant_id = sample.participant_id, holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True)
+					matching_germline_samples = Sample.objects.filter(sample_type = "Cancer Germline", participant_id = sample.participant_id, group_id = sample.group_id, holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True)
 					if matching_germline_samples:
 						matching_germline_sample_found = True
 						for matching_germline_sample in matching_germline_samples:
@@ -296,7 +296,7 @@ class HoldingRackManager():
 			# all new tumour samples must have a matching germline sample from the same patient
 			if sample.is_repeat == "New":
 				matching_tumour_sample_found = False
-				matching_tumour_samples = Sample.objects.filter(sample_type = "Tumour", participant_id = sample.participant_id, holding_rack_well__isnull = True)
+				matching_tumour_samples = Sample.objects.filter(sample_type = "Tumour", participant_id = sample.participant_id, group_id = sample.group_id,  holding_rack_well__isnull = True)
 				if matching_tumour_samples:
 					matching_tumour_sample_found = True
 					for matching_tumour_sample in matching_tumour_samples:
@@ -304,7 +304,7 @@ class HoldingRackManager():
 							matching_tumour_sample.receiving_rack.receiving_rack_id + " in well " + 
 							matching_tumour_sample.receiving_rack_well + " but not yet assigned to holding rack. These samples must be sent in the same consignment.")
 				else:
-					matching_tumour_samples = Sample.objects.filter(sample_type = "Tumour", participant_id = sample.participant_id, holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True)
+					matching_tumour_samples = Sample.objects.filter(sample_type = "Tumour", participant_id = sample.participant_id, group_id = sample.group_id, holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True)
 					if matching_tumour_samples:
 						matching_tumour_sample_found = True
 						for matching_tumour_sample in matching_tumour_samples:

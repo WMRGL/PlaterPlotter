@@ -10,9 +10,10 @@
     <div class="row">
       <div class="col-5">
         <h3>Plate samples</h3>
-        <h4>Holding Rack: {{ holding_rack.holding_rack_id }}</h4>
+        <h5>Holding Rack: {{ holding_rack.holding_rack_id }}</h4>
+        <h5>Type: {{ holding_rack.holding_rack_type }}</h4>
         {% if holding_rack.plate %}
-          <h4>Plate ID: {{ holding_rack.plate.plate_id }}</h4>
+          <h5>Plate ID: {{ holding_rack.plate.plate_id }}</h4>
         {% else %}
           <p>Please confirm correct position of samples using plate scanner and then assign plate ID</p>
         {% endif %}
