@@ -28,8 +28,6 @@ from pathlib import Path
 
 def post_volume_check(request):
 	if request.is_ajax:
-		print(request.GET.get('gel1004_id'))
-		print(request.GET.get('rack_id'))
 		gel_1004_id = request.GET.get('gel1004_id')
 		rack_id = request.GET.get('rack_id')
 		receiving_rack = ReceivingRack.objects.get(id=rack_id)

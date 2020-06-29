@@ -89,9 +89,6 @@
 {% block javascript %}
 <script>
     function toggleVolumeChecked(gel1004Id, rackId) {
-      console.log('button pressed');
-      console.log(gel1004Id);
-      console.log(rackId);
       $.ajax({
         type: 'get',
         url: "{% url 'post_volume_check' %}",
@@ -102,9 +99,6 @@
         success: function(data) {
           var rack = document.getElementById(rackId);
           var gel1004Button = document.getElementById(gel1004Id);
-          console.log(data[rackId]);
-          console.log(data['all_checked']);
-          console.log(data['all_acked']);
           if (data[rackId]){
             rack.className="fas fa-check-circle";
             rack.style.color = "green";
