@@ -52,11 +52,6 @@ def post_volume_check(request):
 		return JsonResponse(data)
 
 
-	# 	instance = 'pass'
-	# 	ser_instance = serializers.serialize('json', [ instance, ])
-	# 	return JsonResponse({'instance': ser_instance}, status=200)
-	# return JsonResponse({"error": ""}, status=400)
-
 # def ajax_change_sample_received_status(request):
 #	 sample_received = request.GET.get('sample_received', False)
 #	 sample_id = request.GET.get('sample_id', False)

@@ -3,7 +3,7 @@ import pytz
 from django import forms
 from django.forms import ModelForm
 from datetime import datetime
-from platerplotter.models import Plate, Sample, Gel1008Csv, ReceivingRack
+from platerplotter.models import Plate, Sample, Gel1008Csv
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
