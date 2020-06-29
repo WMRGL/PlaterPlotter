@@ -9,7 +9,7 @@ from platerplotter.models import (Gel1004Csv, Gel1005Csv, Gel1008Csv, ReceivingR
 	HoldingRack, Sample, RackScanner, RackScannerSample, HoldingRackWell)
 from platerplotter.config.load_config import LoadConfig
 from platerplotter.forms import (HoldingRackForm, SampleSelectForm, PlatingForm, 
-	Gel1008Form, LogIssueForm, ResolveIssueForm, PlateSelectForm, VolumeForm)
+	Gel1008Form, LogIssueForm, ResolveIssueForm, PlateSelectForm)
 from datetime import datetime
 from django.core import serializers
 from django.core.exceptions import ValidationError
@@ -545,7 +545,6 @@ def import_acks(request, test_status=False):
 			return HttpResponseRedirect('/')
 	unacked_gel_1004 = Gel1004Csv.objects.filter(gel_1005_csv__isnull = True)
 	unacked_racks_dict = {}
-	volume_form = VolumeForm(request.POST)
 	for gel_1004 in unacked_gel_1004:
 		unacked_racks_dict[gel_1004] = ReceivingRack.objects.filter(gel_1004_csv=gel_1004)
 		for gel_1004, racks in unacked_racks_dict.items():
@@ -561,7 +560,6 @@ def import_acks(request, test_status=False):
 			gel_1004.all_racks_volume_checked = all_racks_volume_checked
 	return render(request, 'platerplotter/import-acks.html', {
 		"unacked_racks_dict" : unacked_racks_dict,
-		"volume_form" : volume_form
 		})
 
 @login_required()

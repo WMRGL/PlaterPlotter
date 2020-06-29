@@ -53,14 +53,6 @@ class ResolveIssueForm(forms.ModelForm):
 				'issue_outcome' : "Outcome",}
 		widgets = {'comment': forms.Textarea(attrs={'rows':4, 'cols':50}),}
 
-class VolumeForm(forms.ModelForm):
-	volume_checked = forms.BooleanField()
-	class Meta:
-		model = ReceivingRack
-		fields = ('volume_checked',)
-		labels = {'volume_checked': ""}
-
-
 class PlatingForm(ModelForm):
 	class Meta:
 		model = Plate
