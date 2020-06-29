@@ -912,16 +912,20 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
 			pk = request.POST['ready']
 			holding_rack = HoldingRack.objects.get(pk=pk)
 			# assign buffer wells
-			holding_rack_manager.assign_buffer()
-			buffer_wells = HoldingRackWell.objects.filter(holding_rack=holding_rack, buffer_added = True).order_by('well_id')
-			holding_rack.ready_to_plate = True
-			holding_rack.save()
-			messages.info(request, "Holding rack has been marked as ready for plating.")
-			if buffer_wells:
-				buffer_wells_list = ''
-				for buffer_well in buffer_wells:
-					buffer_wells_list += buffer_well.well_id + ', '
-				messages.warning(request, "Buffer will need to be added to the following wells during plating: " + buffer_wells_list)
+			well_A01 = HoldingRackWell.objects.get(holding_rack=holding_rack, well_id='A01')
+			if well_A01.sample:
+				holding_rack_manager.assign_buffer()
+				buffer_wells = HoldingRackWell.objects.filter(holding_rack=holding_rack, buffer_added = True).order_by('well_id')
+				holding_rack.ready_to_plate = True
+				holding_rack.save()
+				messages.info(request, "Holding rack has been marked as ready for plating.")
+				if buffer_wells:
+					buffer_wells_list = ''
+					for buffer_well in buffer_wells:
+						buffer_wells_list += buffer_well.well_id + ', '
+					messages.warning(request, "Buffer will need to be added to the following wells during plating: " + buffer_wells_list)
+			else:
+				messages.error(request, "Well A01 must contain a sample")
 		if 'reopen-rack' in request.POST:
 			holding_rack_form = HoldingRackForm()
 			sample_select_form = SampleSelectForm()
@@ -1224,6 +1228,7 @@ def ready_to_dispatch(request, test_status=False):
 					matching_cancer_samples_not_selected = set()
 					for sample in all_cancer_samples:
 						matching_samples = Sample.objects.filter(participant_id = sample.participant_id,
+							group_id = sample.group_id, 
 							sample_received = True,
 							disease_area = 'Cancer',
 							holding_rack_well__holding_rack__plate__gel_1008_csv__isnull = True).exclude(
@@ -1316,8 +1321,8 @@ def ready_to_dispatch(request, test_status=False):
 								plate = Plate.objects.get(pk=pk)
 								plate.gel_1008_csv = gel_1008_csv
 								plate.save()
-								filename = consignment_number + '_' + plate.plate_id + '.pdf'
-								manifest_path = manifest_directory + filename
+								manifest_filename = consignment_number + '_' + plate.plate_id + '.pdf'
+								manifest_path = manifest_directory + manifest_filename
 								doc = SimpleDocTemplate(manifest_path)
 								doc.pagesize = landscape(A4)
 								elements = []
@@ -1348,6 +1353,7 @@ def ready_to_dispatch(request, test_status=False):
 										'type_of_case', 'Well ID', 'Well Type', 'Participant ID', 'Laboratory Sample ID',
 										'Normalised Biorepository Sample Volume', 'Normalised Biorepository Concentration'])
 									holding_rack_wells = HoldingRackWell.objects.filter(holding_rack=plate.holding_rack).order_by('well_id')
+									holding_rack_wells = sorted(holding_rack_wells, key = lambda x: (x.well_id[1:], x.well_id[0]))
 									for holding_rack_well in holding_rack_wells:
 										if holding_rack_well.sample or holding_rack_well.buffer_added:
 											plate_id = plate.plate_id
@@ -1384,8 +1390,9 @@ def ready_to_dispatch(request, test_status=False):
 												]))
 									flowObjects.append(t1)
 									doc.build(flowObjects)
-									consignment_summaries[filename] = manifest_path
+									consignment_summaries[manifest_filename] = manifest_path
 							manifests = '<ul>'
+							print(consignment_summaries)
 							for manifest, path in consignment_summaries.items():
 								manifests += '<li><a href="/download/' + manifest + '" target="_blank">' + manifest + '</a></li>'
 							manifests += '</ul>'
