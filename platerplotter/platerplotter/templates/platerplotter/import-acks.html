@@ -55,9 +55,9 @@
               </td>
               <td>
                 {% if rack.volume_checked %}
-                  <button><i class="fas fa-check-circle" style="color:green" id="{{rack.id}}" onclick="toggleVolumeChecked('{{rack.id}}')"></i></button>
+                  <button onclick="toggleVolumeChecked('{{gel1004.id}}', '{{rack.id}}')"><i class="fas fa-check-circle" style="color:green" id="{{rack.id}}"></i></button>
                 {% else %}
-                  <button><i class="fas fa-times-circle" style="color:red" id="{{rack.id}}" onclick="toggleVolumeChecked('{{rack.id}}')"></i></button>
+                  <button onclick="toggleVolumeChecked('{{gel1004.id}}', '{{rack.id}}')"><i class="fas fa-times-circle" style="color:red" id="{{rack.id}}"></i></button>
                 {% endif %}
               </td>
             </tr>
@@ -71,10 +71,10 @@
             {% csrf_token %}
             <div class="form-group">
               <div>
-                {% if gel1004.all_racks_acked %}
-                  <button type="submit" name='send-1005' value='{{ gel1004.pk }}' class="btn btn-success btn-block">Send Ack</button>
+                {% if gel1004.all_racks_acked  and gel1004.all_racks_volume_checked %}
+                  <button id='{{gel1004.id}}' type="submit" name='send-1005' value='{{ gel1004.pk }}' class="btn btn-success btn-block">Send Ack</button>
                 {% else %}
-                  <button type="submit" name='send-1005' value='{{ gel1004.pk }}' class="btn btn-success btn-block" disabled>Send Ack</button>
+                  <button id='{{gel1004.id}}' type="submit" name='send-1005' value='{{ gel1004.pk }}' class="btn btn-success btn-block" disabled>Send Ack</button>
                 {% endif %}
               </div>
             </div>
@@ -83,89 +83,42 @@
     </div>
     <hr>
     {% endfor %} 
-                <form id="volume-form">
-                  {% csrf_token %}
-                  {% for field in volume_form %}
-                  <div class="form-group col-4">
-                      {{ field }}
-                  </div>
-                  {% endfor %}
-                  <input type="submit" class="btn btn-primary" value="Save" />
-                </form>
   </div>
 
 {% endblock content %}
 {% block javascript %}
 <script>
-    /*
-        On submiting the form, send the POST ajax
-        request to server and after successfull submission
-        display the object.
-    */
-    function toggleVolumeChecked(rackId) {
+    function toggleVolumeChecked(gel1004Id, rackId) {
       console.log('button pressed');
+      console.log(gel1004Id);
       console.log(rackId);
       $.ajax({
         type: 'get',
         url: "{% url 'post_volume_check' %}",
-        data: {'rack_id' : rackId},
+        data: {
+          'gel1004_id' : gel1004Id,
+          'rack_id' : rackId,
+        },
         success: function(data) {
-          var x = document.getElementById(rackId);
-          console.log(data[rackId])
-          console.log(x)
+          var rack = document.getElementById(rackId);
+          var gel1004Button = document.getElementById(gel1004Id);
+          console.log(data[rackId]);
+          console.log(data['all_checked']);
+          console.log(data['all_acked']);
+          if (data[rackId]){
+            rack.className="fas fa-check-circle";
+            rack.style.color = "green";
+          } else {
+            rack.className="fas fa-times-circle";
+            rack.style.color = "red";
+          }
+          if (data['all_checked'] && data['all_acked']){
+            gel1004Button.disabled = false;
+          } else {
+            gel1004Button.disabled = true;
+          }
         }
       });
-
-      // var unassignedWells = document.getElementsByClassName('unassigned')
-      // var form = document.getElementById('well');
-      // for (var i = 0; i < unassignedWells.length; i++) {
-      //   unassignedWells[i].style.backgroundColor = '#e9ecef'
-      // }
-      // if (position === form.value){
-      //   form.value = '';
-      // } else {
-      //   form.value = position;
-      //   document.getElementById(position).style.backgroundColor = "red";
-      //   console.log(position);
-      // }
     }
-    $("#volume-checked").submit(function (e) {
-        // preventing from page reload and default actions
-        e.preventDefault();
-        // serialize the data for sending the form data.
-        var serializedData = $(this).value;
-        // make POST ajax call
-        $.ajax({
-            type: 'POST',
-            url: "{% url 'post_volume_check' %}",
-            data: serializedData,
-            success: function (response) {
-                // on successfull creating object
-                // 1. clear the form.
-                alert(response["responseJSON"]["success"]);
-                // $("#friend-form").trigger('reset');
-                // // 2. focus to nickname input 
-                // $("#id_nick_name").focus();
-
-                // // display the newly friend to table.
-                // var instance = JSON.parse(response["instance"]);
-                // var fields = instance[0]["fields"];
-                // $("#my_friends tbody").prepend(
-                //     `<tr>
-                //     <td>${fields["nick_name"]||""}</td>
-                //     <td>${fields["first_name"]||""}</td>
-                //     <td>${fields["last_name"]||""}</td>
-                //     <td>${fields["likes"]||""}</td>
-                //     <td>${fields["dob"]||""}</td>
-                //     <td>${fields["lives_in"]||""}</td>
-                //     </tr>`
-                // )
-            },
-            error: function (response) {
-                // alert the error if any error occured
-                alert(response["responseJSON"]["error"]);
-            }
-        })
-    })
 </script>
 {% endblock javascript %}

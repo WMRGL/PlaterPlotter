@@ -28,11 +28,29 @@ from pathlib import Path
 
 def post_volume_check(request):
 	if request.is_ajax:
+		print(request.GET.get('gel1004_id'))
 		print(request.GET.get('rack_id'))
+		gel_1004_id = request.GET.get('gel1004_id')
 		rack_id = request.GET.get('rack_id')
 		receiving_rack = ReceivingRack.objects.get(id=rack_id)
+		all_receiving_racks = ReceivingRack.objects.filter(gel_1004_csv=gel_1004_id)
+		# toggle between checked and not checked each time button is pressed
+		if receiving_rack.volume_checked:
+			receiving_rack.volume_checked = False
+		else:
+			receiving_rack.volume_checked = True
+		receiving_rack.save()
+		all_checked = True
+		all_racks_acked = True
+		for rack in all_receiving_racks:
+			if not rack.volume_checked:
+				all_checked = False
+			if not rack.rack_acknowledged:
+				all_racks_acked = False
 		data = {}
 		data[rack_id] = receiving_rack.volume_checked
+		data['all_checked'] = all_checked
+		data['all_acked'] = all_racks_acked
 		return JsonResponse(data)
 
 
@@ -534,11 +552,15 @@ def import_acks(request, test_status=False):
 		unacked_racks_dict[gel_1004] = ReceivingRack.objects.filter(gel_1004_csv=gel_1004)
 		for gel_1004, racks in unacked_racks_dict.items():
 			all_racks_acked = True
+			all_racks_volume_checked = True
 			for rack in racks:
 				rack.no_samples = Sample.objects.filter(receiving_rack=rack).count()
 				if not rack.rack_acknowledged:
 					all_racks_acked = False
+				if not rack.volume_checked:
+					all_racks_volume_checked = False
 			gel_1004.all_racks_acked = all_racks_acked
+			gel_1004.all_racks_volume_checked = all_racks_volume_checked
 	return render(request, 'platerplotter/import-acks.html', {
 		"unacked_racks_dict" : unacked_racks_dict,
 		"volume_form" : volume_form
