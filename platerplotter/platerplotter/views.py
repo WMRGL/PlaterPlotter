@@ -11,6 +11,7 @@ from platerplotter.config.load_config import LoadConfig
 from platerplotter.forms import (HoldingRackForm, SampleSelectForm, PlatingForm, 
 	Gel1008Form, LogIssueForm, ResolveIssueForm, PlateSelectForm)
 from datetime import datetime
+from django.core import serializers
 from django.core.exceptions import ValidationError
 from platerplotter.holding_rack_manager import HoldingRackManager
 import csv
@@ -23,6 +24,33 @@ from reportlab.platypus import Flowable, Paragraph, SimpleDocTemplate, Table, Ta
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import landscape, A4
 from pathlib import Path
+
+
+def post_volume_check(request):
+	if request.is_ajax:
+		gel_1004_id = request.GET.get('gel1004_id')
+		rack_id = request.GET.get('rack_id')
+		receiving_rack = ReceivingRack.objects.get(id=rack_id)
+		all_receiving_racks = ReceivingRack.objects.filter(gel_1004_csv=gel_1004_id)
+		# toggle between checked and not checked each time button is pressed
+		if receiving_rack.volume_checked:
+			receiving_rack.volume_checked = False
+		else:
+			receiving_rack.volume_checked = True
+		receiving_rack.save()
+		all_checked = True
+		all_racks_acked = True
+		for rack in all_receiving_racks:
+			if not rack.volume_checked:
+				all_checked = False
+			if not rack.rack_acknowledged:
+				all_racks_acked = False
+		data = {}
+		data[rack_id] = receiving_rack.volume_checked
+		data['all_checked'] = all_checked
+		data['all_acked'] = all_racks_acked
+		return JsonResponse(data)
+
 
 # def ajax_change_sample_received_status(request):
 #	 sample_received = request.GET.get('sample_received', False)
@@ -516,12 +544,18 @@ def import_acks(request, test_status=False):
 		unacked_racks_dict[gel_1004] = ReceivingRack.objects.filter(gel_1004_csv=gel_1004)
 		for gel_1004, racks in unacked_racks_dict.items():
 			all_racks_acked = True
+			all_racks_volume_checked = True
 			for rack in racks:
 				rack.no_samples = Sample.objects.filter(receiving_rack=rack).count()
 				if not rack.rack_acknowledged:
 					all_racks_acked = False
+				if not rack.volume_checked:
+					all_racks_volume_checked = False
 			gel_1004.all_racks_acked = all_racks_acked
-	return render(request, 'platerplotter/import-acks.html', {"unacked_racks_dict" : unacked_racks_dict})
+			gel_1004.all_racks_volume_checked = all_racks_volume_checked
+	return render(request, 'platerplotter/import-acks.html', {
+		"unacked_racks_dict" : unacked_racks_dict,
+		})
 
 @login_required()
 def acknowledge_samples(request, gel1004, rack, test_status=False):

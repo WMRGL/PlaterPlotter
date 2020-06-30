@@ -53,6 +53,7 @@ class ReceivingRack(models.Model):
 	laboratory_id = models.CharField(max_length=3, choices=lab_ids)
 	glh_sample_consignment_number = models.CharField(max_length=50)
 	rack_acknowledged = models.BooleanField(default=False)
+	volume_checked = models.BooleanField(default=False)
 	disease_area = models.CharField(max_length=12, choices = (
 			("Cancer", "Cancer"),
 			("Rare Disease", "Rare Disease"),
