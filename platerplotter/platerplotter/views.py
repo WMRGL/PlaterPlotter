@@ -459,10 +459,22 @@ def import_acks(request, test_status=False):
 											receiving_rack_id = receiving_rack_id,
 											laboratory_id = laboratory_id)
 									except:
+										if rack_type == 'RP':
+											rt = 'Proband'
+										elif rack_type == 'RF':
+											rt = 'Family'
+										elif rack_type == 'CG':
+											rt = 'Cancer Germline'
+										elif rack_type == 'CT':
+											rt = 'Tumour'
+										else:
+											rt = None
 										rack = ReceivingRack.objects.create(
 											gel_1004_csv = gel_1004_csv,
 											receiving_rack_id = receiving_rack_id,
 											laboratory_id = laboratory_id,
+											disease_area = disease_area,
+											rack_type = rt,
 											glh_sample_consignment_number = glh_sample_consignment_number)
 									# creates new Sample object
 									sample = Sample.objects.create(
@@ -1334,7 +1346,7 @@ def ready_to_dispatch(request, test_status=False):
 								plate = Plate.objects.get(pk=pk)
 								plate.gel_1008_csv = gel_1008_csv
 								plate.save()
-								manifest_filename = consignment_number + '_' + plate.plate_id + '.pdf'
+								manifest_filename = plate.plate_id + "_" + datetime.now(pytz.timezone('UTC')).strftime("%Y%m%d_%H%M%S") + '.pdf'
 								manifest_path = manifest_directory + manifest_filename
 								doc = SimpleDocTemplate(manifest_path)
 								doc.pagesize = landscape(A4)

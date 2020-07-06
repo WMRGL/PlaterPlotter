@@ -30,11 +30,13 @@
           <table class="table table-bordered">
             <thead>
               <tr>
-                <th colspan="5" style="background-color: #e9ecef">{{gel1004.filename}}</th>
+                <th colspan="7" style="background-color: #e9ecef">{{gel1004.filename}}</th>
               </tr>
               <tr>
                 <th>Rack ID</th>
                 <th>Laboratory ID</th>
+                <th>Disease Area</th>
+                <th>Rack Type</th>
                 <th>Number of Samples</th>
                 <th>Samples acknowledged</th>
                 <th>Volume checked</th>
@@ -45,6 +47,8 @@
             <tr>
               <td><a href="/acknowledge-samples/{{ gel1004.pk }}/{{ rack.receiving_rack_id }}">{{ rack.receiving_rack_id }}</a></td>
               <td>{{ rack.laboratory_id }}</td>
+              <td>{{ rack.disease_area }}</td>
+              <td>{{ rack.rack_type }}</td>
               <td>{{ rack.no_samples }}</td>
               <td>
                 {% if rack.rack_acknowledged %}
@@ -72,9 +76,9 @@
             <div class="form-group">
               <div>
                 {% if gel1004.all_racks_acked  and gel1004.all_racks_volume_checked %}
-                  <button id='{{gel1004.id}}' type="submit" name='send-1005' value='{{ gel1004.pk }}' class="btn btn-success btn-block">Send Ack</button>
+                  <button id='{{gel1004.id}}' type="submit" name='send-1005' value='{{ gel1004.pk }}' class="btn btn-success btn-block">Send GEL1005</button>
                 {% else %}
-                  <button id='{{gel1004.id}}' type="submit" name='send-1005' value='{{ gel1004.pk }}' class="btn btn-success btn-block" disabled>Send Ack</button>
+                  <button id='{{gel1004.id}}' type="submit" name='send-1005' value='{{ gel1004.pk }}' class="btn btn-success btn-block" disabled>Send GEL1005</button>
                 {% endif %}
               </div>
             </div>

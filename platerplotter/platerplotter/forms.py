@@ -89,6 +89,8 @@ class Gel1008Form(ModelForm):
 			consignment_number = self.cleaned_data['consignment_number']
 			if not re.match(r'^.*$', consignment_number):
 				raise ValidationError("Invalid consignment number")
+			if ',' in consignment_number:
+				raise ValidationError("Invalid consignment number, cannot contain ','.")
 			return consignment_number
 		else:
 			raise ValidationError("Required field.")
