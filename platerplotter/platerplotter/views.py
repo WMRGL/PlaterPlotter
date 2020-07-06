@@ -977,7 +977,7 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
 						holding_rack.holding_rack_type = sample.sample_type
 						holding_rack.priority = sample.priority
 						holding_rack.save()
-					if sample.sample_type == holding_rack.holding_rack_type and sample.priority == holding_rack.priority:
+					if sample.sample_type == holding_rack.holding_rack_type:
 						well = request.POST['well']
 						holding_rack_manager.assign_well(request=request, sample=sample, well=well)
 					else:
