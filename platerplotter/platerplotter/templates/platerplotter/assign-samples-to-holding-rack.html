@@ -14,8 +14,7 @@
       <h3>Holding rack</h3>
       <strong>ID:</strong> {{holding_rack.holding_rack_id}} &nbsp|&nbsp
       <strong>Area:</strong> {{holding_rack.disease_area}} <br>
-      <strong>Type:</strong> {{holding_rack.holding_rack_type}} &nbsp|&nbsp
-      <strong>Priority:</strong> {{holding_rack.priority}}    
+      <strong>Type:</strong> {{holding_rack.holding_rack_type}}
     </div>
     <div class="col-6">
       <div align='center'>
@@ -185,7 +184,6 @@ Group ID:            {{sample.group_id}}' style="background-color: blue"><div cl
                   <th>Rack ID</th>
                   <th>Disease Area</th>
                   <th>Sample Type</th>
-                  <th>Priority</th>
                   <th>Number of Samples</th>
                   <th>Half Plate</th>
                   <th>Full Plate</th>
@@ -202,7 +200,6 @@ Group ID:            {{sample.group_id}}' style="background-color: blue"><div cl
                 {% endif %}
                 <td>{{ holding_rack.disease_area }}</td>
                 <td>{{ holding_rack.holding_rack_type }}</td>
-                <td>{{ holding_rack.priority }}</td>
                 <td>{{ count }}</td>
                 <td>
                   {% if holding_rack.half_full %}
