@@ -49,9 +49,9 @@ class ViewGEL1004InputValidationTestCase(TestCase):
 		self.assertEqual(check_disease_area('cancer'), ('Cancer', None))
 		self.assertEqual(check_disease_area('cancerr'), ('Cancerr', 'Incorrect disease area. Received cancerr. Must be either cancer or rare disease.'))
 
-	def test_check_clinical_sample_type(self):
-		self.assertEqual(check_clinical_sample_type('dna_saliva'), ('dna_saliva', None))
-		self.assertEqual(check_clinical_sample_type('dna'), ('dna', 'Clinical sample type not in list of accepted values. Received dna.'))
+	# def test_check_clinical_sample_type(self):
+	# 	self.assertEqual(check_clinical_sample_type('dna_saliva'), ('dna_saliva', None))
+	# 	self.assertEqual(check_clinical_sample_type('dna'), ('dna', 'Clinical sample type not in list of accepted values. Received dna.'))
 
 	def test_check_glh_sample_consignment_number(self):
 		self.assertEqual(check_glh_sample_consignment_number('ABC-1234-12-12-12-1'), ('abc-1234-12-12-12-1', None))

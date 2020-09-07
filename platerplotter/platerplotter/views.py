@@ -111,18 +111,18 @@ def check_disease_area(disease_area):
 
 def check_clinical_sample_type(clin_sample_type):
 	error = None
-	accepted_values = ["dna_blood_germline","dna_saliva","dna_fibroblast","dna_ff_germline",
-		"dna_ffpe_tumour","dna_ff_tumour","dna_blood_tumour","dna_bone_marrow_aspirate_tumour_sorted_cells",
-		"dna_bone_marrow_aspirate_tumour_cells","tumour_tissue_ffpe","lysate_ffpe","lysate_ff",
-		"lysed_tumour_cells","buffy_coat","streck_plasma","edta_plasma","lihep_plasma","serum",
-		"rna_blood","tumour_tissue_ff","bone_marrow_rna_gtc","blood_rna_gtc","dna_amniotic_fluid",
-		"dna_fresh_amniotic_fluid","dna_sorted_cd138_positive_cells","dna_edta_blood","dna_li_hep_blood",
-		"dna_bone_marrow","dna_chorionic_villus_sample","dna_fresh_chronic_villus_sample","dna_unknown",
-		"dna_unkown_tumour","dna_fetal_edta_blood","dna_fibroblast_culture","dna_fresh_fluid_sorted_other",
-		"dna_fresh_fluid_unsorted","dna_other","dna_fresh_frozen_tissue","dna_fresh_tissue_in_culture_medium",
-		"dna_fresh_fluid_tumour","dna_fresh_frozen_tumour"]
-	if clin_sample_type.lower() not in accepted_values:
-		error = 'Clinical sample type not in list of accepted values. Received {}.'.format(clin_sample_type)
+	# accepted_values = ["dna_blood_germline","dna_saliva","dna_fibroblast","dna_ff_germline",
+	# 	"dna_ffpe_tumour","dna_ff_tumour","dna_blood_tumour","dna_bone_marrow_aspirate_tumour_sorted_cells",
+	# 	"dna_bone_marrow_aspirate_tumour_cells","tumour_tissue_ffpe","lysate_ffpe","lysate_ff",
+	# 	"lysed_tumour_cells","buffy_coat","streck_plasma","edta_plasma","lihep_plasma","serum",
+	# 	"rna_blood","tumour_tissue_ff","bone_marrow_rna_gtc","blood_rna_gtc","dna_amniotic_fluid",
+	# 	"dna_fresh_amniotic_fluid","dna_sorted_cd138_positive_cells","dna_edta_blood","dna_li_hep_blood",
+	# 	"dna_bone_marrow","dna_chorionic_villus_sample","dna_fresh_chronic_villus_sample","dna_unknown",
+	# 	"dna_unkown_tumour","dna_fetal_edta_blood","dna_fibroblast_culture","dna_fresh_fluid_sorted_other",
+	# 	"dna_fresh_fluid_unsorted","dna_other","dna_fresh_frozen_tissue","dna_fresh_tissue_in_culture_medium",
+	# 	"dna_fresh_fluid_tumour","dna_fresh_frozen_tumour"]
+	# if clin_sample_type.lower() not in accepted_values:
+	# 	error = 'Clinical sample type not in list of accepted values. Received {}.'.format(clin_sample_type)
 	return clin_sample_type.lower(), error
 
 def check_glh_sample_consignment_number(glh_sample_consignment_number):
