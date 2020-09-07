@@ -52,26 +52,6 @@ def post_volume_check(request):
 		return JsonResponse(data)
 
 
-# def ajax_change_sample_received_status(request):
-#	 sample_received = request.GET.get('sample_received', False)
-#	 sample_id = request.GET.get('sample_id', False)
-#	 # first you get your Job model
-#	 sample = Sample.objects.get(pk=sample_id)
-#	 try:
-#		 sample.sample_received = sample_received
-#		 sample.save()
-#		 return JsonResponse({"success": True})
-#	 except Exception as e:
-#		 return JsonResponse({"success": False})
-#	 return JsonResponse(data)
-
-# def remove_padded_zeros(position):
-# 	letter = position[0]
-# 	number = position[1:]
-# 	if number[0] == '0':
-# 		number = number[1]
-# 	return letter + number
-
 def pad_zeros(well):
 	if len(well) == 2:
 		return well[0] + '0' + well[1]
@@ -94,7 +74,7 @@ def check_rack_id(rack_id):
 	error = None
 	if 8 > len(rack_id) or len(rack_id) > 12:
 		error = 'Incorrect rack ID. Received {} which does not match the required specification.'.format(rack_id)
-	return rack_id, error
+	return rack_id.upper(), error
 
 def check_laboratory_id(laboratory_id):
 	error = None
@@ -256,7 +236,7 @@ def confirm_sample_positions(request, rack, rack_samples, first_check=False,
 		rack_id = rack.receiving_rack_id
 	else:
 		rack_id = rack.holding_rack_id
-	rack_scanner = RackScanner.objects.filter(scanned_id=rack_id,
+	rack_scanner = RackScanner.objects.filter(scanned_id__iexact=rack_id,
 			acknowledged=False).order_by('-date_modified')
 	if rack_scanner:
 		rack_scanner_samples = RackScannerSample.objects.filter(rack_scanner=rack_scanner[0])
