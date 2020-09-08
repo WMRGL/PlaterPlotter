@@ -47,8 +47,8 @@
               <td>{{ sample.receiving_rack.receiving_rack_id }} {{ sample.receiving_rack_well }}</td>
               <td>{{ sample.receiving_rack.laboratory_id }}</td>
               <td>{{ sample.laboratory_sample_volume }}</td>
-              <td>{{ sample.sample_received_datetime }}</td>
-              <td>{{ sample.receiving_rack.gel_1004_csv.gel_1005_csv.report_generated_datetime }}</td>
+              <td>{{ sample.sample_received_datetime|date:"d/m/Y G:i" }}</td>
+              <td>{{ sample.receiving_rack.gel_1004_csv.gel_1005_csv.report_generated_datetime|date:"d/m/Y G:i" }}</td>
               <td>{{ sample.holding_rack_well.holding_rack.holding_rack_id }} {{ sample.holding_rack_well.well_id }}</td>
               <td>{{ sample.holding_rack_well.holding_rack.holding_rack_type }}</td>
               <td>{{ sample.holding_rack_well.holding_rack.plate.plate_id }} 
@@ -57,7 +57,7 @@
                 {% endif %}
               </td>
               <td>{{ sample.holding_rack_well.holding_rack.plate.gel_1008_csv.consignment_number }}</td>
-              <td>{{ sample.holding_rack_well.holding_rack.plate.gel_1008_csv.date_of_dispatch }}</td>
+              <td>{{ sample.holding_rack_well.holding_rack.plate.gel_1008_csv.date_of_dispatch|date:"d/m/Y G:i" }}</td>
               <td>{{ sample.comment }}</td>
               <td>{{ sample.issue_outcome }}</td>
             </tr>
