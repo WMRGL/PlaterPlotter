@@ -1,8 +1,11 @@
 from django.urls import path
+from django.urls import include
+
 
 from . import views
 
 urlpatterns = [
+    path('', include('django.contrib.auth.urls')),
     path('', views.import_acks, name='index'),
     path('acknowledge-samples/<str:gel1004>/<str:rack>', views.acknowledge_samples, name='acknowledge_samples'),
     path('post/ajax/volume', views.post_volume_check, name = "post_volume_check"),
