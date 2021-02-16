@@ -48,7 +48,7 @@ class Command(BaseCommand):
 					gel1005_generated = sample.receiving_rack.gel_1004_csv.gel_1005_csv.report_generated_datetime
 				else:
 					gel1005_generated = None
-				if gel1005_generated:
+				if gel1005_generated and received:
 					difference = gel1005_generated - received
 					difference = difference - datetime.timedelta(microseconds=difference.microseconds)
 				else:
