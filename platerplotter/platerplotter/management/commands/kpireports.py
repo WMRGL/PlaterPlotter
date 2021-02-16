@@ -18,7 +18,7 @@ class Command(BaseCommand):
 	def handle(self, *args, **options):
 		###########################################################################################################################################
 		# for when a specific date range is needed - will need to be modified as required
-		# samples = Sample.objects.filter(receiving_rack__gel_1004_csv__report_received_datetime__range=["2020-11-09", "2020-12-01"]).order_by("receiving_rack__gel_1004_csv__report_received_datetime")
+		# samples = Sample.objects.filter(sample_received_datetime__range=["2020-11-09", "2020-12-01"]).order_by("sample_received_datetime")
 		# file_name_start = '20201109-20201130-'
 		###########################################################################################################################################
 		# normal query will be all cases received the previous month
@@ -30,8 +30,8 @@ class Command(BaseCommand):
 			year = year - 1
 		else:
 			month = month - 1
-		samples = Sample.objects.filter(receiving_rack__gel_1004_csv__report_received_datetime__year=year,
-			receiving_rack__gel_1004_csv__report_received_datetime__month=month).order_by("receiving_rack__gel_1004_csv__report_received_datetime")
+		samples = Sample.objects.filter(sample_received_datetime__year=year,
+			sample_received_datetime__month=month).order_by("sample_received_datetime")
 		if len(str(month)) == 1:
 			month = "0" + str(month)
 		file_name_start = str(year) + str(month) + '-'
@@ -43,7 +43,7 @@ class Command(BaseCommand):
 				'SAMPLE_DISPATCHED', 'DAYS_FROM_RECEIVE_TO_DISPATCH', 'COMMENTS'])
 			for sample in samples:
 				sample_id = sample.laboratory_sample_id
-				received = sample.receiving_rack.gel_1004_csv.report_received_datetime
+				received = sample.sample_received_datetime
 				if sample.receiving_rack.gel_1004_csv.gel_1005_csv:
 					gel1005_generated = sample.receiving_rack.gel_1004_csv.gel_1005_csv.report_generated_datetime
 				else:
