@@ -74,7 +74,7 @@ class Command(BaseCommand):
 				else:
 					days_to_dispatch = None
 				if received:
-					recieved = received.strftime("%d/%m/%y %H:%M:%S")
+					received = received.strftime("%d/%m/%y %H:%M:%S")
 				if gel1005_generated:
 					gel1005_generated = gel1005_generated.strftime("%d/%m/%y %H:%M:%S")
 				if dispatch_date:
