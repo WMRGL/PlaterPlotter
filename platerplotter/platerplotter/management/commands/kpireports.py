@@ -59,16 +59,16 @@ class Command(BaseCommand):
 					else:
 						target_met = False
 				else:
-					difference_from_now = datetime.datetime.now(datetime.timezone.utc) - received
-					if datetime.timedelta(hours=24) < difference_from_now:
-						target_met = False
-					else:
-						target_met = None
+					target_met = None
+					if received:
+						difference_from_now = datetime.datetime.now(datetime.timezone.utc) - received
+						if datetime.timedelta(hours=24) < difference_from_now:
+							target_met = False
 				if self.has_gel1008(sample):
 					dispatch_date = sample.holding_rack_well.holding_rack.plate.gel_1008_csv.date_of_dispatch
 				else:
 					dispatch_date = None
-				if dispatch_date:
+				if dispatch_date and received:
 					days_to_dispatch = dispatch_date.date() - received.date()
 					days_to_dispatch = days_to_dispatch.days
 				else:
