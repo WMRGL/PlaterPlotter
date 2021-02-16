@@ -43,7 +43,7 @@ class Command(BaseCommand):
 				'SAMPLE_DISPATCHED', 'DAYS_FROM_RECEIVE_TO_DISPATCH', 'COMMENTS'])
 			for sample in samples:
 				sample_id = sample.laboratory_sample_id
-				received = sample_received_datetime
+				received = sample.sample_received_datetime
 				if sample.receiving_rack.gel_1004_csv.gel_1005_csv:
 					gel1005_generated = sample.receiving_rack.gel_1004_csv.gel_1005_csv.report_generated_datetime
 				else:
