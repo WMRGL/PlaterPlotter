@@ -73,12 +73,14 @@ class Command(BaseCommand):
 					days_to_dispatch = days_to_dispatch.days
 				else:
 					days_to_dispatch = None
+				if received:
+					recieved = received.strftime("%d/%m/%y %H:%M:%S")
 				if gel1005_generated:
 					gel1005_generated = gel1005_generated.strftime("%d/%m/%y %H:%M:%S")
 				if dispatch_date:
 					dispatch_date = dispatch_date.strftime("%d/%m/%y")
 				comment = sample.comment
-				csv_writer.writerow([sample_id, received.strftime("%d/%m/%y %H:%M:%S"), gel1005_generated, 
+				csv_writer.writerow([sample_id, received, gel1005_generated, 
 					difference, target_met, dispatch_date, days_to_dispatch, comment])
 		
 		with open(directory + file_name_start + 'KPI-Sample-Breakdown.csv', 'w', newline='') as csvfile:
