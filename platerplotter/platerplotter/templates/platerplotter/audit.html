@@ -10,9 +10,21 @@
 {% block content %}
 <div class='container-fluid'>
  <div class="row">
-  <div class="col-6">
-    <h3>Audit</h3>
+  <div class="col-8">
+    <h3>Audit</h3> 
+    <b>Note:</b> Search results are limited to 1000 hits for performance reasons
   </div>
+  <div class="col-4">
+    <form role='form' action='' method="POST", class='form-inline float-right'>
+       {% csrf_token %}
+       <input type="text" name="search_term" />
+       <div class="form-group">
+        <div class="col-lg-5 col-sm-offset-5">
+          <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+      </div>
+    </form>
+    </div>
    	{% if samples %}
    	<div class="col-12">
  	 <div class="tab-pane active">

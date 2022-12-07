@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.urls import reverse
+from django.db.models import Q
 from platerplotter.models import (Gel1004Csv, Gel1005Csv, Gel1008Csv, ReceivingRack, Plate, 
 	HoldingRack, Sample, RackScanner, RackScannerSample, HoldingRackWell)
 from platerplotter.config.load_config import LoadConfig
@@ -1469,10 +1470,22 @@ def audit(request):
 	"""
 	Renders the audit page showing all processed samples. 
 	"""
-	samples = Sample.objects.all().prefetch_related('receiving_rack', 'holding_rack_well', 
+	if request.method == 'POST':
+		search_term = request.POST['search_term']
+		samples = Sample.objects.filter(Q(participant_id__contains=search_term) | 
+										Q(group_id__contains=search_term) |
+										Q(laboratory_sample_id__contains=search_term) |
+										Q(receiving_rack__receiving_rack_id__contains=search_term) |
+										Q(comment__contains=search_term) |
+										Q(issue_outcome__contains=search_term) |
+										Q(holding_rack_well__holding_rack__holding_rack_id__contains=search_term) |
+										Q(holding_rack_well__holding_rack__plate__plate_id__contains=search_term) |
+										Q(holding_rack_well__holding_rack__plate__gel_1008_csv__consignment_number__contains=search_term)).prefetch_related('receiving_rack', 'holding_rack_well', 
 				'holding_rack_well__holding_rack', 'holding_rack_well__holding_rack__plate', 
 				'holding_rack_well__holding_rack__plate__gel_1008_csv', 
-				'receiving_rack__gel_1004_csv', 'receiving_rack__gel_1004_csv__gel_1005_csv')
+				'receiving_rack__gel_1004_csv', 'receiving_rack__gel_1004_csv__gel_1005_csv')[0:1000]
+	else:
+		samples = None
 	return render(request, 'platerplotter/audit.html', {"samples" : samples})
 
 def login_user(request):
