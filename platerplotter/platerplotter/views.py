@@ -1468,7 +1468,7 @@ def consignments_for_collection(request, test_status=False):
 @login_required()
 def audit(request):
 	"""
-	Renders the audit page showing all processed samples. 
+	Renders the audit page allowing users to search for processed samples. 
 	"""
 	if request.method == 'POST':
 		search_term = request.POST['search_term']
@@ -1483,7 +1483,7 @@ def audit(request):
 										Q(holding_rack_well__holding_rack__plate__gel_1008_csv__consignment_number__contains=search_term)).prefetch_related('receiving_rack', 'holding_rack_well', 
 				'holding_rack_well__holding_rack', 'holding_rack_well__holding_rack__plate', 
 				'holding_rack_well__holding_rack__plate__gel_1008_csv', 
-				'receiving_rack__gel_1004_csv', 'receiving_rack__gel_1004_csv__gel_1005_csv')[0:1000]
+				'receiving_rack__gel_1004_csv', 'receiving_rack__gel_1004_csv__gel_1005_csv').order_by('-sample_received_datetime')[0:1000]
 	else:
 		samples = None
 	return render(request, 'platerplotter/audit.html', {"samples" : samples})
