@@ -1307,5 +1307,6 @@ class ReadyToDispatchAndAuditTestCase(TestCase):
 		self.assertContains(response, 'added to the consignment list')
 
 	def test_audit(self):
-		response = self.client.post(reverse(audit))
+		response = self.client.post(reverse(audit), {
+			'search_term': '003-DN'}, follow=True)
 		self.assertContains(response, 'LP0000003-DNA')
