@@ -1301,9 +1301,9 @@ def ready_to_dispatch(request, test_status=False):
 						error = False
 						warning = False
 						for matching_gel_1008 in matching_gel_1008s:
-							if matching_gel_1008.message_generated:
+							if matching_gel_1008.consignment_collected:
 								warning = True
-							if matching_gel_1008.date_of_dispatch != date_of_dispatch and not matching_gel_1008.message_generated:
+							if matching_gel_1008.date_of_dispatch != date_of_dispatch and not matching_gel_1008.consignment_collected:
 								error = True
 						if warning:
 							messages.warning(request, "Warning, this consignment number has been used before.")
