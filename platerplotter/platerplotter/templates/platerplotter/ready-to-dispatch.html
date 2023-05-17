@@ -28,7 +28,7 @@
         </form>
       </div>
       <div class="col-6">
-        <form role='form' method="POST" class='form-inline float-right' enctype="multipart/form-data">
+        <form id='gel1008-form' role='form' method="POST" class='form-inline float-right' enctype="multipart/form-data">
           {% csrf_token %}
           <div class="col-lg-4">
             {% bootstrap_field gel1008_form.consignment_number %}
@@ -115,6 +115,32 @@ function myFunction() {
   }
   form.value = currently_selected_list
 }
+
+
+
+function disableFunction() {
+   console.log('disable button')
+   btn.disabled=true;
+   btn.name="generate-manifests"
+   btn.type="submit";
+   btn.form.submit();
+   
+}
+
+
+</script>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+$(document).ready(function(){
+	var $myForm = $("#gel1008-form");
+	$myForm.submit(function(){
+	    $myForm.submit(function(){
+	        return false;
+	    });
+	});
+});
 </script>
 
 {% endblock content %}
