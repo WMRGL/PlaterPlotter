@@ -1307,7 +1307,7 @@ def ready_to_dispatch(request, test_status=False):
 								error = True
 						if warning:
 							messages.warning(request, "Warning, this consignment number has been used before.")
-						if error:
+						elif error:
 							messages.error(request, "There is an open consignment with this number but the date of dispatch did not match.")
 						else:
 							if test_status:
