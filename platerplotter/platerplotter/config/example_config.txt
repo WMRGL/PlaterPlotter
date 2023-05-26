@@ -1,0 +1,9 @@
+gel1004path=<insert_path>
+gel1005path=<insert_path>
+gel1008path=<insert_path>
+consignment_manifest_path=<insert_path>
+rack_scanner_received_path=<insert_path>
+rack_scanner_plated_path=<insert_path>
+rack_scanner_path=<insert_path>
+plate_plots_path=<insert_path>
+kpi_path=<insert_path>
