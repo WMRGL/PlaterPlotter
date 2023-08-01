@@ -185,6 +185,13 @@ def check_rack_type(rack_type):
 		error = 'Rack type not in list of accepted_values. Received {}.'.format(rack_type)
 	return rack_type, error
 
+def check_sample_delivery_mode(sample_delivery_mode):
+	error = None
+	accepted_values = ["Tumour First", "Germline Late", "Family Only", "Standard", ""]
+	if sample_delivery_mode.title() not in accepted_values:
+		error = 'Incorrect sample_delivery_mode. Received {} which is not in the list of accepted values'.format(sample_delivery_mode)
+	return sample_delivery_mode.title(), error
+
 def old_rack_scan(test_status=False):
 	if test_status:
 		directory = str(Path.cwd().parent) + '/TestData/Inbound/RackScanner/'
@@ -390,6 +397,9 @@ def import_acks(request, test_status=False):
 								rack_type, error = check_rack_type(row[15].strip())
 								if error:
 									errors.append(error)
+								sample_delivery_mode, error = check_sample_delivery_mode(row[16].strip())
+								if error:
+									errors.append(error)
 								if disease_area == 'Rare Disease' and not (rack_type == 'RP' or rack_type == 'RF'):
 									errors.append('Rack type does not match sample type for sample {}'.format(str(laboratory_sample_id)))
 								if disease_area == 'Cancer' and not (rack_type == 'CG' or rack_type == 'CT'):
@@ -424,6 +434,7 @@ def import_acks(request, test_status=False):
 									is_repeat, error = check_is_repeat(row[13].strip())
 									tissue_type, error = check_tissue_type(row[14].strip())
 									rack_type, error = check_rack_type(row[15].strip())
+									sample_delivery_mode, error = check_sample_delivery_mode(row[16].strip())
 									# gets exiting, or creates new objects
 									try:
 										gel_1004_csv = Gel1004Csv.objects.get(
@@ -471,7 +482,8 @@ def import_acks(request, test_status=False):
 										receiving_rack_well = receiving_rack_well,
 										is_proband = is_proband,
 										is_repeat = is_repeat,
-										tissue_type = tissue_type)
+										tissue_type = tissue_type,
+										sample_delivery_mode = sample_delivery_mode)
 									sample = Sample.objects.get(pk=sample.pk)
 									if sample.disease_area == 'Rare Disease':
 										if sample.is_proband and rack_type == 'RP':
