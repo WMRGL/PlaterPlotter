@@ -86,6 +86,10 @@ class ViewGEL1004InputValidationTestCase(TestCase):
 		self.assertEqual(check_tissue_type("Normal or Germline sample"), ("Normal or Germline sample", None))
 		self.assertEqual(check_tissue_type("Normal or germline sample"), ("Normal or germline sample", 'Tissue type not in list of accepted values. Received Normal or germline sample.'))
 
+	def test_check_sample_delivery_mode(self):
+		self.assertEqual(check_sample_delivery_mode("Standard"), ("Standard", None))
+		self.assertEqual(check_sample_delivery_mode("Standar"), ("Standar", "Incorrect sample_delivery_mode. Received Standar which is not in the list of accepted values"))
+
 class ViewHelperFunctionsTestCase(TestCase):
 
 	def test_rack_scan(self):
