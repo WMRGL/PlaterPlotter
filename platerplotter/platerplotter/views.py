@@ -439,10 +439,11 @@ def import_acks(request, test_status=False):
 									tissue_type, error = check_tissue_type(row[14].strip())
 									rack_type, error = check_rack_type(row[15].strip())
 									# Try sample_delivery_mode allows us to avoid errors caused if the old Gel1004 message is sent.
+									# And assign "Standard" to samples from old Gel1004 message
 									try:
 										sample_delivery_mode, error = check_sample_delivery_mode(row[16].strip())
 									except IndexError:
-										pass
+										sample_delivery_mode = "Standard"
 									# gets exiting, or creates new objects
 									try:
 										gel_1004_csv = Gel1004Csv.objects.get(
@@ -477,38 +478,21 @@ def import_acks(request, test_status=False):
 											rack_type = rt,
 											glh_sample_consignment_number = glh_sample_consignment_number)
 									# creates new Sample object
-									# try statement to avoid errors if the old Gel1004 message is sent without a sample_delivery_mode
-									try:
-										sample = Sample.objects.create(
-											uid = laboratory_sample_id,
-											receiving_rack = rack,
-											participant_id = participant_id,
-											group_id = group_id,
-											priority = priority,
-											disease_area = disease_area,
-											clin_sample_type = clin_sample_type,
-											laboratory_sample_id = laboratory_sample_id,
-											laboratory_sample_volume = laboratory_sample_volume,
-											receiving_rack_well = receiving_rack_well,
-											is_proband = is_proband,
-											is_repeat = is_repeat,
-											tissue_type = tissue_type,
-											sample_delivery_mode = sample_delivery_mode)
-									except UnboundLocalError:
-										sample = Sample.objects.create(
-											uid=laboratory_sample_id,
-											receiving_rack=rack,
-											participant_id=participant_id,
-											group_id=group_id,
-											priority=priority,
-											disease_area=disease_area,
-											clin_sample_type=clin_sample_type,
-											laboratory_sample_id=laboratory_sample_id,
-											laboratory_sample_volume=laboratory_sample_volume,
-											receiving_rack_well=receiving_rack_well,
-											is_proband=is_proband,
-											is_repeat=is_repeat,
-											tissue_type=tissue_type)
+									sample = Sample.objects.create(
+										uid = laboratory_sample_id,
+										receiving_rack = rack,
+										participant_id = participant_id,
+										group_id = group_id,
+										priority = priority,
+										disease_area = disease_area,
+										clin_sample_type = clin_sample_type,
+										laboratory_sample_id = laboratory_sample_id,
+										laboratory_sample_volume = laboratory_sample_volume,
+										receiving_rack_well = receiving_rack_well,
+										is_proband = is_proband,
+										is_repeat = is_repeat,
+										tissue_type = tissue_type,
+										sample_delivery_mode = sample_delivery_mode)
 
 									sample = Sample.objects.get(pk=sample.pk)
 									if sample.disease_area == 'Rare Disease':

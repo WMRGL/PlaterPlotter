@@ -145,7 +145,7 @@ class Sample(models.Model):
 	tissue_type = models.CharField(max_length=50, choices=(("Normal or Germline sample", "Normal or Germline sample"),
 		("Liquid tumour sample", "Liquid tumour sample"), ("Solid tumour sample", "Solid tumour sample"),
 		("Abnormal tissue sample", "Abnormal tissue sample"), ("Omics sample", "Omics sample")))
-	sample_delivery_mode = models.CharField(max_length=50, blank=True, choices=(("Tumour First", "Tumour First"),
+	sample_delivery_mode = models.CharField(max_length=50, blank=True, default="Standard", choices=(("Tumour First", "Tumour First"),
 					("Germline Late", "Germline Late"), ("Family Only", "Family Only"), ("Standard", "Standard")))
 	sample_received = models.BooleanField(default=False)
 	sample_matched = models.BooleanField(default=False)
