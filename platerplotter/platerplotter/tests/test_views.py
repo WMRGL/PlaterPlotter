@@ -144,8 +144,16 @@ class ImportAcksTestCase(TestCase):
 		self.assertEqual(Gel1004Csv.objects.count(), 1)
 		self.assertEqual(ReceivingRack.objects.count(), 1)
 		self.assertEqual(Sample.objects.count(), 7)
+		# Test new Gel1004 file format NGIS spec v3.22
+		os.rename(str(Path.cwd().parent) + '/TestData/Inbound/GEL1004/processed/ngis_gel_to_bio_sample_sent_eme_20190614_133158.csv',
+			str(Path.cwd().parent) + '/TestData/Inbound/GEL1004/ngis_gel_to_bio_sample_sent_eme_20190614_133158.csv')
+		response_post_import = self.client.post(reverse(import_acks, kwargs={'test_status': True}),	{'import-1004': ['']})
+		self.assertEqual(Gel1004Csv.objects.count(), 2)
+		self.assertEqual(ReceivingRack.objects.count(), 2)
+		self.assertEqual(Sample.objects.count(), 14)
 		os.rename(str(Path.cwd().parent) + '/TestData/Inbound/GEL1004/processed/ngis_gel_to_bio_sample_sent_eme_20190614_133157.csv',
 			str(Path.cwd().parent) + '/TestData/Inbound/GEL1004/ngis_gel_to_bio_sample_sent_eme_20190614_133157.csv')
+
 
 class SendGel1005TestCase(TestCase):
 	def setUp(self):
