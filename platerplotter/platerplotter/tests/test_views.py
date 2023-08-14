@@ -652,6 +652,22 @@ class AssignSamplesToHoldingRackTestCase(TestCase):
 			well_id = 'E01')
 		holding_rack_well_four.sample = sample_seven
 		holding_rack_well_four.save()
+		# create sample eight to test sample_delivery_mode 'Tumour First' in test_sample()
+		sample_eight = Sample.objects.create(receiving_rack=receiving_rack,
+			 receiving_rack_well='H01', participant_id='p12345678709',
+			 group_id='r123456789709', priority='Routine',
+			 disease_area='Cancer', sample_type='Tumour',
+			 clin_sample_type='dna_saliva', laboratory_sample_id='1234567689',
+			 uid='1234567689',
+			 laboratory_sample_volume=10, is_proband=True, is_repeat='New',
+			 tissue_type='Solid tumour sample', sample_received=True,
+			 sample_delivery_mode='Tumour First')
+		# create holding rack to test sample_delivery_mode in test_sample()
+		tumour_holding_rack = HoldingRack.objects.create(holding_rack_id='HH87654321')
+		for holding_rack_row in holding_rack_rows:
+			for holding_rack_column in holding_rack_columns:
+				HoldingRackWell.objects.create(holding_rack=tumour_holding_rack,
+											   well_id=holding_rack_row + holding_rack_column)
 
 	def test_load_assign_samples_to_holding_rack_normal(self):
 		gel_1004 = Gel1004Csv.objects.get(filename='test1004.csv')
@@ -783,6 +799,17 @@ class AssignSamplesToHoldingRackTestCase(TestCase):
 			'rack': 'PP12345678', 'holding_rack_id': 'HH12345678'}), {
 			'sample': [''], 'lab_sample_id':'1234567893', 'well': ['']}, follow=True)
 		self.assertContains(response, 'assigned to well C01')
+		# wrong sample_delivery_mode
+		response = self.client.post(reverse(assign_samples_to_holding_rack, kwargs={
+			'rack': 'SA12345678', 'gel1004': gel_1004.pk, 'holding_rack_id': 'HH87654321'}), {
+			'sample': [''], 'lab_sample_id': '1234567897', 'well': ['']}, follow=True)
+		self.assertContains(response,
+							'No matching germline sample found for this sample. Unable to assign to holding rack.')
+		# correct sample_delivery_mode 'Tumour First'
+		response = self.client.post(reverse(assign_samples_to_holding_rack, kwargs={
+			'rack': 'SA12345678', 'gel1004': gel_1004.pk, 'holding_rack_id': 'HH87654321'}), {
+			'sample': [''], 'lab_sample_id': '1234567689', 'well': ['']}, follow=True)
+		self.assertContains(response,'assigned to well A01')
 
 	def test_log_issue_normal(self):
 		gel_1004 = Gel1004Csv.objects.get(filename='test1004.csv')
