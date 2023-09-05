@@ -187,7 +187,7 @@ def check_rack_type(rack_type):
 
 def check_sample_delivery_mode(sample_delivery_mode):
 	error = None
-	accepted_values = ["Tumour First", "Germline Late", "Family Only", "Standard", ""]
+	accepted_values = ["Tumour First", "Germline Late", "Family Only", "Standard"]
 	if sample_delivery_mode.title() not in accepted_values:
 		error = 'Incorrect sample_delivery_mode. Received {} which is not in the list of accepted values'.format(sample_delivery_mode)
 	return sample_delivery_mode.title(), error
@@ -403,6 +403,7 @@ def import_acks(request, test_status=False):
 									if error:
 										errors.append(error)
 								except IndexError:
+									# allows old gel1004 messages without a sample_delivery_mode pass.
 									pass
 								if disease_area == 'Rare Disease' and not (rack_type == 'RP' or rack_type == 'RF'):
 									errors.append('Rack type does not match sample type for sample {}'.format(str(laboratory_sample_id)))
@@ -443,6 +444,7 @@ def import_acks(request, test_status=False):
 									try:
 										sample_delivery_mode, error = check_sample_delivery_mode(row[16].strip())
 									except IndexError:
+										print("index error")
 										sample_delivery_mode = "Standard"
 									# gets exiting, or creates new objects
 									try:
