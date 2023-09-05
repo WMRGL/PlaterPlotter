@@ -167,8 +167,8 @@ class HoldingRackManager():
 							sample.laboratory_sample_id + " to a new rack.")
 		elif self.holding_rack.holding_rack_type == "Family":
 			matching_proband_sample_found = True
-			# all new family samples must have a matching proband
-			if sample.is_repeat == "New":
+			# all new family samples must have a matching proband except sample_delivery_mode="Family Only" samples
+			if sample.is_repeat == "New" and sample.sample_delivery_mode != "Family Only":
 				matching_proband_sample_found = False
 				matching_proband_samples = Sample.objects.filter(sample_type = "Proband", group_id = sample.group_id, holding_rack_well__isnull = True)
 				if matching_proband_samples:
@@ -229,8 +229,8 @@ class HoldingRackManager():
 							sample.laboratory_sample_id + " to a new rack.")
 		elif self.holding_rack.holding_rack_type == "Tumour":
 			matching_germline_sample_found = True
-			# all new tumour samples must have a matching germline sample from the same patient
-			if sample.is_repeat == "New":
+			# all new tumour samples must have a matching germline sample from the same patient except sample_delivery_mode="Tumour First" samples
+			if sample.is_repeat == "New" and sample.sample_delivery_mode != "Tumour First":
 				matching_germline_sample_found = False
 				matching_germline_samples = Sample.objects.filter(sample_type = "Cancer Germline", participant_id = sample.participant_id, group_id = sample.group_id, holding_rack_well__isnull = True)
 				if matching_germline_samples:
@@ -293,8 +293,8 @@ class HoldingRackManager():
 						messages.error(request, "Unable to add sample " + sample.laboratory_sample_id + 
 							" to this rack as a sample with the same participant ID is already assigned to this rack.")
 			matching_tumour_sample_found = True
-			# all new tumour samples must have a matching germline sample from the same patient
-			if sample.is_repeat == "New":
+			# all new tumour samples must have a matching germline sample from the same patient except sample_delivery_mode="Germline Late" samples
+			if sample.is_repeat == "New" and sample.sample_delivery_mode != "Germline Late":
 				matching_tumour_sample_found = False
 				matching_tumour_samples = Sample.objects.filter(sample_type = "Tumour", participant_id = sample.participant_id, group_id = sample.group_id,  holding_rack_well__isnull = True)
 				if matching_tumour_samples:
