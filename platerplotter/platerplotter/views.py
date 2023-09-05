@@ -444,7 +444,6 @@ def import_acks(request, test_status=False):
 									try:
 										sample_delivery_mode, error = check_sample_delivery_mode(row[16].strip())
 									except IndexError:
-										print("index error")
 										sample_delivery_mode = "Standard"
 									# gets exiting, or creates new objects
 									try:
