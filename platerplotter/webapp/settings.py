@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'bootstrap4',
     'easyaudit',
+    'crispy_bootstrap4',
     
 ]
 
@@ -118,6 +119,8 @@ STATIC_URL = '/static/'
 LOGIN_REDIRECT_URL = 'index'
 LOGIN_URL = '/login/'
 LOGOUT_REDIRECT_URL = 'index'
+
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 CSRF_COOKIE_NAME = 'platerplotter_token'
 SESSION_COOKIE_NAME = 'platerplotter_session'
