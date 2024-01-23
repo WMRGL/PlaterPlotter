@@ -8,7 +8,7 @@ from pathlib import Path
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 
 from platerplotter.config.load_config import LoadConfig
@@ -417,3 +417,30 @@ def import_acks(request, test_status=False):
 	return render(request, 'notifications/import-acks.html', {
 		"unacked_racks_dict": unacked_racks_dict,
 	})
+
+
+def post_volume_check(request):
+	if request.accepts("/post/ajax/volume"):
+		gel_1004_id = request.GET.get('gel1004_id')
+		rack_id = request.GET.get('rack_id')
+		receiving_rack = ReceivingRack.objects.get(id=rack_id)
+		all_receiving_racks = ReceivingRack.objects.filter(gel_1004_csv=gel_1004_id)
+		# toggle between checked and not checked each time button is pressed
+		if receiving_rack.volume_checked:
+			receiving_rack.volume_checked = False
+		else:
+			receiving_rack.volume_checked = True
+		receiving_rack.save()
+		all_checked = True
+		all_racks_acked = True
+		for rack in all_receiving_racks:
+			if not rack.volume_checked:
+				all_checked = False
+			if not rack.rack_acknowledged:
+				all_racks_acked = False
+		data = {}
+		data[rack_id] = receiving_rack.volume_checked
+		data['all_checked'] = all_checked
+		data['all_acked'] = all_racks_acked
+		return JsonResponse(data)
+
