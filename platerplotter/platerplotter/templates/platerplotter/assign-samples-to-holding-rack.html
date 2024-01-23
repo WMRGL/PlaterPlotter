@@ -14,7 +14,8 @@
       <h3>Holding rack</h3>
       <strong>ID:</strong> {{holding_rack.holding_rack_id}} &nbsp|&nbsp
       <strong>Area:</strong> {{holding_rack.disease_area}} <br>
-      <strong>Type:</strong> {{holding_rack.holding_rack_type}}
+      <strong>Type:</strong> {{holding_rack.holding_rack_type}} &nbsp|&nbsp
+      <strong>Live Sample Counter: </strong> <span id="total_sample"></span>
     </div>
     <div class="col-6">
       <div align='center'>
@@ -80,7 +81,7 @@
                             <td title='Position:             {{row|add:column}} 
 Laboratory ID:    {{sample.laboratory_sample_id}}
 Participant ID:     {{sample.participant_id}}
-Group ID:            {{sample.group_id}}' style="background-color: blue"><div class="tooltip hidden"></div></td>
+Group ID:            {{sample.group_id}}' class="assigned" style="background-color: blue"><div class=" tooltip hidden"></div></td>
                           {% endif %}
                         {% endfor %}
                       {% else %}
@@ -364,6 +365,10 @@ function myFunction(position) {
     console.log(position);
   }
 }
+
+  var all_samples = document.getElementsByClassName('assigned')
+  var total_current_samples = document.getElementById('total_sample')
+  total_current_samples.textContent = all_samples.length
 </script>
 
 {% endblock content %}
