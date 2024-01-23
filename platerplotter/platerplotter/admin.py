@@ -1,6 +1,7 @@
 from django.contrib import admin
-from platerplotter.models import (Gel1004Csv, Gel1005Csv, Gel1008Csv, ReceivingRack, 
+from platerplotter.models import ( Gel1008Csv,
 	HoldingRack, HoldingRackWell, Plate, Sample, RackScanner, RackScannerSample)
+from notifications.models import Gel1005Csv, Gel1004Csv, ReceivingRack
 
 class Gel1004CsvAdmin(admin.ModelAdmin):
 	model = Gel1004Csv

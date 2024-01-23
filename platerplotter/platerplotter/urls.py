@@ -3,10 +3,11 @@ from django.urls import include
 
 
 from . import views
+from notifications.views import import_acks
 
 urlpatterns = [
     path('', include('django.contrib.auth.urls')),
-    path('', views.import_acks, name='index'),
+    path('', import_acks, name='index'),
     path('acknowledge-samples/<str:gel1004>/<str:rack>', views.acknowledge_samples, name='acknowledge_samples'),
     path('post/ajax/volume', views.post_volume_check, name = "post_volume_check"),
     path('problem-samples/', views.problem_samples, name='problem_samples'),
@@ -28,7 +29,7 @@ urlpatterns = [
     path('login/', views.login_user, name='login'),
     path('logout/', views.logout_user, name='logout'),
     # paths to allow for alernative input directories for unit tests
-    path('<str:test_status>', views.import_acks, name='index'),
+    path('<str:test_status>', import_acks, name='index'),
     path('acknowledge-samples/<str:gel1004>/<str:rack>/<str:test_status>', views.acknowledge_samples, name='acknowledge_samples'),
     path('problem-samples/<str:holding_rack_id>/<str:test_status>', views.problem_samples, name='problem_samples'),
     path('plate-holding-rack/<str:holding_rack_pk>/<str:test_status>', views.plate_holding_rack, name='plate_holding_rack'),

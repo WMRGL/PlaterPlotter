@@ -1,0 +1,122 @@
+{% extends 'platerplotter/base.html' %}
+{% block title %}
+    Unacknowledged Racks - {{ block.super }}
+{% endblock title %}
+
+
+{% block content %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-10">
+        <h3>Unacknowledged Racks</h3>
+        <p>Click on a rack ID to acknowledge that the samples have been received.</p>
+      </div>
+      <div class="col-2">
+        <form role='form' action='' method="POST" class='form'>
+            {% csrf_token %}
+            <div class="form-group">
+              <div>
+                <button type="submit" name='import-1004' class="btn btn-primary btn-block">Import New</button>
+              </div>
+            </div>
+        </form>
+      </div>
+    </div>
+    <hr>
+    {% for gel1004, racks in unacked_racks_dict.items %}
+    <div class="row">
+      <div class="col-10">
+        <div class="tab-pane active">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th colspan="7" style="background-color: #e9ecef">{{gel1004.filename}}</th>
+              </tr>
+              <tr>
+                <th>Rack ID</th>
+                <th>Laboratory ID</th>
+                <th>Disease Area</th>
+                <th>Rack Type</th>
+                <th>Number of Samples</th>
+                <th>Samples acknowledged</th>
+                <th>Volume checked</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for rack in racks %}
+            <tr>
+              <td><a href="/acknowledge-samples/{{ gel1004.pk }}/{{ rack.receiving_rack_id }}">{{ rack.receiving_rack_id }}</a></td>
+              <td>{{ rack.laboratory_id }}</td>
+              <td>{{ rack.disease_area }}</td>
+              <td>{{ rack.rack_type }}</td>
+              <td>{{ rack.no_samples }}</td>
+              <td>
+                {% if rack.rack_acknowledged %}
+                  <i class="fas fa-check-circle" style="color:green"></i>
+                {% else %}
+                  <i class="fas fa-times-circle" style="color:red"></i>
+                {% endif %}
+              </td>
+              <td>
+                {% if rack.volume_checked %}
+                  <button onclick="toggleVolumeChecked('{{gel1004.id}}', '{{rack.id}}')"><i class="fas fa-check-circle" style="color:green" id="{{rack.id}}"></i></button>
+                {% else %}
+                  <button onclick="toggleVolumeChecked('{{gel1004.id}}', '{{rack.id}}')"><i class="fas fa-times-circle" style="color:red" id="{{rack.id}}"></i></button>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="col-2">
+          <form role='form' action='' method="POST" class='form'>
+            {% csrf_token %}
+            <div class="form-group">
+              <div>
+                {% if gel1004.all_racks_acked  and gel1004.all_racks_volume_checked %}
+                  <button id='{{gel1004.id}}' type="submit" name='send-1005' value='{{ gel1004.pk }}' class="btn btn-success btn-block">Send GEL1005</button>
+                {% else %}
+                  <button id='{{gel1004.id}}' type="submit" name='send-1005' value='{{ gel1004.pk }}' class="btn btn-success btn-block" disabled>Send GEL1005</button>
+                {% endif %}
+              </div>
+            </div>
+        </form>
+      </div>
+    </div>
+    <hr>
+    {% endfor %}
+  </div>
+
+{% endblock content %}
+{% block javascript %}
+<script>
+    function toggleVolumeChecked(gel1004Id, rackId) {
+      $.ajax({
+        type: 'get',
+        url: "{% url 'post_volume_check' %}",
+        data: {
+          'gel1004_id' : gel1004Id,
+          'rack_id' : rackId,
+        },
+        success: function(data) {
+          var rack = document.getElementById(rackId);
+          var gel1004Button = document.getElementById(gel1004Id);
+          if (data[rackId]){
+            rack.className="fas fa-check-circle";
+            rack.style.color = "green";
+          } else {
+            rack.className="fas fa-times-circle";
+            rack.style.color = "red";
+          }
+          if (data['all_checked'] && data['all_acked']){
+            gel1004Button.disabled = false;
+          } else {
+            gel1004Button.disabled = true;
+          }
+        }
+      });
+    }
+</script>
+{% endblock javascript %}
