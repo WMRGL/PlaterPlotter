@@ -26,5 +26,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('notifications/', include('notifications.urls')),
     path('problem/', include('problemsamples.urls')),
+    path('awaiting/', include('awaitingsorting.urls')),
     path('', import_acks, name='index')
 ]

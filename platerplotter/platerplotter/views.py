@@ -1,35 +1,31 @@
 import csv
 import os
-import pytz
 import re
 import time
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import Flowable, Paragraph, SimpleDocTemplate, Table, TableStyle
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import landscape, A4
+from datetime import datetime
 from pathlib import Path
 
-from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, FileResponse, Http404
+import pytz
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.urls import reverse
 from django.db.models import Q
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render
+from django.urls import reverse
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import landscape, A4
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Table, TableStyle
 
-from .models import (Gel1008Csv, Plate,
-					 HoldingRack, Sample, HoldingRackWell)
-from .config.load_config import LoadConfig
-from .forms import (HoldingRackForm, SampleSelectForm, PlatingForm,
-					Gel1008Form, LogIssueForm, ResolveIssueForm, PlateSelectForm)
-from datetime import datetime
-from django.core import serializers
-from django.core.exceptions import ValidationError
-from .holding_rack_manager import HoldingRackManager
 from notifications.models import Gel1005Csv, Gel1004Csv, ReceivingRack
-
-
+from problemsamples.forms import SampleSelectForm, LogIssueForm
+from problemsamples.models import RackScannerSample, RackScanner
+from .config.load_config import LoadConfig
+from .forms import (HoldingRackForm, PlatingForm, Gel1008Form, ResolveIssueForm, PlateSelectForm)
+from .holding_rack_manager import HoldingRackManager
+from .models import (Gel1008Csv, Plate, HoldingRack, Sample, HoldingRackWell)
 
 
 def pad_zeros(well):
@@ -121,7 +117,7 @@ def check_glh_sample_consignment_number(glh_sample_consignment_number):
 	error = None
 	if not re.match(r'^[a-z]{3}-\d{4}-\d{2}-\d{2}-\d{2}-[1,2]$',
 					glh_sample_consignment_number.lower()) and not re.match(
-			r'^[a-z]{3}-\d{4}-\d{2}-\d{2}-[1,2]$', glh_sample_consignment_number.lower()) and not re.match(
+		r'^[a-z]{3}-\d{4}-\d{2}-\d{2}-[1,2]$', glh_sample_consignment_number.lower()) and not re.match(
 		r'^.*$', glh_sample_consignment_number.lower()):
 		error = 'Incorrect GLH sample consignment number. Received {} which does not match the required specification.'.format(
 			glh_sample_consignment_number)

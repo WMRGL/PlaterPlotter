@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'notifications',
     'problemsamples',
+    'awaitingsorting',
     'bootstrap4',
     'easyaudit',
     'crispy_bootstrap4',

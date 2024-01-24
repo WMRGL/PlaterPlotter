@@ -35,7 +35,7 @@
 	                    <a class="nav-link {% if url_name == 'problemsamples:samples' %}active{% endif %}" href="{% url 'problemsamples:samples' %}">Problem Samples</a>
 	                </li>
 	                <li class="nav nav-item">
-	                    <a class="nav-link {% if url_name == 'awaiting_holding_rack_assignment' or url_name == 'assign_samples_to_holding_rack' or url_name == 'assign_problem_samples_to_holding_rack' %}active{% endif %}" href="{% url 'awaiting_holding_rack_assignment' %}">Awaiting Sorting</a>
+	                    <a class="nav-link {% if url_name == 'awaitingsorting:awaiting_holding_rack_assignment' or url_name == 'assign_samples_to_holding_rack' or url_name == 'assign_problem_samples_to_holding_rack' %}active{% endif %}" href="{% url 'awaitingsorting:awaiting_holding_rack_assignment' %}">Awaiting Sorting</a>
 	                </li>
 	                <li class="nav nav-item">
 	                    <a class="nav-link {% if url_name == 'holding_racks' %}active{% endif %}" href="{% url 'holding_racks' %}">Holding Racks</a>

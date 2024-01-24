@@ -17,15 +17,6 @@ class HoldingRackForm(forms.Form):
 		else:
 			return holding_rack_id.upper()
 
-class SampleSelectForm(forms.Form):
-	lab_sample_id = forms.CharField(label='', widget=forms.TextInput(attrs={'autofocus': 'autofocus'}))
-
-	def clean_lab_sample_id(self):
-		lab_sample_id = self.cleaned_data['lab_sample_id']
-		if not re.match(r'^\d{10}$', lab_sample_id):
-			raise ValidationError("Invalid Laboratory Sample ID")
-		else:
-			return lab_sample_id
 
 class PlateSelectForm(forms.Form):
 	plate_id = forms.CharField(label='', widget=forms.TextInput(attrs={'autofocus': 'autofocus'}))
