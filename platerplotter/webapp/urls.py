@@ -17,6 +17,7 @@ from django.contrib import admin
 from django.urls import include, path
 
 #from django.contrib.auth import views as auth_views
+from notifications.views import import_acks
 
 urlpatterns = [
     path(r'', include('platerplotter.urls')),
@@ -25,5 +26,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('notifications/', include('notifications.urls')),
     path('problem/', include('problemsamples.urls')),
-
+    path('', import_acks, name='index')
 ]
