@@ -32,7 +32,7 @@
 	                    <a class="nav-link {% if url_name == 'index' or url_name == 'acknowledge_samples'%}active{% endif %}" href="{% url 'index' %}">Rack Notifications</a>
 	                </li>
 	                <li class="nav nav-item">
-	                    <a class="nav-link {% if url_name == 'problemsamples:problem_samples' %}active{% endif %}" href="{% url 'problemsamples:problem_samples' %}">Problem Samples</a>
+	                    <a class="nav-link {% if url_name == 'problemsamples:samples' %}active{% endif %}" href="{% url 'problemsamples:samples' %}">Problem Samples</a>
 	                </li>
 	                <li class="nav nav-item">
 	                    <a class="nav-link {% if url_name == 'awaiting_holding_rack_assignment' or url_name == 'assign_samples_to_holding_rack' or url_name == 'assign_problem_samples_to_holding_rack' %}active{% endif %}" href="{% url 'awaiting_holding_rack_assignment' %}">Awaiting Sorting</a>

@@ -19,7 +19,7 @@ from django.urls import reverse
 from django.db.models import Q
 
 from .models import (Gel1008Csv, Plate,
-					 HoldingRack, Sample, RackScanner, RackScannerSample, HoldingRackWell)
+					 HoldingRack, Sample, HoldingRackWell)
 from .config.load_config import LoadConfig
 from .forms import (HoldingRackForm, SampleSelectForm, PlatingForm,
 					Gel1008Form, LogIssueForm, ResolveIssueForm, PlateSelectForm)
@@ -30,30 +30,6 @@ from .holding_rack_manager import HoldingRackManager
 from notifications.models import Gel1005Csv, Gel1004Csv, ReceivingRack
 
 
-def post_volume_check(request):
-	if request.accepts("/post/ajax/volume"):
-		gel_1004_id = request.GET.get('gel1004_id')
-		rack_id = request.GET.get('rack_id')
-		receiving_rack = ReceivingRack.objects.get(id=rack_id)
-		all_receiving_racks = ReceivingRack.objects.filter(gel_1004_csv=gel_1004_id)
-		# toggle between checked and not checked each time button is pressed
-		if receiving_rack.volume_checked:
-			receiving_rack.volume_checked = False
-		else:
-			receiving_rack.volume_checked = True
-		receiving_rack.save()
-		all_checked = True
-		all_racks_acked = True
-		for rack in all_receiving_racks:
-			if not rack.volume_checked:
-				all_checked = False
-			if not rack.rack_acknowledged:
-				all_racks_acked = False
-		data = {}
-		data[rack_id] = receiving_rack.volume_checked
-		data['all_checked'] = all_checked
-		data['all_acked'] = all_racks_acked
-		return JsonResponse(data)
 
 
 def pad_zeros(well):

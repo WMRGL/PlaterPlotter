@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'notifications',
+    'problemsamples',
     'bootstrap4',
     'easyaudit',
     'crispy_bootstrap4',

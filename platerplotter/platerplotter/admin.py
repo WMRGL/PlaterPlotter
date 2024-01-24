@@ -1,6 +1,6 @@
 from django.contrib import admin
 from platerplotter.models import ( Gel1008Csv,
-	HoldingRack, HoldingRackWell, Plate, Sample, RackScanner, RackScannerSample)
+	HoldingRack, HoldingRackWell, Plate, Sample)
 from notifications.models import Gel1005Csv, Gel1004Csv, ReceivingRack
 
 class Gel1004CsvAdmin(admin.ModelAdmin):
@@ -50,17 +50,7 @@ class SampleAdmin(admin.ModelAdmin):
 					'holding_rack_well__holding_rack__plate__plate_id']
 
 
-class RackScannerAdmin(admin.ModelAdmin):
-	model = RackScanner
-	list_filter = ['date_modified', 'acknowledged']
-	list_display = ['filename', 'scanned_id', 'date_modified', 'acknowledged']
-	search_fields = ['filename', 'scanned_id']
 
-class RackScannerSampleAdmin(admin.ModelAdmin):
-	model = RackScannerSample
-	list_filter = ['rack_scanner']
-	list_display = ['sample_id', 'rack_scanner', 'position', 'matched']
-	search_fields = ['sample_id']
 
 class HoldingRackWellAdmin(admin.ModelAdmin):
 	model = HoldingRackWell
@@ -76,6 +66,4 @@ admin.site.register(HoldingRack, HoldingRackAdmin)
 admin.site.register(HoldingRackWell, HoldingRackWellAdmin)
 admin.site.register(Plate, PlateAdmin)
 admin.site.register(Sample, SampleAdmin)
-admin.site.register(RackScanner, RackScannerAdmin)
-admin.site.register(RackScannerSample, RackScannerSampleAdmin)
 
