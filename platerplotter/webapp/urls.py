@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from notifications import views as notification_views
 
 #from django.contrib.auth import views as auth_views
 
@@ -24,6 +25,6 @@ urlpatterns = [
     # path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('admin/', admin.site.urls),
     path('notifications/', include('notifications.urls')),
-    path('problem/', include('problemsamples.urls')),
-
+    path('problems/', include('problemsamples.urls')),
+    path('', notification_views.import_acks, name='index')
 ]

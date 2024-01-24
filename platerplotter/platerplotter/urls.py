@@ -7,10 +7,10 @@ from notifications.views import import_acks, post_volume_check
 
 urlpatterns = [
     path('', include('django.contrib.auth.urls')),
-    path('', import_acks, name='index'),
+    # path('', import_acks, name='index'),
     path('acknowledge-samples/<str:gel1004>/<str:rack>', views.acknowledge_samples, name='acknowledge_samples'),
     path('post/ajax/volume', post_volume_check, name = "post_volume_check"),
-    path('problem-samples/', views.problem_samples, name='problem_samples'),
+    # path('problem-samples/', views.problem_samples, name='problem_samples'),
     path('problem-samples/<str:holding_rack_id>', views.problem_samples, name='problem_samples'),
     path('awaiting-holding-rack-assignment/', views.awaiting_holding_rack_assignment, name='awaiting_holding_rack_assignment'),
     path('assign-samples-to-holding-rack/<str:gel1004>/<str:rack>', views.assign_samples_to_holding_rack, name='assign_samples_to_holding_rack'),
