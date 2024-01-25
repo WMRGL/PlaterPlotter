@@ -26,7 +26,8 @@ from problemsamples.models import RackScannerSample, RackScanner
 from .config.load_config import LoadConfig
 from .forms import (HoldingRackForm, PlatingForm, Gel1008Form, ResolveIssueForm, PlateSelectForm)
 from .holding_rack_manager import HoldingRackManager
-from .models import (Gel1008Csv, Plate, Sample)
+from .models import (Gel1008Csv, Sample)
+from holdingracks.models import Plate
 
 
 def pad_zeros(well):

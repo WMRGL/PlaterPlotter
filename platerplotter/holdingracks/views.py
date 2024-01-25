@@ -1,18 +1,28 @@
+import csv
+from pathlib import Path
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from .forms import HoldingRackForm
+from platerplotter.config.load_config import LoadConfig
+from .forms import HoldingRackForm, PlatingForm
 from .holding_rack_manager import HoldingRackManager
-from .models import HoldingRackWell, HoldingRack
+from .models import HoldingRackWell, HoldingRack, Plate
 from notifications.models import Sample, ReceivingRack
 from problemsamples.forms import LogIssueForm, SampleSelectForm
 from problemsamples.views import confirm_sample_positions
 
 
 # Create your views here.
+
+def strip_zeros(well):
+	if well[1] == '0':
+		return well[0] + well[2]
+	else:
+		return well
 
 
 @login_required()
@@ -128,3 +138,50 @@ def holding_racks(request, holding_rack_id=None):
 		"current_holding_racks_dict": current_holding_racks_dict,
 		"holding_rack_rows": holding_rack_rows,
 		"holding_rack_columns": holding_rack_columns})
+
+
+@login_required()
+def plate_holding_rack(request, holding_rack_pk, test_status=False):
+	holding_rack = HoldingRack.objects.get(pk=holding_rack_pk)
+	samples = Sample.objects.filter(holding_rack_well__holding_rack=holding_rack)
+	if request.method == 'POST':
+		if "rack-scanner" in request.POST:
+			plating_form = PlatingForm()
+			confirm_sample_positions(request, holding_rack, samples, final_check=True)
+		if "assign-plate" in request.POST:
+			plating_form = PlatingForm(request.POST)
+			if plating_form.is_valid():
+				plate_id = plating_form.cleaned_data.get('plate_id')
+				plate = Plate.objects.create(plate_id=plate_id)
+				holding_rack.plate = plate
+				holding_rack.save()
+				# generate output for robot
+				holding_rack_wells = HoldingRackWell.objects.filter(holding_rack=holding_rack).order_by('well_id')
+				if test_status:
+					directory = str(Path.cwd().parent) + '/TestData/Outbound/PlatePlots/'
+				else:
+					directory = LoadConfig().load()['plate_plots_path']
+				filename = holding_rack.holding_rack_id + '.csv'
+				path = directory + filename
+				with open(path, 'w', newline='') as csvfile:
+					writer = csv.writer(csvfile, delimiter=',',
+										quotechar=',', quoting=csv.QUOTE_MINIMAL)
+					for holding_rack_well in holding_rack_wells:
+						well_id = strip_zeros(holding_rack_well.well_id)
+						if holding_rack_well.sample or holding_rack_well.buffer_added:
+							if holding_rack_well.sample and not holding_rack_well.buffer_added:
+								well_contents = holding_rack_well.sample.laboratory_sample_id
+							elif holding_rack_well.buffer_added and not holding_rack_well.sample:
+								well_contents = "NO READ"  # previously read "BUFFER" but Hamilton robot needs reprogramming
+							else:
+								messages.error(request, 'Well contents invalid. Reported to contain sample and buffer')
+						else:
+							well_contents = "NO READ"
+						writer.writerow([well_id, well_contents, ' 2d_rackid_1', holding_rack.holding_rack_id])
+	else:
+		plating_form = PlatingForm()
+	return render(request, 'holdingracks/plate-holding-rack.html', {
+		"holding_rack": holding_rack,
+		"samples": samples,
+		"plating_form": plating_form})
+

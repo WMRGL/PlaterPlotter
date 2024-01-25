@@ -2,11 +2,23 @@ from django.db import models
 
 from notifications.choices import well_ids
 from notifications.models import Sample
-from platerplotter.models import Plate
+from platerplotter.models import Gel1008Csv
 
 
 # Create your models here.
 
+class Plate(models.Model):
+	gel_1008_csv = models.ForeignKey(Gel1008Csv, on_delete=models.SET_NULL, null=True, blank=True, related_name='related_plate')
+	plate_id = models.CharField(max_length=13, unique=True)
+
+	def __str__(self):
+		return self.plate_id
+
+	class Meta:
+		app_label = 'platerplotter'
+		db_table = 'Plate'
+		verbose_name = 'Plate'
+		verbose_name_plural = 'Plates'
 
 
 class HoldingRack(models.Model):
@@ -51,4 +63,6 @@ class HoldingRackWell(models.Model):
 		db_table = 'HoldingRackWell'
 		verbose_name = 'Holding rack well'
 		verbose_name_plural = 'Holding rack wells'
+
+
 

@@ -18,6 +18,7 @@ from django.urls import include, path
 
 #from django.contrib.auth import views as auth_views
 from notifications.views import import_acks
+from readytoplate.views import ready_to_plate
 
 urlpatterns = [
     path(r'', include('platerplotter.urls')),
@@ -28,5 +29,6 @@ urlpatterns = [
     path('problem/', include('problemsamples.urls')),
     path('awaiting/', include('awaitingsorting.urls')),
     path('holding/', include('holdingracks.urls')),
-    path('', import_acks, name='index')
+    path('ready/', include('readytoplate.urls')),
+    path('', import_acks, name='index'),
 ]

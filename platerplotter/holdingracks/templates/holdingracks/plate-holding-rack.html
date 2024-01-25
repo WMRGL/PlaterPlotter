@@ -1,0 +1,100 @@
+{% extends 'platerplotter/base.html' %}
+{% block title %}
+    Acknowledge Samples - {{ block.super }}
+{% endblock title %}
+{% load bootstrap4 %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-5">
+        <h3>Plate samples</h3>
+        <h5>Holding Rack: {{ holding_rack.holding_rack_id }}</h5>
+        <h5>Type: {{ holding_rack.holding_rack_type }}</h5>
+        {% if holding_rack.plate %}
+          <h5>Plate ID: {{ holding_rack.plate.plate_id }}</h5>
+        {% else %}
+          <p>Please confirm correct position of samples using plate scanner and then assign plate ID</p>
+        {% endif %}
+      </div>
+      <div class="col-2" align='center'>
+        <form role='form' action='' method="POST" class='form'>
+            {% csrf_token %}
+            <div class="form-group">
+              <div>
+                {% if holding_rack.positions_confirmed %}
+                  <button type="submit" name="rack-scanner" class="btn btn-success" disabled title="Rack positions confirmed.
+Please plate samples.">Check Rack Scanner</button>
+                {% else %}
+                  <button type="submit" name="rack-scanner" class="btn btn-success">Check Rack Scanner</button>
+                {% endif %}
+              </div>
+            </div>
+        </form>
+      </div>
+      <div class="col-5">
+        <div align='right'>
+          <h5>Assign Plate ID once correct positions have been confirmed</h5>
+        </div>
+        <form role='form' method="POST" class='form-inline float-right' enctype="multipart/form-data">
+          {% csrf_token %}
+          {{ plating_form|crispy }}
+          <div class="form-group">
+            <div class="col-lg-5 col-sm-offset-5">
+              {% if holding_rack.positions_confirmed and not holding_rack.plate %}
+                <button type="submit" name="assign-plate" class="btn btn-primary">Assign Plate</button>
+              {% elif holding_rack.plate %}
+                <button type="submit" name="assign-plate" class="btn btn-primary" disabled title="Plate has already been assigned.">Assign Plate</button>
+              {% else %}
+                <button type="submit" name="assign-plate" class="btn btn-primary" disabled title="Please confirm sample positions using rack scanner first.">Assign Plate</button>
+              {% endif %}
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12">
+        <div class="tab-pane active">
+          <br>
+            <table class="table table-bordered" id='dataTable'>
+              <thead>
+                <tr>
+                  <th>Holding Rack Well</th>
+                  <th>Lab Sample ID</th>  
+                  <th>Participant ID</th>
+                  <th>Group ID</th>
+                  <th>Priority</th>
+                  <th>Disease Area</th>
+                  <th>Sample Type</th>          
+                  <th>Position confirmed</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for sample in samples %}
+              <tr>
+                <td>{{ sample.holding_rack_well.well_id }}</td>
+                <td>{{ sample.laboratory_sample_id }}</td>
+                <td>{{ sample.participant_id }}</td>
+                <td>{{ sample.group_id }}</td>
+                <td>{{ sample.priority }}</td>
+                <td>{{ sample.disease_area }}</td>
+                <td>{{ sample.clin_sample_type }}</td>
+                <td>
+                  {% if sample.sample_matched %}
+                    <i class="fas fa-check-circle" style="color:green"></i>
+                  {% else %}
+                    <i class="fas fa-times-circle" style="color:red"></i>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div> 
+      </div>     
+    </div>
+  </div>
+
+{% endblock content %}

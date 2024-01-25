@@ -3,9 +3,12 @@ import pytz
 from django import forms
 from django.forms import ModelForm
 from datetime import datetime
-from platerplotter.models import Plate, Sample, Gel1008Csv
+from platerplotter.models import Sample, Gel1008Csv
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+
+from holdingracks.models import Plate
+
 
 class HoldingRackForm(forms.Form):
 	holding_rack_id = forms.CharField(label='', widget=forms.TextInput(attrs={'autofocus': 'autofocus'}))
