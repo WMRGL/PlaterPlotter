@@ -4,10 +4,10 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
+from holdingracks.forms import HoldingRackForm
+from holdingracks.holding_rack_manager import HoldingRackManager
+from holdingracks.models import HoldingRack, HoldingRackWell
 from notifications.models import Sample, ReceivingRack
-from platerplotter.forms import HoldingRackForm
-from platerplotter.holding_rack_manager import HoldingRackManager
-from platerplotter.models import HoldingRack, HoldingRackWell
 from problemsamples.forms import LogIssueForm, SampleSelectForm
 from problemsamples.views import confirm_sample_positions
 

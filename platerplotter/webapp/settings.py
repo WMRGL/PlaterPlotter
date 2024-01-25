@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'notifications',
     'problemsamples',
     'awaitingsorting',
+    'holdingracks',
     'bootstrap4',
     'easyaudit',
     'crispy_bootstrap4',

@@ -27,5 +27,6 @@ urlpatterns = [
     path('notifications/', include('notifications.urls')),
     path('problem/', include('problemsamples.urls')),
     path('awaiting/', include('awaitingsorting.urls')),
+    path('holding/', include('holdingracks.urls')),
     path('', import_acks, name='index')
 ]

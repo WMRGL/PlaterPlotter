@@ -19,13 +19,14 @@ from reportlab.lib.pagesizes import landscape, A4
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Table, TableStyle
 
+from holdingracks.models import HoldingRack, HoldingRackWell
 from notifications.models import Gel1005Csv, Gel1004Csv, ReceivingRack
 from problemsamples.forms import SampleSelectForm, LogIssueForm
 from problemsamples.models import RackScannerSample, RackScanner
 from .config.load_config import LoadConfig
 from .forms import (HoldingRackForm, PlatingForm, Gel1008Form, ResolveIssueForm, PlateSelectForm)
 from .holding_rack_manager import HoldingRackManager
-from .models import (Gel1008Csv, Plate, HoldingRack, Sample, HoldingRackWell)
+from .models import (Gel1008Csv, Plate, Sample)
 
 
 def pad_zeros(well):
