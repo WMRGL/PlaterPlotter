@@ -23,7 +23,7 @@
           {% csrf_token %}
           <div class="form-group">
             {% if rack %}
-              <a class="btn btn-primary btn-lg" href="/assign-samples-to-holding-rack/{{rack.gel_1004_csv.pk}}/{{rack.receiving_rack_id}}" role="button">Change Holding Rack</a>
+              <a class="btn btn-primary btn-lg" href="{% url 'awaitingsorting:assign_samples_to_holding_rack' gel1004=rack.gel_1004_csv.pk rack=rack.receiving_rack_id %}" role="button">Change Holding Rack</a>
             {% elif problem_holding_rack %}
               <a class="btn btn-primary btn-lg" href="/assign-samples-to-holding-rack/{{problem_holding_rack.holding_rack_id}}" role="button">Change Holding Rack</a>
             {% endif %}
@@ -247,7 +247,7 @@ Group ID:            {{sample.group_id}}' class="assigned" style="background-col
     </div>
     <div class="col-4">
       <div align='center'>
-        <a class="btn btn-primary btn-lg" href="/awaiting-holding-rack-assignment/" role="button">Change Rack</a>
+        <a class="btn btn-primary btn-lg" href="{% url 'awaitingsorting:awaiting_holding_rack_assignment' %}" role="button">Change Rack</a>
       </div>
     </div>
   </div>

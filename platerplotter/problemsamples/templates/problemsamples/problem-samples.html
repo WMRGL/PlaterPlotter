@@ -19,7 +19,7 @@
         <form role='form' action='' method="POST", class='justify-content-center'>
           {% csrf_token %}
           <div class="form-group">
-            <a class="btn btn-primary btn-lg" href="/problem-samples/" role="button">Change Problem Rack</a>
+            <a class="btn btn-primary btn-lg" href="{% url 'problemsamples:samples' %}" role="button">Change Problem Rack</a>
             <button type="submit" name='rack-scanner' value='{{ holding_rack.pk }}' class="btn btn-success btn-lg">Rack Scanner</button>
           </div>
         </form>
@@ -176,7 +176,7 @@ Group ID:            {{sample.group_id}}' style="background-color: black"><div c
               <tbody>
               {% for holding_rack, count in current_holding_racks_dict.items %}
               <tr>
-                <td><a href="/problem-samples/{{ holding_rack.holding_rack_id }}">{{ holding_rack.holding_rack_id }}</a></td>
+                <td><a href="{% url 'problemsamples:problem_samples' holding_rack_id=holding_rack.holding_rack_id %}">{{ holding_rack.holding_rack_id }}</a></td>
                 <td>Mixed</td>
                 <td>{{ holding_rack.holding_rack_type }}</td>
                 <td>Mixed</td>
