@@ -261,7 +261,7 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
 	else:
 		holding_rack_form = HoldingRackForm()
 		sample_select_form = SampleSelectForm()
-	return render(request, 'platerplotter/assign-samples-to-holding-rack.html', {
+	return render(request, 'awaitingsorting/assign-samples-to-holding-rack.html', {
 		"rack": rack,
 		"problem_holding_rack": problem_holding_rack,
 		"samples": samples,

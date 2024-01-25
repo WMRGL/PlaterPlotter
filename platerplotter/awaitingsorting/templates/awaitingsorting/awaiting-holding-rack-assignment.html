@@ -33,7 +33,10 @@
             <tbody>
             {% for rack, samples in unplated_racks_dict.items %}
             <tr>
-              <td><a href="/assign-samples-to-holding-rack/{{ rack.gel_1004_csv.pk }}/{{ rack.receiving_rack_id }}">{{ rack.receiving_rack_id }}</a></td>
+              <td><a
+                      href="{% url 'awaitingsorting:assign_samples_to_holding_rack' gel1004=rack.gel_1004_csv.pk rack=rack.receiving_rack_id %}">
+                {{ rack.receiving_rack_id }}
+              </a></td>
               <td>{{ rack.disease_area }}</td>
               <td>{{ rack.holding_rack_type }}</td>
               <td>{{ rack.priority }}</td>
@@ -63,7 +66,7 @@
               <tbody>
               {% for holding_rack, samples in problem_holding_rack_dict.items %}
               <tr>
-                <td><a href="/assign-samples-to-holding-rack/{{ holding_rack.holding_rack_id }}">{{ holding_rack.holding_rack_id }}</a></td>
+                <td><a href="awaiting/assign-samples-to-holding-rack/{{ holding_rack.holding_rack_id }}">{{ holding_rack.holding_rack_id }}</a></td>
                 <td>{{ holding_rack.holding_rack_type }}</td>
                 <td>{{ samples|length }}</td>
               </tr>
