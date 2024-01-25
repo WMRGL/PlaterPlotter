@@ -13,4 +13,5 @@ urlpatterns = [
 	path('assign-samples-to-holding-rack/<str:rack>', views.assign_samples_to_holding_rack,
 		 name='assign_samples_to_holding_rack'),
 
+
 ]

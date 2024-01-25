@@ -195,7 +195,8 @@ Group ID:            {{sample.group_id}}' class="assigned" style="background-col
               {% for holding_rack, count in current_holding_racks_dict.items %}
               <tr>
                 {% if rack %}
-                  <td><a href="/assign-samples-to-holding-rack/{{ rack.gel_1004_csv.pk }}/{{rack.receiving_rack_id}}/{{ holding_rack.holding_rack_id }}">{{ holding_rack.holding_rack_id }}</a></td>
+
+                  <td><a href="{% url 'awaitingsorting:assign_samples_to_holding_rack' gel1004=rack.gel_1004_csv.pk rack=rack.receiving_rack_id holding_rack_id=holding_rack.holding_rack_id %}">{{ holding_rack.holding_rack_id }}</a></td>
                 {% elif problem_holding_rack %}
                   <td><a href="/assign-problem-rack-samples-to-holding-rack/{{problem_holding_rack.holding_rack_id}}/{{ holding_rack.holding_rack_id }}"> {{ holding_rack.holding_rack_id }}</a></td>
                 {% endif %}
