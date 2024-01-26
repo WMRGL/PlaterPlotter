@@ -5,6 +5,7 @@ from pathlib import Path
 import pytz
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from reportlab.lib import colors
@@ -33,6 +34,7 @@ def ready_to_plate(request):
 		HoldingRackManager(rack).is_full()
 		rack.sample_count = Sample.objects.filter(holding_rack_well__holding_rack=rack).count
 	return render(request, 'ready/ready-to-plate.html', {"ready_to_plate": ready_to_plate})
+
 
 @login_required()
 def ready_to_dispatch(request, test_status=False):
@@ -323,3 +325,28 @@ def consignments_for_collection(request, test_status=False):
 		"consignment_no_dict": consignment_no_dict
 	})
 
+
+@login_required()
+def audit(request):
+	"""
+	Renders the audit page allowing users to search for processed samples.
+	"""
+	if request.method == 'POST':
+		search_term = request.POST['search_term']
+		samples = Sample.objects.filter(Q(participant_id__contains=search_term) |
+										Q(group_id__contains=search_term) |
+										Q(laboratory_sample_id__contains=search_term) |
+										Q(receiving_rack__receiving_rack_id__contains=search_term) |
+										Q(comment__contains=search_term) |
+										Q(issue_outcome__contains=search_term) |
+										Q(holding_rack_well__holding_rack__holding_rack_id__contains=search_term) |
+										Q(holding_rack_well__holding_rack__plate__plate_id__contains=search_term) |
+										Q(holding_rack_well__holding_rack__plate__gel_1008_csv__consignment_number__contains=search_term)).prefetch_related(
+			'receiving_rack', 'holding_rack_well',
+			'holding_rack_well__holding_rack', 'holding_rack_well__holding_rack__plate',
+			'holding_rack_well__holding_rack__plate__gel_1008_csv',
+			'receiving_rack__gel_1004_csv', 'receiving_rack__gel_1004_csv__gel_1005_csv').order_by(
+			'-sample_received_datetime')[0:1000]
+	else:
+		samples = None
+	return render(request, 'ready/audit.html', {"samples": samples})

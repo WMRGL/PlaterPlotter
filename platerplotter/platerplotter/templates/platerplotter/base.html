@@ -50,7 +50,7 @@
 	                    <a class="nav-link {% if url_name == 'consignments_for_collection' %}active{% endif %}" href="{% url 'ready:consignments_for_collection' %}">Consignments for Collection</a>
 	                </li>
 	                <li class="nav nav-item">
-	                    <a class="nav-link {% if url_name == 'audit' %}active{% endif %}" href="{% url 'audit' %}">Audit</a>
+	                    <a class="nav-link {% if url_name == 'audit' %}active{% endif %}" href="{% url 'ready:audit' %}">Audit</a>
 	                </li>
 		            <li class="nav-item dropdown">
 	                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span><i class="fas fa-user"></i></span> {{ request.user.username }}</a>
