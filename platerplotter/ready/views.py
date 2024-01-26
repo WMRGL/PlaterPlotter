@@ -1,4 +1,5 @@
 import csv
+import os
 from datetime import datetime, time
 from pathlib import Path
 
@@ -6,7 +7,7 @@ import pytz
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import landscape, A4
@@ -350,3 +351,11 @@ def audit(request):
 	else:
 		samples = None
 	return render(request, 'ready/audit.html', {"samples": samples})
+
+
+def download_manifest(request, filename):
+	directory = LoadConfig().load()['consignment_manifest_path']
+	with open(directory + filename, 'rb') as fh:
+		response = HttpResponse(fh.read(), content_type="application/pdf")
+		response['Content-Disposition'] = 'inline; filename=' + os.path.basename('output/' + filename)
+		return response

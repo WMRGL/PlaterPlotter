@@ -1,0 +1,56 @@
+{% extends 'platerplotter/base.html' %}
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row justify-content-md-center">
+        <div class="col-md-4">
+            <h2><small>Register</small></h2>
+            <form method="post">
+                {% csrf_token %}
+                {% if matching_users %}
+                <div class="alert alert-danger">
+                    <strong>Username already exists.</strong>
+                </div>
+                {% endif %}
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                        </div>
+                        <input id="email" name="email" type="email" class="form-control" placeholder="Email address" required>
+                    </div>
+                    <small class="form-text text-muted">Please use your nhs.net email address.</small>
+                </div>
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                        </div>
+                        <input style="width: 90%;" id="username" name="username" type="text" class="form-control" placeholder="Username" required>
+                        <small class="form-text text-muted">Please choose an informative username for audit purposes.</small>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        </div>
+                        <input id="password" name="password" type="password" class="form-control" placeholder="Password" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn">Save</button>
+
+            </form>
+            <div class="pt-3 pb-2">
+                <a class="link biglink" href="{% url 'index' %}"><i class="fas fa-chevron-left"></i> Back to login page</a>
+            </div>
+
+            {% if created %}
+            <p class="pt-2">User account created. Please <a class="inline" href="mailto:bwc.rglbio@nhs.net&subject=PlaterPlotter%20New%20Account%20Request&body=Please%20include%20your%20username%20and%20reason%20for%20requiring%20access%20to%20PlaterPlotter.">email us</a> to activate your account.</p>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

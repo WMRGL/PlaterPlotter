@@ -9,5 +9,5 @@ urlpatterns = [
 	path('to-dispatch/', views.ready_to_dispatch, name='ready_to_dispatch'),
 	path('for-collection/', views.consignments_for_collection, name='consignments_for_collection'),
 	path('audit/', views.audit, name='audit'),
-
+	path('download/<str:filename>', views.download_manifest, name='download_manifest')
 ]
