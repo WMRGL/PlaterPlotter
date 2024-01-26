@@ -44,10 +44,10 @@
 	                    <a class="nav-link {% if url_name == 'ready_to_plate' %}active{% endif %}" href="{% url 'ready:ready_to_plate' %}">Ready to Plate</a>
 	                </li>
 	                <li class="nav nav-item">
-	                    <a class="nav-link {% if url_name == 'ready_to_dispatch' %}active{% endif %}" href="{% url 'ready_to_dispatch' %}">Ready for Dispatch</a>
+	                    <a class="nav-link {% if url_name == 'ready_to_dispatch' %}active{% endif %}" href="{% url 'ready:ready_to_dispatch' %}">Ready for Dispatch</a>
 	                </li>
 	               	<li class="nav nav-item">
-	                    <a class="nav-link {% if url_name == 'consignments_for_collection' %}active{% endif %}" href="{% url 'consignments_for_collection' %}">Consignments for Collection</a>
+	                    <a class="nav-link {% if url_name == 'consignments_for_collection' %}active{% endif %}" href="{% url 'ready:consignments_for_collection' %}">Consignments for Collection</a>
 	                </li>
 	                <li class="nav nav-item">
 	                    <a class="nav-link {% if url_name == 'audit' %}active{% endif %}" href="{% url 'audit' %}">Audit</a>

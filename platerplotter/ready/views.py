@@ -289,11 +289,37 @@ def ready_to_dispatch(request, test_status=False):
 		selected_plates_list = []
 		plate_select_form = PlateSelectForm()
 		gel1008_form = Gel1008Form()
-	return render(request, 'platerplotter/ready-to-dispatch.html', {
+	return render(request, 'ready/ready-to-dispatch.html', {
 		"ready_to_dispatch": ready_to_dispatch,
 		"gel1008_form": gel1008_form,
 		"plate_select_form": plate_select_form,
 		"selected_plates_list": selected_plates_list})
 
 
+@login_required()
+def consignments_for_collection(request, test_status=False):
+	consignments = Gel1008Csv.objects.filter(consignment_collected=False)
+	consignment_no_dict = {}
+	for gel_1008 in consignments:
+		if gel_1008.consignment_number in consignment_no_dict:
+			consignment_no_dict[gel_1008.consignment_number].append(Plate.objects.get(gel_1008_csv=gel_1008))
+		else:
+			consignment_no_dict[gel_1008.consignment_number] = [Plate.objects.get(gel_1008_csv=gel_1008)]
+	for consignment, plates in consignment_no_dict.items():
+		for plate in plates:
+			plate.sample_count = Sample.objects.filter(holding_rack_well__holding_rack__plate=plate).count()
+			HoldingRackManager(plate.holding_rack).is_half_full()
+			HoldingRackManager(plate.holding_rack).is_full()
+	if request.method == 'POST':
+		if "send-consignment" in request.POST:
+			consignment = request.POST['send-consignment']
+			plates = consignment_no_dict[consignment]
+			for plate in plates:
+				plate.gel_1008_csv.consignment_collected = True
+				plate.gel_1008_csv.save()
+			messages.info(request, "Consignment collected.")
+		return HttpResponseRedirect('/consignments-for-collection/')
+	return render(request, 'ready/consignments-for-collection.html', {
+		"consignment_no_dict": consignment_no_dict
+	})
 
