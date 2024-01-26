@@ -3,11 +3,12 @@ import pytz
 from django import forms
 from django.forms import ModelForm
 from datetime import datetime
-from platerplotter.models import Sample, Gel1008Csv
+from platerplotter.models import Sample
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from holdingracks.models import Plate
+from ready.models import Gel1008Csv
 
 
 class HoldingRackForm(forms.Form):
@@ -31,21 +32,24 @@ class PlateSelectForm(forms.Form):
 		else:
 			return plate_id.upper()
 
+
 class LogIssueForm(forms.ModelForm):
 	class Meta:
 		model = Sample
 		fields = ('comment',)
-		labels = {'comment': "",}
-		widgets = {'comment': forms.Textarea(attrs={'rows':4, 'cols':50}),}
+		labels = {'comment': "", }
+		widgets = {'comment': forms.Textarea(attrs={'rows': 4, 'cols': 50}), }
+
 
 class ResolveIssueForm(forms.ModelForm):
 	class Meta:
 		model = Sample
-		fields = ('comment', 
-				'issue_outcome',)
-		labels = {'comment': "", 
-				'issue_outcome' : "Outcome",}
-		widgets = {'comment': forms.Textarea(attrs={'rows':4, 'cols':50}),}
+		fields = ('comment',
+				  'issue_outcome',)
+		labels = {'comment': "",
+				  'issue_outcome': "Outcome", }
+		widgets = {'comment': forms.Textarea(attrs={'rows': 4, 'cols': 50}), }
+
 
 class PlatingForm(ModelForm):
 	class Meta:
@@ -66,12 +70,13 @@ class PlatingForm(ModelForm):
 		else:
 			raise ValidationError("Required field.")
 
+
 class Gel1008Form(ModelForm):
 	class Meta:
 		model = Gel1008Csv
 		fields = ('consignment_number', 'date_of_dispatch')
 		widgets = {
-			'date_of_dispatch': forms.DateInput(attrs={'type': 'date','data-provide': 'datepicker'}),
+			'date_of_dispatch': forms.DateInput(attrs={'type': 'date', 'data-provide': 'datepicker'}),
 		}
 		labels = {
 			'consignment_number': "Consignment Number",

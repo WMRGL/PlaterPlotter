@@ -2,7 +2,7 @@ from django.db import models
 
 from notifications.choices import well_ids
 from notifications.models import Sample
-from platerplotter.models import Gel1008Csv
+from ready.models import Gel1008Csv
 
 
 # Create your models here.

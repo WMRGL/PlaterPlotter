@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'problemsamples',
     'awaitingsorting',
     'holdingracks',
-    'readytoplate',
+    'ready',
     'bootstrap4',
     'easyaudit',
     'crispy_bootstrap4',

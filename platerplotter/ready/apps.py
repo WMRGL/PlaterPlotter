@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class ReadytoplateConfig(AppConfig):
+class ReadyConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'readytoplate'
+    name = 'ready'

@@ -20,13 +20,13 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Table, TableStyle
 
 from holdingracks.models import HoldingRack, HoldingRackWell
-from notifications.models import Gel1005Csv, Gel1004Csv, ReceivingRack
+from notifications.models import Gel1005Csv, Gel1004Csv, ReceivingRack, Sample
 from problemsamples.forms import SampleSelectForm, LogIssueForm
 from problemsamples.models import RackScannerSample, RackScanner
 from .config.load_config import LoadConfig
 from .forms import (HoldingRackForm, PlatingForm, Gel1008Form, ResolveIssueForm, PlateSelectForm)
 from .holding_rack_manager import HoldingRackManager
-from .models import (Gel1008Csv, Sample)
+from ready.models import Gel1008Csv
 from holdingracks.models import Plate
 
 

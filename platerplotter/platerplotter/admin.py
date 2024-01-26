@@ -1,8 +1,8 @@
 from django.contrib import admin
 
 from holdingracks.models import HoldingRack, HoldingRackWell, Plate
-from platerplotter.models import (Gel1008Csv,  Sample)
-from notifications.models import Gel1005Csv, Gel1004Csv, ReceivingRack
+from ready.models import (Gel1008Csv)
+from notifications.models import Gel1005Csv, Gel1004Csv, ReceivingRack, Sample
 
 
 class Gel1004CsvAdmin(admin.ModelAdmin):

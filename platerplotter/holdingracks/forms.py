@@ -37,3 +37,14 @@ class PlatingForm(ModelForm):
 			return plate_id.upper()
 		else:
 			raise ValidationError("Required field.")
+
+
+class PlateSelectForm(forms.Form):
+	plate_id = forms.CharField(label='', widget=forms.TextInput(attrs={'autofocus': 'autofocus'}))
+
+	def clean_plate_id(self):
+		plate_id = self.cleaned_data['plate_id'].upper()
+		if not re.match(r'^LP\d{7}-DNA$', plate_id):
+			raise ValidationError("Invalid Plate ID")
+		else:
+			return plate_id.upper()
