@@ -355,6 +355,7 @@ form.value = '';
 function myFunction(position) {
   var unassignedWells = document.getElementsByClassName('unassigned')
   var form = document.getElementById('well');
+
   for (var i = 0; i < unassignedWells.length; i++) {
     unassignedWells[i].style.backgroundColor = '#e9ecef'
   }
@@ -367,9 +368,14 @@ function myFunction(position) {
   }
 }
 
-  var all_samples = document.getElementsByClassName('assigned')
-  var total_current_samples = document.getElementById('total_sample')
-  total_current_samples.textContent = all_samples.length
+  var all_samples = document.getElementsByClassName('assigned');
+  var total_current_samples = document.getElementById('total_sample');
+  total_current_samples.textContent = all_samples.length;
+
+  // Change the last element colour
+  var new_all = Array.from(all_samples);
+  var last_element = new_all.slice(-1)[0];
+  last_element.style.backgroundColor = "green";
 </script>
 
 {% endblock content %}
