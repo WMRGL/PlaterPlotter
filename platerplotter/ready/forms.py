@@ -1,9 +1,11 @@
 import re
-from datetime import timezone
+from datetime import datetime
 
 from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import ModelForm
+from django.utils import timezone
+
 
 from platerplotter.models import Gel1008Csv
 

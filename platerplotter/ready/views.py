@@ -1,6 +1,7 @@
 import csv
 import os
-from datetime import datetime, time
+import time
+from datetime import datetime
 from pathlib import Path
 
 import pytz
