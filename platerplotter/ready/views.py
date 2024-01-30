@@ -15,12 +15,10 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Table, TableStyle
 
 from holdingracks.holding_rack_manager import HoldingRackManager
-from holdingracks.models import HoldingRack, Plate, HoldingRackWell
-from notifications.models import Sample
+from platerplotter.models import Sample, HoldingRack, Plate, HoldingRackWell, Gel1008Csv
 from platerplotter.config.load_config import LoadConfig
 from ready.forms import Gel1008Form
 from holdingracks.forms import PlateSelectForm
-from .models import Gel1008Csv
 
 
 # Create your views here.

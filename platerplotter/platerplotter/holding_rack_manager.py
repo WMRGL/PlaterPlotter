@@ -1,8 +1,7 @@
-from holdingracks.models import HoldingRackWell
-from platerplotter.models import Sample
 from django.contrib import messages
 
-from holdingracks.models import Plate
+from platerplotter.models import Sample, HoldingRackWell, Plate
+
 class HoldingRackManager():
 
 	def __init__(self, holding_rack):

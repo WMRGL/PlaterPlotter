@@ -1,8 +1,9 @@
 from django.contrib import admin
 
-from holdingracks.models import HoldingRack, HoldingRackWell, Plate
-from ready.models import (Gel1008Csv)
-from notifications.models import Gel1005Csv, Gel1004Csv, ReceivingRack, Sample
+from platerplotter.models import (
+	HoldingRack, HoldingRackWell, Plate, Gel1008Csv, Gel1005Csv, Gel1004Csv, ReceivingRack, Sample
+)
+
 
 
 class Gel1004CsvAdmin(admin.ModelAdmin):
@@ -68,7 +69,7 @@ admin.site.register(Gel1004Csv, Gel1004CsvAdmin)
 admin.site.register(Gel1005Csv, Gel1005CsvAdmin)
 admin.site.register(Gel1008Csv, Gel1008CsvAdmin)
 admin.site.register(ReceivingRack, ReceivingRackAdmin)
-admin.site.register(HoldingRack, HoldingRackAdmin)
+# admin.site.register(HoldingRack, HoldingRackAdmin)
 admin.site.register(HoldingRackWell, HoldingRackWellAdmin)
 admin.site.register(Plate, PlateAdmin)
 admin.site.register(Sample, SampleAdmin)

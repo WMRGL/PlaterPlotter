@@ -5,7 +5,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import ModelForm
 
-from ready.models import Gel1008Csv
+from platerplotter.models import Gel1008Csv
 
 
 class Gel1008Form(ModelForm):

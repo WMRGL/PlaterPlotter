@@ -12,9 +12,7 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 
 from platerplotter.config.load_config import LoadConfig
-from platerplotter.models import Sample
-
-from .models import Gel1005Csv, Gel1004Csv, ReceivingRack
+from platerplotter.models import Sample, Gel1005Csv, Gel1004Csv, ReceivingRack
 
 
 # Create your views here.

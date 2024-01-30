@@ -10,8 +10,8 @@ from django.urls import reverse
 from platerplotter.config.load_config import LoadConfig
 from .forms import HoldingRackForm, PlatingForm
 from .holding_rack_manager import HoldingRackManager
-from .models import HoldingRackWell, HoldingRack, Plate
-from notifications.models import Sample, ReceivingRack
+from platerplotter.models import HoldingRackWell, HoldingRack, Plate
+from platerplotter.models import Sample, ReceivingRack
 from problemsamples.forms import LogIssueForm, SampleSelectForm
 from problemsamples.views import confirm_sample_positions
 

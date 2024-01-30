@@ -7,8 +7,7 @@ from platerplotter.models import Sample
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from holdingracks.models import Plate
-from ready.models import Gel1008Csv
+from platerplotter.models import Plate, Gel1008Csv
 
 
 class HoldingRackForm(forms.Form):

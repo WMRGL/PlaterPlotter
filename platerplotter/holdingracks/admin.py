@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import HoldingRack
+from platerplotter.models import HoldingRack
 # Register your models here.
 
 
@@ -10,3 +10,5 @@ class HoldingRackAdmin(admin.ModelAdmin):
 	list_display = ['holding_rack_id', 'holding_rack_type']
 	search_fields = ['holding_rack_id']
 
+
+admin.site.register(HoldingRack, HoldingRackAdmin)

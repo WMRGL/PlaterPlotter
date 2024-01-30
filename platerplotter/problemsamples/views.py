@@ -11,11 +11,8 @@ from django.shortcuts import render
 from django.urls import reverse
 
 from holdingracks.forms import HoldingRackForm
-from holdingracks.models import HoldingRack, HoldingRackWell
 from platerplotter.config.load_config import LoadConfig
-from .models import RackScanner, RackScannerSample
-from notifications.models import Sample, ReceivingRack
-
+from platerplotter.models import Sample, ReceivingRack, RackScanner, RackScannerSample, HoldingRack, HoldingRackWell
 from problemsamples.forms import LogIssueForm, ResolveIssueForm, SampleSelectForm
 from platerplotter.holding_rack_manager import HoldingRackManager
 # Create your views here.

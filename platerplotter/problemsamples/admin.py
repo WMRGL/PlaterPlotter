@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import RackScanner, RackScannerSample
+from platerplotter.models import RackScanner, RackScannerSample
 
 
 # Register your models here.
