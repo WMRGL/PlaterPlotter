@@ -29,5 +29,6 @@ urlpatterns = [
     path('awaiting/', include('awaitingsorting.urls')),
     path('holding/', include('holdingracks.urls')),
     path('ready/', include('ready.urls')),
+    path('discard/', include('discards.urls')),
     path('', import_acks, name='index'),
 ]

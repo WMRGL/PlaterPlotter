@@ -18,6 +18,7 @@ class Gel1005Csv(models.Model):
 		verbose_name = 'Gel1005 CSV'
 		verbose_name_plural = 'Gel1005 CSVs'
 
+
 class Gel1004Csv(models.Model):
 	gel_1005_csv = models.ForeignKey(Gel1005Csv, on_delete=models.CASCADE, null=True, blank=True)
 	filename = models.CharField(max_length=60)
@@ -50,6 +51,7 @@ class Gel1008Csv(models.Model):
 		verbose_name = 'Gel1008 CSV'
 		verbose_name_plural = 'Gel1008 CSVs'
 
+
 class ReceivingRack(models.Model):
 	gel_1004_csv = models.ForeignKey(Gel1004Csv, on_delete=models.CASCADE)
 	receiving_rack_id = models.CharField(max_length=12)
@@ -57,15 +59,17 @@ class ReceivingRack(models.Model):
 	glh_sample_consignment_number = models.CharField(max_length=50)
 	rack_acknowledged = models.BooleanField(default=False)
 	volume_checked = models.BooleanField(default=False)
-	disease_area = models.CharField(max_length=12, choices = (
-			("Cancer", "Cancer"),
-			("Rare Disease", "Rare Disease"),
-			("Mixed", "Mixed")), null=True, blank=True)
+	disease_area = models.CharField(max_length=12, choices=(
+		("Cancer", "Cancer"),
+		("Rare Disease", "Rare Disease"),
+		("Mixed", "Mixed")), null=True, blank=True)
 	rack_type = models.CharField(max_length=15, choices=(("Proband", "Proband"),
-		("Family", "Family"), ("Cancer Germline", "Cancer Germline"),
-		("Tumour", "Tumour"), ("Mixed", "Mixed")), null=True, blank=True)
+														 ("Family", "Family"), ("Cancer Germline", "Cancer Germline"),
+														 ("Tumour", "Tumour"), ("Mixed", "Mixed")), null=True,
+								 blank=True)
 	priority = models.CharField(max_length=10, choices=(("Routine", "Routine"),
-		("Urgent", "Urgent"), ("Mixed", "Mixed")), null=True, blank=True)	
+														("Urgent", "Urgent"), ("Mixed", "Mixed")), null=True,
+								blank=True)
 
 	def __str__(self):
 		return self.receiving_rack_id
@@ -84,8 +88,10 @@ class ReceivingRack(models.Model):
 		verbose_name = 'Receiving rack'
 		verbose_name_plural = 'Receiving racks'
 
+
 class Plate(models.Model):
-	gel_1008_csv = models.ForeignKey(Gel1008Csv, on_delete=models.SET_NULL, null=True, blank=True, related_name='related_plate')
+	gel_1008_csv = models.ForeignKey(Gel1008Csv, on_delete=models.SET_NULL, null=True, blank=True,
+									 related_name='related_plate')
 	plate_id = models.CharField(max_length=13, unique=True)
 
 	def __str__(self):
@@ -97,19 +103,22 @@ class Plate(models.Model):
 		verbose_name = 'Plate'
 		verbose_name_plural = 'Plates'
 
+
 class HoldingRack(models.Model):
 	plate = models.OneToOneField(Plate, on_delete=models.CASCADE, null=True, blank=True, related_name='holding_rack')
 	holding_rack_id = models.CharField(max_length=11)
-	disease_area = models.CharField(max_length=12, choices = (
-			("Cancer", "Cancer"),
-			("Rare Disease", "Rare Disease"),
-			("Unassigned", "Unassigned")), default="Unassigned")
-	holding_rack_type = models.CharField(max_length=15, choices=(("Proband", "Proband"),
-		("Family", "Family"), ("Cancer Germline", "Cancer Germline"),
-		("Tumour", "Tumour"), ("Problem", "Problem"), ("Unassigned", "Unassigned")), default="Unassigned")
-	priority = models.CharField(max_length=10, choices=(("Routine", "Routine"),
-		("Urgent", "Urgent"),
+	disease_area = models.CharField(max_length=12, choices=(
+		("Cancer", "Cancer"),
+		("Rare Disease", "Rare Disease"),
 		("Unassigned", "Unassigned")), default="Unassigned")
+	holding_rack_type = models.CharField(max_length=15, choices=(("Proband", "Proband"),
+																 ("Family", "Family"),
+																 ("Cancer Germline", "Cancer Germline"),
+																 ("Tumour", "Tumour"), ("Problem", "Problem"),
+																 ("Unassigned", "Unassigned")), default="Unassigned")
+	priority = models.CharField(max_length=10, choices=(("Routine", "Routine"),
+														("Urgent", "Urgent"),
+														("Unassigned", "Unassigned")), default="Unassigned")
 	half_full = models.BooleanField(default=False)
 	full = models.BooleanField(default=False)
 	ready_to_plate = models.BooleanField(default=False)
@@ -124,6 +133,7 @@ class HoldingRack(models.Model):
 		verbose_name = 'Holding rack'
 		verbose_name_plural = 'Holding racks'
 
+
 class Sample(models.Model):
 	uid = models.CharField(max_length=100, unique=True)
 	receiving_rack = models.ForeignKey(ReceivingRack, on_delete=models.CASCADE)
@@ -131,25 +141,32 @@ class Sample(models.Model):
 	participant_id = models.CharField(max_length=20)
 	group_id = models.CharField(max_length=20)
 	priority = models.CharField(max_length=7, choices=(("Routine", "Routine"),
-		("Urgent", "Urgent")), default="Routine")
-	disease_area = models.CharField(max_length=12, choices = (
-			("Cancer", "Cancer"),
-			("Rare Disease", "Rare Disease")))
+													   ("Urgent", "Urgent")), default="Routine")
+	disease_area = models.CharField(max_length=12, choices=(
+		("Cancer", "Cancer"),
+		("Rare Disease", "Rare Disease")))
 	sample_type = models.CharField(max_length=15, choices=(("Proband", "Proband"),
-		("Family", "Family"), ("Cancer Germline", "Cancer Germline"),
-		("Tumour", "Tumour"), ("Unassigned", "Unassigned")), default="Unassigned")
-	clin_sample_type = models.CharField(max_length=44, choices = sample_types)
+														   ("Family", "Family"), ("Cancer Germline", "Cancer Germline"),
+														   ("Tumour", "Tumour"), ("Unassigned", "Unassigned")),
+								   default="Unassigned")
+	clin_sample_type = models.CharField(max_length=44, choices=sample_types)
 	laboratory_sample_id = models.CharField(max_length=10)
 	laboratory_sample_volume = models.IntegerField()
 	is_proband = models.BooleanField()
 	is_repeat = models.CharField(max_length=50, choices=(("New", "New"),
-		("Retrospective", "Retrospective"), ("Repeat New", "Repeat New"),
-		("Repeat Retrospective", "Repeat Retrospective")), default="New")
+														 ("Retrospective", "Retrospective"),
+														 ("Repeat New", "Repeat New"),
+														 ("Repeat Retrospective", "Repeat Retrospective")),
+								 default="New")
 	tissue_type = models.CharField(max_length=50, choices=(("Normal or Germline sample", "Normal or Germline sample"),
-		("Liquid tumour sample", "Liquid tumour sample"), ("Solid tumour sample", "Solid tumour sample"),
-		("Abnormal tissue sample", "Abnormal tissue sample"), ("Omics sample", "Omics sample")))
-	sample_delivery_mode = models.CharField(max_length=50, blank=True, default="Standard", choices=(("Tumour First", "Tumour First"),
-					("Germline Late", "Germline Late"), ("Family Only", "Family Only"), ("Standard", "Standard")))
+														   ("Liquid tumour sample", "Liquid tumour sample"),
+														   ("Solid tumour sample", "Solid tumour sample"),
+														   ("Abnormal tissue sample", "Abnormal tissue sample"),
+														   ("Omics sample", "Omics sample")))
+	sample_delivery_mode = models.CharField(max_length=50, blank=True, default="Standard",
+											choices=(("Tumour First", "Tumour First"),
+													 ("Germline Late", "Germline Late"), ("Family Only", "Family Only"),
+													 ("Standard", "Standard")))
 	sample_received = models.BooleanField(default=False)
 	sample_matched = models.BooleanField(default=False)
 	sample_received_datetime = models.DateTimeField(null=True)
@@ -158,9 +175,11 @@ class Sample(models.Model):
 	issue_identified = models.BooleanField(default=False)
 	comment = models.TextField(blank=True, null=True)
 	issue_outcome = models.CharField(max_length=64, choices=(("Not resolved", "Not resolved"),
-		("Ready for plating", "Ready for plating"),
-		("Sample returned to extracting GLH", "Sample returned to extracting GLH"), 
-		("Sample destroyed", "Sample destroyed")), blank=True, null=True)
+															 ("Ready for plating", "Ready for plating"),
+															 ("Sample returned to extracting GLH",
+															  "Sample returned to extracting GLH"),
+															 ("Sample destroyed", "Sample destroyed")), blank=True,
+									 null=True)
 	bypass_plating_rules = models.BooleanField(default=False)
 
 	def __str__(self):
@@ -172,11 +191,13 @@ class Sample(models.Model):
 		verbose_name = 'Sample'
 		verbose_name_plural = 'Samples'
 
+
 class HoldingRackWell(models.Model):
-	holding_rack = models.ForeignKey(HoldingRack, on_delete=models.CASCADE, related_name = 'wells')
+	holding_rack = models.ForeignKey(HoldingRack, on_delete=models.CASCADE, related_name='wells')
 	well_id = models.CharField(max_length=3, choices=well_ids)
 	buffer_added = models.BooleanField(default=False)
-	sample = models.OneToOneField(Sample, on_delete=models.SET_NULL, null=True, blank=True, related_name='holding_rack_well')
+	sample = models.OneToOneField(Sample, on_delete=models.SET_NULL, null=True, blank=True,
+								  related_name='holding_rack_well')
 
 	def __str__(self):
 		return self.holding_rack.holding_rack_id + ' ' + self.well_id
@@ -186,6 +207,7 @@ class HoldingRackWell(models.Model):
 		db_table = 'HoldingRackWell'
 		verbose_name = 'Holding rack well'
 		verbose_name_plural = 'Holding rack wells'
+
 
 class RackScanner(models.Model):
 	filename = models.CharField(max_length=60)
@@ -208,7 +230,7 @@ class RackScannerSample(models.Model):
 	rack_scanner = models.ForeignKey(RackScanner, on_delete=models.CASCADE)
 	sample_id = models.CharField(max_length=10)
 	position = models.CharField(max_length=3, choices=well_ids)
-	matched = models.BooleanField(default=False) 
+	matched = models.BooleanField(default=False)
 
 	class Meta:
 		unique_together = (('rack_scanner', 'sample_id', 'position'))

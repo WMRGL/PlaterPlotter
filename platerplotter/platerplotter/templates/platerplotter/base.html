@@ -52,6 +52,9 @@
 	                <li class="nav nav-item">
 	                    <a class="nav-link {% if url_name == 'audit' %}active{% endif %}" href="{% url 'ready:audit' %}">Audit</a>
 	                </li>
+					<li class="nav nav-item">
+	                    <a class="nav-link {% if url_name == 'discards_index' %}active{% endif %}" href="{% url 'discards:discards_index' %}">Discard</a>
+	                </li>
 		            <li class="nav-item dropdown">
 	                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span><i class="fas fa-user"></i></span> {{ request.user.username }}</a>
 	                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
@@ -78,6 +81,9 @@
 		        {% if message.level == DEFAULT_MESSAGE_LEVELS.INFO %}
 		          <div class="alert alert-success" role="alert"><strong>{{ message|safe }}</strong></div>
 		        {% endif %}
+				{% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+		          <div class="alert alert-success" role="alert"><strong>{{ message }}</strong></div>
+		        {% endif %}
 		    {% else %}
 		   		{% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
 		          <div class="alert alert-danger" role="alert"><strong>{{ message }}</strong></div>
@@ -86,6 +92,9 @@
 		          <div class="alert alert-warning" role="alert"><strong>{{ message }}</strong></div>
 		        {% endif %}
 		        {% if message.level == DEFAULT_MESSAGE_LEVELS.INFO %}
+		          <div class="alert alert-success" role="alert"><strong>{{ message }}</strong></div>
+		        {% endif %}
+				{% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
 		          <div class="alert alert-success" role="alert"><strong>{{ message }}</strong></div>
 		        {% endif %}
 		    {% endif %}
