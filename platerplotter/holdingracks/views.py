@@ -242,7 +242,7 @@ def holding_racks_well(request, holding_rack_id=None, holding_racks_well_id=None
 				return HttpResponseRedirect(url)
 	else:
 		holding_rack_form = HoldingRackForm()
-	return render(request, 'holdingracks/holding-racks.html', {
+	return render(request, 'holdingracks/holding-racks-well.html', {
 		"holding_rack_form": holding_rack_form,
 		"holding_rack": holding_rack,
 		"holding_rack_samples": holding_rack_samples,

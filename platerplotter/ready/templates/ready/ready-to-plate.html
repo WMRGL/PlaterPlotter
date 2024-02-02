@@ -51,5 +51,19 @@
       </div>
     </div>
   </div>
-
+  </div>
 {% endblock content %}
+
+
+{% block javascript %}
+  <script>
+    $(document).ready( function () {
+        var table = $('#dataTable').DataTable();
+        function foco(){
+        $('div.dataTables_filter input', table.table().container()).focus();
+        }
+        setTimeout(foco, 1)
+        });
+  </script>
+
+{% endblock %}

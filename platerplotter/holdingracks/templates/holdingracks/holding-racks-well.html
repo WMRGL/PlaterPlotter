@@ -59,7 +59,7 @@
                     {% for column in holding_rack_columns %}
                       {% if row|add:column in assigned_well_list %}
                         {% for sample in holding_rack_samples %}
-                          {% if row|add:column == sample.holding_rack_well.well_id %}
+                          {% if row|add:column == sample.holding_rack_well.well_id and row|add:column == holding_racks_well_id %}
                             <td title='Position:             {{row|add:column}}
   Laboratory ID:    {{sample.laboratory_sample_id}}
   Participant ID:     {{sample.participant_id}}
@@ -219,11 +219,27 @@
   var all_samples = document.getElementsByClassName('assigned');
   var total_current_samples = document.getElementById('total_sample');
   total_current_samples.textContent = all_samples.length;
+  const dTable = document.getElementById('dataTable')
 
   // Change the last element colour
   var new_all = Array.from(all_samples);
   var last_element = new_all.slice(-1)[0];
   last_element.style.backgroundColor = "green";
+
+  // Assuming the URL is stored in a variable called url
+  var url = window.location.href;
+  var parsedUrl = new URL(url);
+  var pathname = parsedUrl.pathname;
+  var segments = pathname.split('/');
+  var yourVariable = segments[segments.length - 2];
+
+document.addEventListener("DOMContentLoaded", function() {
+
+  var table = $('#dataTable').DataTable();
+
+    table.destroy();
+  table.search(`${yourVariable}`).draw();
+});
 
 </script>
 
