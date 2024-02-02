@@ -349,6 +349,7 @@ def audit(request):
 			'-sample_received_datetime')[0:1000]
 	else:
 		samples = None
+	print(samples)
 	return render(request, 'ready/audit.html', {"samples": samples})
 
 

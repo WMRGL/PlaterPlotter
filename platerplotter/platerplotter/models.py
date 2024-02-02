@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.urls import reverse
 
 from notifications.choices import well_ids, sample_types
 from platerplotter.choices import lab_ids
@@ -184,6 +185,12 @@ class Sample(models.Model):
 
 	def __str__(self):
 		return self.laboratory_sample_id
+
+	def get_absolute_url(self):
+		return reverse('holdingracks:holding_racks_well', kwargs={
+			'holding_rack_id': str(self.holding_rack_well).split()[-2],
+			'holding_racks_well_id': str(self.holding_rack_well).split()[-1]
+		})
 
 	class Meta:
 		app_label = 'platerplotter'

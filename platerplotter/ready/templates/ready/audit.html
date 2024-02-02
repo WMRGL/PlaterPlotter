@@ -52,7 +52,11 @@
             <tbody>
             {% for sample in samples %}
             <tr>
-              <td>{{ sample.laboratory_sample_id }}</td>
+              {% if sample.get_absolute_url  %}
+                <td><a href="{{sample.get_absolute_url}}">{{ sample.laboratory_sample_id }}</a></td>
+                {% else %}
+                <td>{{ sample.laboratory_sample_id }}</td>
+                {% endif %}
               <td>{{ sample.participant_id }}</td>
               <td>{{ sample.group_id }}</td>
               <td>{{ sample.sample_type }}</td>
