@@ -8,7 +8,7 @@ from platerplotter.models import HoldingRack
 
 
 class Discard(models.Model):
-	holding_rack_id = models.CharField(max_length=15)
+	holding_rack = models.ForeignKey(HoldingRack, on_delete=models.SET_NULL, null=True, blank=True)
 	discarded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 	checked_by = models.CharField(max_length=255)
 	dispatch_date = models.DateField()
@@ -16,7 +16,11 @@ class Discard(models.Model):
 	created = models.DateTimeField(auto_now_add=True)
 
 	def __str__(self):
-		return self.holding_rack_id
+		return self.holding_rack
+
+	@property
+	def discarded_by_name(self):
+		return f"{self.discarded_by.first_name} {self.discarded_by.last_name}"
 
 	class Meta:
 		db_table = 'Discard'

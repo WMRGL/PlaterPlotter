@@ -33,7 +33,7 @@
             <tbody>
             {% for rack, samples in unplated_racks_dict.items %}
             <tr>
-              <td><a
+              <td><a class="result-link"
                       href="{% url 'awaitingsorting:assign_samples_to_holding_rack' gel1004=rack.gel_1004_csv.pk rack=rack.receiving_rack_id %}">
                 {{ rack.receiving_rack_id }}
               </a></td>
@@ -81,16 +81,21 @@
 
 {% endblock content %}
 
+{% block javascript %}
+    <script>
+        $(document).ready(function () {
+            var table = $('#dataTable').DataTable();
 
-    {% block javascript %}
-<script>
-  $(document).ready( function () {
-      var table = $('#dataTable').DataTable();
-      function foco(){
-      $('div.dataTables_filter input', table.table().container()).focus();
-      }
-      setTimeout(foco, 1)
-      });
-</script>
+            table.on('draw', function () {
+                var searchData = table.rows({search: 'applied'}).data().toArray();
+                if (searchData.length === 1) {
+                    searchData.forEach(function (row) {
+                        var link = $(row[0]).attr('href');
+                        window.open(link, '_blank');
+                    });
+                }
+            });
+        });
 
-    {% endblock %}
+    </script>
+{% endblock %}

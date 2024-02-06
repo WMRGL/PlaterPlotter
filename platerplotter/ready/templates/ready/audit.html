@@ -46,7 +46,8 @@
                 <th>Consignment Number</th>
                 <th>Date of Dispatch</th>
                 <th>Issue</th>
-                <th>Issue Outcome</th>    
+                <th>Issue Outcome</th>
+                  <th>Comment</th>
               </tr>
             </thead>
             <tbody>
@@ -76,6 +77,7 @@
               <td>{{ sample.holding_rack_well.holding_rack.plate.gel_1008_csv.date_of_dispatch|date:"Y/m/d G:i" }}</td>
               <td>{{ sample.comment }}</td>
               <td>{{ sample.issue_outcome }}</td>
+                <td>{{ sample.comment }}</td>
             </tr>
             {% endfor %}
           </tbody>

@@ -7,7 +7,7 @@ from django.forms import ModelForm
 from django.utils import timezone
 
 
-from platerplotter.models import Gel1008Csv
+from platerplotter.models import Gel1008Csv, Sample
 
 
 class Gel1008Form(ModelForm):
@@ -45,3 +45,7 @@ class Gel1008Form(ModelForm):
 			raise ValidationError("Required field.")
 
 
+class SampleForm(forms.ModelForm):
+	class Meta:
+		model = Sample
+		fields = ['comment']

@@ -8,7 +8,7 @@ from .models import Discard
 class DiscardAdmin(admin.ModelAdmin):
 	model = Discard
 
-	list_display = ['holding_rack_id', 'discarded_by', 'checked_by', 'dispatch_date']
+	list_display = ['discarded_by_name', 'holding_rack_id', 'checked_by', 'dispatch_date']
 
 
 admin.site.register(Discard, DiscardAdmin)

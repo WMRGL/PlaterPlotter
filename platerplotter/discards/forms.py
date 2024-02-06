@@ -7,7 +7,7 @@ from .models import Discard
 class DiscardForm(forms.ModelForm):
 	class Meta:
 		model = Discard
-		fields = ['holding_rack_id', 'checked_by', 'dispatch_date', 'discarded_by']
+		fields = ['holding_rack', 'checked_by', 'dispatch_date', 'discarded_by']
 
 	def __init__(self, *args, **kwargs):
 		current_user = kwargs.pop('current_user', None)
