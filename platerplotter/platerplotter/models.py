@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
@@ -125,6 +126,9 @@ class HoldingRack(models.Model):
     ready_to_plate = models.BooleanField(default=False)
     positions_confirmed = models.BooleanField(default=False)
     discarded = models.BooleanField(default=False)
+    discarded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    checked_by = models.CharField(max_length=120, null=True, blank=True)
+    discard_date = models.DateTimeField(blank=True, null=True)
 
 
     def __str__(self):

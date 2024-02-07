@@ -5,5 +5,5 @@ from . import views
 app_name = 'discards'
 
 urlpatterns = [
-	path('', views.discard_view, name='discards_index')
+	path('', views.discards_index, name='discards_index'),
 ]

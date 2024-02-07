@@ -66,7 +66,7 @@
               <tbody>
               {% for holding_rack, samples in problem_holding_rack_dict.items %}
               <tr>
-                <td><a href="awaiting/assign-samples-to-holding-rack/{{ holding_rack.holding_rack_id }}">{{ holding_rack.holding_rack_id }}</a></td>
+                <td><a href="{% url 'awaitingsorting:assign_samples_to_holding_rack' rack=holding_rack.holding_rack_id %}">{{ holding_rack.holding_rack_id }}</a></td>
                 <td>{{ holding_rack.holding_rack_type }}</td>
                 <td>{{ samples|length }}</td>
               </tr>
