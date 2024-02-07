@@ -86,6 +86,14 @@
         $(document).ready(function () {
             var table = $('#dataTable').DataTable();
 
+            // auto focus datatable
+              function foco() {
+                $('div.dataTables_filter input', table.table().container()).focus();
+            }
+
+            setTimeout(foco, 1)
+
+            // auto open search result link
             table.on('draw', function () {
                 var searchData = table.rows({search: 'applied'}).data().toArray();
                 if (searchData.length === 1) {
