@@ -3,12 +3,13 @@
 
 {% block content %}
     {% if discard_racks %}
-        <div class="container">
-            <form action="." method="post">
+        <div class="container-fluid">
+            <form id="discardForm" action="." method="post">
                 {% csrf_token %}
                 <table class="table table-bordered" id="dataTable">
                     <thead>
                     <tr>
+                        <th>Select</th>
                         <th>Holding rack ID</th>
                         <th>Date of dispatch</th>
                         <th>Status</th>
@@ -18,12 +19,22 @@
                     </tr>
                     </thead>
                     <tbody>
+                    <tr>
+                        <td>
+                            <input type="checkbox" id="selectAll">
+                        </td>
+                        <td colspan="6">Select All</td>
+                    </tr>
                     {% for discard_rack in discard_racks %}
                         <tr>
                             <td>
+                                <input type="checkbox" class="discard-checkbox" name="selected_rack"
+                                       value="{{ discard_rack.holding_rack_id }}">
+                            </td>
+                            <td>
                                 <div class="form-group">
                                     <input type="text" class="form-control" value="{{ discard_rack.holding_rack_id }}"
-                                           name="holding_rack_id" id="checkedBy" readonly>
+                                           name="holding_rack_id" readonly>
                                 </div>
                             </td>
                             <td>{{ discard_rack.plate.gel_1008_csv.date_of_dispatch }}</td>
@@ -31,15 +42,14 @@
                             <td>{{ user }}</td>
                             <td>
                                 <div class="form-group">
-                                    <input type="text" class="form-control" name="checked_by" >
+                                    <input type="text" class="form-control" name="checked_by">
                                 </div>
                             </td>
                             <td>
                                 <div class="form-group">
-                                    <input type="checkbox" class="form-control" name="discarded" >
+                                    <input type="checkbox" class="form-control" name="discarded">
                                 </div>
                             </td>
-
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -47,41 +57,48 @@
                 <button type="submit" class="btn btn-primary">Submit</button>
             </form>
         </div>
+
+    {% else %}
+        <div class="alert alert-success" role="alert">
+            No holding racks available
+        </div>
     {% endif %}
 
+{% comment %}
+    <div class="container">
+      <form action="." method="post"> {% csrf_token %}
+        <div class="form-group">
+          <label for="holdingRackID">Holding Rack ID</label>
+          <input type="text" class="form-control" id="holdingRackID" name="holding_rack_id">
+        </div>
 
-{#    <div class="container">#}
-{#      <form action="." method="post"> {% csrf_token %}#}
-{#        <div class="form-group">#}
-{#          <label for="holdingRackID">Holding Rack ID</label>#}
-{#          <input type="text" class="form-control" id="holdingRackID" name="holding_rack_id">#}
-{#        </div>#}
-{##}
-{#        <div class="form-group">#}
-{#          <label for="dateOfDispatch">Date of dispatch</label>#}
-{#          <input type="date" class="form-control" id="dateOfDispatch" name="dispatch_date">#}
-{#        </div>#}
-{##}
-{#        <div class="form-group">#}
-{#        <label for="discardedBy">Discarded by</label>#}
-{#          <span id="discardedBy" class="form-control" >{{discard_form.discarded_by}}</span>#}
-{#      </div>#}
-{##}
-{#        <div class="form-group">#}
-{#          <label for="checkedBy">Checked By</label>#}
-{#          <input type="text" class="form-control" name="checked_by" id="checkedBy">#}
-{#        </div>#}
-{##}
-{#        <div class="form-group">#}
-{#          <label for="discardStatus">Status</label>#}
-{#          <input type="text" class="form-control" id="discardStatus" readonly>#}
-{#        </div>#}
-{##}
-{#        <button type="submit" id="discardBtn" class="btn btn-primary" disabled>Submit</button>#}
-{#      </form>#}
-{#    </div>#}
+        <div class="form-group">
+          <label for="dateOfDispatch">Date of dispatch</label>
+          <input type="date" class="form-control" id="dateOfDispatch" name="dispatch_date">
+        </div>
+
+        <div class="form-group">
+        <label for="discardedBy">Discarded by</label>
+          <span id="discardedBy" class="form-control" >{{discard_form.discarded_by}}</span>
+      </div>
+
+        <div class="form-group">
+          <label for="checkedBy">Checked By</label>
+          <input type="text" class="form-control" name="checked_by" id="checkedBy">
+        </div>
+
+        <div class="form-group">
+          <label for="discardStatus">Status</label>
+          <input type="text" class="form-control" id="discardStatus" readonly>
+        </div>
+
+        <button type="submit" id="discardBtn" class="btn btn-primary" disabled>Submit</button>
+      </form>
+    </div>{% endcomment %}
 
 <script>
+{% comment %}
+
   let dispatchDateInput = document.getElementById('dateOfDispatch');
   let todayDate = new Date();
   const discardStatusText = document.getElementById('discardStatus');
@@ -102,8 +119,19 @@
       discardStatusText.value = 'DO NOT DISCARD';
       discardStatusText.style.backgroundColor = '#ff000047';
     }
-  }
+{% endcomment %}
 
+
+  document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('selectAll').addEventListener('click', function () {
+            const checkboxes = document.querySelectorAll('.discard-checkbox');
+            checkboxes.forEach((checkbox) => {
+                checkbox.checked = this.checked;
+            });
+        });
+    });
 </script>
+
+
 
 {% endblock %}

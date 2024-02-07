@@ -1,5 +1,4 @@
-import datetime
-from datetime import date
+from datetime import date, datetime
 
 from django.contrib import messages
 from django.contrib.auth.models import User
@@ -8,6 +7,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .forms import DiscardForm
 from platerplotter.models import HoldingRack
+
 
 @login_required
 def discard_view(request):
@@ -29,7 +29,7 @@ def discard_view(request):
     }
     return render(request, 'discards/discard.html', context=context)
 
-@login_required()
+
 def discards_index(request):
     context = {}
     holding_racks = HoldingRack.objects.all()
@@ -38,24 +38,24 @@ def discards_index(request):
     discard_form = DiscardForm(request.POST or None)
 
     for holding_rack in holding_racks:
-        if holding_rack.plate and holding_rack.discarded == False:
+        if holding_rack.plate and not holding_rack.discarded:
             dispatch_date = holding_rack.plate.gel_1008_csv.date_of_dispatch.date()
             today = date.today()
             weeks = (today - dispatch_date).days // 7
             if weeks > 9:
                 discard_racks.append(holding_rack)
-        else:
-            pass
 
     if request.method == 'POST':
         if discard_form.is_valid():
-            obj = HoldingRack.objects.filter(holding_rack_id=discard_form.cleaned_data['holding_rack_id']).last()
-            obj.checked_by = discard_form.cleaned_data['checked_by']
-            obj.discarded = discard_form.cleaned_data['discarded']
-            obj.discarded_by = current_user
-            obj.discard_date = datetime.datetime.now()
-            obj.save()
-            messages.success(request, 'Holding Rack discarded successfully')
+            selected_racks = request.POST.getlist('selected_rack')
+            for rack_id in selected_racks:
+                obj = HoldingRack.objects.filter(holding_rack_id=rack_id).last()
+                obj.checked_by = discard_form.cleaned_data['checked_by']
+                obj.discarded = discard_form.cleaned_data['discarded']
+                obj.discarded_by = current_user
+                obj.discard_date = datetime.now()
+                obj.save()
+            messages.success(request, 'Holding Racks discarded successfully')
             return redirect('discards:discards_index')
         else:
             print(discard_form.errors)
@@ -63,3 +63,9 @@ def discards_index(request):
     context['discard_form'] = discard_form
     context['user'] = current_user
     return render(request, 'discards/discard.html', context=context)
+
+@login_required()
+def all_discards_view(request):
+    discards = HoldingRack.objects.filter(discarded=True)
+
+    return render(request, 'discards/all_discards.html', context={'discards': discards})
