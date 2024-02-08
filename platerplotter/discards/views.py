@@ -12,7 +12,7 @@ from platerplotter.models import HoldingRack
 @login_required
 def discard_view(request):
     current_user = request.user
-    discard_form = DiscardForm(request.POST or None, current_user=current_user)
+    discard_form = DiscardForm(request.POST or None)
 
     if request.method == 'POST':
         if discard_form.is_valid():
@@ -51,7 +51,7 @@ def discards_index(request):
             for rack_id in selected_racks:
                 obj = HoldingRack.objects.filter(holding_rack_id=rack_id).last()
                 obj.checked_by = discard_form.cleaned_data['checked_by']
-                obj.discarded = discard_form.cleaned_data['discarded']
+                obj.discarded = True
                 obj.discarded_by = current_user
                 obj.discard_date = datetime.now()
                 obj.save()

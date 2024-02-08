@@ -15,7 +15,6 @@
                         <th>Status</th>
                         <th>Discarded by</th>
                         <th>Checked by</th>
-                        <th>Discard</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -42,12 +41,7 @@
                             <td>{{ user }}</td>
                             <td>
                                 <div class="form-group">
-                                    <input type="text" class="form-control" name="checked_by">
-                                </div>
-                            </td>
-                            <td>
-                                <div class="form-group">
-                                    <input type="checkbox" class="form-control" name="discarded">
+                                    <input type="text" class="form-control" name="checked_by" required>
                                 </div>
                             </td>
                         </tr>
@@ -122,14 +116,31 @@
 {% endcomment %}
 
 
-  document.addEventListener('DOMContentLoaded', function () {
-        document.getElementById('selectAll').addEventListener('click', function () {
-            const checkboxes = document.querySelectorAll('.discard-checkbox');
-            checkboxes.forEach((checkbox) => {
-                checkbox.checked = this.checked;
-            });
+ document.addEventListener('DOMContentLoaded', function () {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.discard-checkbox');
+
+    selectAllCheckbox.addEventListener('click', function () {
+        checkboxes.forEach((checkbox) => {
+            checkbox.checked = this.checked;
         });
     });
+
+    document.getElementById('discardForm').addEventListener('submit', function (event) {
+        let atLeastOneChecked = false;
+        checkboxes.forEach((checkbox) => {
+            if (checkbox.checked) {
+                atLeastOneChecked = true;
+            }
+        });
+
+        if (!atLeastOneChecked) {
+            event.preventDefault(); // Prevent form submission
+            alert('Please select at least one item to discard.');
+        }
+    });
+});
+
 </script>
 
 

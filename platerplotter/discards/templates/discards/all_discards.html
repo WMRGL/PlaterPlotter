@@ -1,9 +1,9 @@
 {% extends 'platerplotter/base.html' %}
 
 {% block content %}
-    <div class="container">
+    <div class="container-fluid">
         {% if discards %}
-            <div class="container">
+            <div class="container-fluid">
                 <table class="table table-bordered" id="dataTable">
                     <thead>
                     <tr>
@@ -19,7 +19,7 @@
                     {% for discard in discards %}
                         <tr>
                             <td>{{ discard.holding_rack_id }}</td>
-                            <td>{{ discard.plate.gel_1008_csv.date_of_dispatch }}</td>
+                            <td>{{ discard.plate.gel_1008_csv.date_of_dispatch.date }}</td>
                             <td>{{ discard.discarded }}</td>
                             <td>{{ discard.discarded_by.first_name }} {{ discard.discarded_by.last_name }}</td>
                             <td>{{ discard.checked_by }}</td>
