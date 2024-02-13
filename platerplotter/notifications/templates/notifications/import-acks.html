@@ -45,7 +45,7 @@
             <tbody>
             {% for rack in racks %}
             <tr>
-              <td><a href="/acknowledge-samples/{{ gel1004.pk }}/{{ rack.receiving_rack_id }}">{{ rack.receiving_rack_id }}</a></td>
+              <td><a href="{% url 'notifications:acknowledge_samples' gel1004.pk rack.receiving_rack_id %} ">{{ rack.receiving_rack_id }}</a></td>
               <td>{{ rack.laboratory_id }}</td>
               <td>{{ rack.disease_area }}</td>
               <td>{{ rack.rack_type }}</td>

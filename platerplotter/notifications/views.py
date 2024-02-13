@@ -10,9 +10,12 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
+from django.urls import reverse
 
 from platerplotter.config.load_config import LoadConfig
 from platerplotter.models import Sample, Gel1005Csv, Gel1004Csv, ReceivingRack
+from problemsamples.forms import SampleSelectForm, LogIssueForm
+from problemsamples.views import confirm_sample_positions
 
 
 # Create your views here.
@@ -440,3 +443,102 @@ def import_acks(request, test_status=False):
 	return render(request, 'notifications/import-acks.html', {
 		"unacked_racks_dict": unacked_racks_dict,
 	})
+
+
+@login_required()
+def acknowledge_samples(request, gel1004, rack, test_status=False):
+	rack = ReceivingRack.objects.get(gel_1004_csv=gel1004, receiving_rack_id=rack)
+	samples = Sample.objects.filter(receiving_rack=rack)
+	sample_select_form = SampleSelectForm()
+	log_issue_form = LogIssueForm()
+	sample_form_dict = {}
+	for sample in samples:
+		sample_form_dict[sample] = LogIssueForm(instance=sample)
+	if request.method == 'POST':
+		if 'rack-scanner' in request.POST:
+			confirm_sample_positions(request, rack, samples, first_check=True, test_status=test_status)
+		if 'rack-acked' in request.POST:
+			rack.rack_acknowledged = True
+			rack.save()
+			return HttpResponseRedirect('/')
+		if 'sample-scanned' in request.POST:
+			sample_select_form = SampleSelectForm(request.POST)
+			if sample_select_form.is_valid():
+				lab_sample_id = sample_select_form.cleaned_data.get('lab_sample_id')
+				sample = None
+				try:
+					sample = Sample.objects.get(receiving_rack=rack, laboratory_sample_id=lab_sample_id)
+				except:
+					messages.error(request, "Sample " + lab_sample_id + " does not exist")
+				if sample:
+					sample.sample_received = True
+					sample.sample_received_datetime = datetime.now(pytz.timezone('UTC'))
+					sample.save()
+			sample_select_form = SampleSelectForm()
+			log_issue_form = LogIssueForm()
+		if 'sample-received' in request.POST:
+			pk = request.POST['sample-received']
+			sample = Sample.objects.get(pk=pk)
+			if sample.sample_received:
+				sample.sample_received = False
+				sample.sample_received_datetime = None
+			else:
+				sample.sample_received = True
+				sample.sample_received_datetime = datetime.now(pytz.timezone('UTC'))
+			sample.save()
+			url = reverse('acknowledge_samples', kwargs={
+				"gel1004": gel1004,
+				"rack": rack.receiving_rack_id,
+			})
+			return HttpResponseRedirect(url)
+		if 'log-issue' in request.POST:
+			log_issue_form = LogIssueForm(request.POST)
+			if log_issue_form.is_valid():
+				pk = request.POST['log-issue']
+				comment = log_issue_form.cleaned_data.get('comment')
+				sample = Sample.objects.get(pk=pk)
+				sample.issue_identified = True
+				sample.comment = comment
+				sample.issue_outcome = "Not resolved"
+				sample.save()
+				url = reverse('acknowledge_samples', kwargs={
+					"gel1004": gel1004,
+					"rack": rack.receiving_rack_id,
+				})
+				return HttpResponseRedirect(url)
+		if 'delete-issue' in request.POST:
+			log_issue_form = LogIssueForm(request.POST)
+			if log_issue_form.is_valid():
+				pk = request.POST['delete-issue']
+				sample = Sample.objects.get(pk=pk)
+				sample.issue_identified = False
+				sample.comment = None
+				sample.issue_outcome = None
+				sample.save()
+				url = reverse('acknowledge_samples', kwargs={
+					"gel1004": gel1004,
+					"rack": rack.receiving_rack_id,
+				})
+				return HttpResponseRedirect(url)
+	all_samples_received = True
+	for sample in samples:
+		if not sample.sample_received:
+			all_samples_received = False
+	if all_samples_received:
+		messages.info(request, "All samples received")
+
+	if 'mark-as-problem-rack' in request.POST:
+		rack_id = request.POST['rack_id']
+		selected_rack = Sample.objects.filter(receiving_rack__receiving_rack_id=rack_id)
+		for rack in selected_rack:
+			rack.comment = request.POST['comment']
+			rack.issue_identified = True
+			rack.issue_outcome = "Not resolved"
+			rack.save()
+
+	return render(request, 'platerplotter/acknowledge-samples.html', {"rack": rack,
+																	  "samples": samples,
+																	  "sample_select_form": sample_select_form,
+																	  "sample_form_dict": sample_form_dict,
+																	  "log_issue_form": log_issue_form,
+																	  "all_samples_received": all_samples_received})
