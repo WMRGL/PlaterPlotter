@@ -91,10 +91,12 @@
                                             {% if row|add:column in assigned_well_list %}
                                                 {% for sample in holding_rack_samples %}
                                                     {% if row|add:column == sample.holding_rack_well.well_id %}
-                                                        <td title='Position:             {{ row|add:column }}
-Laboratory ID:    {{ sample.laboratory_sample_id }}
-Participant ID:     {{ sample.participant_id }}
-Group ID:            {{ sample.group_id }}' class="assigned" style="background-color: blue">
+                                                        <td title='Position:{{ row|add:column }}
+                                                            Laboratory ID: {{ sample.laboratory_sample_id }}
+                                                            Participant ID: {{ sample.participant_id }}
+                                                            Group ID: {{ sample.group_id }}'
+                                                            class="assigned" id="current-sample"
+                                                            style="background-color: blue">
                                                             <div class=" tooltip hidden"></div>
                                                         </td>
                                                     {% endif %}
@@ -156,7 +158,7 @@ Group ID:            {{ sample.group_id }}' class="assigned" style="background-c
                                                     </div>
                                                     <div class="modal-body">
                                                         <strong>Participant ID:</strong> {{ sample.participant_id }}
-                                                        <form role='form' action='' method="POST" , class='form'>
+                                                        <form role='form' action='' method="POST" class='form'>
                                                             {% csrf_token %}
                                                             {{ form|crispy }}
                                                             <br>
@@ -191,7 +193,7 @@ Group ID:            {{ sample.group_id }}' class="assigned" style="background-c
                     <div align='right'>
                         <h4>Scan or type Holding Rack</h4>
                     </div>
-                    <form role='form' action='' method="POST" , class='form-inline float-right'>
+                    <form role='form' action='' method="POST" class='form-inline float-right'>
                         {% csrf_token %}
                         {{ holding_rack_form|crispy }}
                         <div class="form-group">
@@ -333,7 +335,7 @@ Group ID:            {{ sample.group_id }}' class="assigned" style="background-c
                                                 </div>
                                                 <div class="modal-body">
                                                     <strong>Participant ID:</strong> {{ sample.participant_id }}
-                                                    <form role='form' action='' method="POST" , class='form'>
+                                                    <form role='form' action='' method="POST" class='form'>
                                                         {% csrf_token %}
                                                         {{ form|crispy }}
                                                         <br>
@@ -412,13 +414,19 @@ Group ID:            {{ sample.group_id }}' class="assigned" style="background-c
             }
         }
 
-        var all_samples = document.getElementsByClassName('assigned');
-        var total_current_samples = document.getElementById('total_sample');
+        const all_samples = document.getElementsByClassName('assigned');
+        const total_current_samples = document.getElementById('total_sample');
+        const current_sample = document.getElementById('current-sample');
         total_current_samples.textContent = all_samples.length;
 
         // Change the last element colour
-        var new_all = Array.from(all_samples);
-        var last_element = new_all.slice(-1)[0];
+        const new_all = Array.from(all_samples);
+        const last_element = new_all.slice(-1)[0];
         last_element.style.backgroundColor = "green";
+
+        function changeColor(sampleId) {
+            const lastSample = document.getElementById(sampleId);
+            lastSample.style.backgroundColor = 'green'
+        }
     </script>
 {% endblock content %}

@@ -2,6 +2,7 @@ from datetime import date, datetime
 
 from django.contrib import messages
 from django.contrib.auth.models import User
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -31,19 +32,31 @@ def discard_view(request):
 
 
 def discards_index(request):
-    context = {}
-    holding_racks = HoldingRack.objects.all()
+    holding_racks = HoldingRack.objects.filter(discarded=False)
     discard_racks = []
     current_user = request.user
     discard_form = DiscardForm(request.POST or None)
+    query = request.GET.get('q')
+
+    def is_discard_due(holding_rack_id):
+        if holding_rack_id.plate:
+            dispatch_date = holding_rack_id.plate.gel_1008_csv.date_of_dispatch.date()
+            weeks = (date.today() - dispatch_date).days // 7
+            return weeks >= 10
+        return False
 
     for holding_rack in holding_racks:
-        if holding_rack.plate and not holding_rack.discarded:
-            dispatch_date = holding_rack.plate.gel_1008_csv.date_of_dispatch.date()
-            today = date.today()
-            weeks = (today - dispatch_date).days // 7
-            if weeks > 9:
-                discard_racks.append(holding_rack)
+        if is_discard_due(holding_rack):
+            discard_racks.append(holding_rack)
+
+    if query:
+        results = HoldingRack.objects.filter(holding_rack_id__icontains=query)
+        if results:
+            for result in results:
+                if result.plate is None or result.plate.gel_1008_csv is None:
+                    messages.info(request, 'Holding is not due for discard')
+        else:
+            messages.info(request, 'Holding is not available for discard')
 
     if request.method == 'POST':
         if discard_form.is_valid():
@@ -59,11 +72,13 @@ def discards_index(request):
             return redirect('discards:discards_index')
         else:
             print(discard_form.errors)
-    context['discard_racks'] = discard_racks
-    context['discard_form'] = discard_form
-    context['user'] = current_user
-    return render(request, 'discards/discard.html', context=context)
 
+    context = {
+        'discard_racks': discard_racks,
+        'discard_form': discard_form,
+        'user': current_user
+    }
+    return render(request, 'discards/discard.html', context=context)
 @login_required()
 def all_discards_view(request):
     discards = HoldingRack.objects.filter(discarded=True)

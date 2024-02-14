@@ -283,10 +283,13 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
 
 @login_required()
 def delete_sample(request, gel1004, rack, holding_rack_id, sample_id):
-    sample = HoldingRackWell.objects.get(sample__uid=sample_id)
-    sample.sample = None
-    sample.save()
-    messages.info(request, sample_id + " has been returned to GLH rack")
+    try:
+        sample = HoldingRackWell.objects.get(sample__uid=sample_id)
+        sample.sample = None
+        sample.save()
+        messages.info(request, f"{sample_id} has been returned to GLH rack")
+    except HoldingRackWell.DoesNotExist:
+        messages.error(request, f"Sample with ID {sample_id} does not exist.")
 
     url = reverse('awaitingsorting:assign_samples_to_holding_rack', kwargs={
         'gel1004': gel1004,

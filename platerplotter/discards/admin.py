@@ -11,4 +11,4 @@ class DiscardAdmin(admin.ModelAdmin):
 	list_display = ['discarded_by_name', 'holding_rack_id', 'checked_by', 'dispatch_date']
 
 
-admin.site.register(Discard, DiscardAdmin)
+# admin.site.register(Discard, DiscardAdmin)
