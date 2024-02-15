@@ -6,164 +6,194 @@
 
 
 {% block content %}
-  <div class="container-fluid">
-    <div class="row">
-      <div class="col-4">
-        <h3>Acknowledge Receipt of Samples</h3>
-        <h4>Rack: {{ rack.receiving_rack_id }}</h4>
-      </div>
-      <div class="col-4" align='center'>
-        <form role='form' action='' method="POST" class='form'>
-            {% csrf_token %}
-            <div class="form-group">
-              <div>
-                  <button type="submit" name="rack-scanner" class="btn btn-success">Check Rack Scanner</button>
-              </div>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-4">
+                <h3>Acknowledge Receipt of Samples</h3>
+                <h4>Rack: {{ rack.receiving_rack_id }}</h4>
             </div>
-        </form>
-      </div>
-      <div class="col-4">
-        <div align='right'>
-          <h4>Scan or type sample ID</h4>
-        </div>
-        <form role='form' action='' method="POST", class='form-inline float-right'>
-          {% csrf_token %}
-          {{ sample_select_form|crispy }}
-          <div class="form-group">
-            <div class="col-lg-5 col-sm-offset-5">
-              <button type="submit" name='sample-scanned' class="btn btn-primary">Go</button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-10">
-        <p>Please acknowledge receipt of each sample in the rack by scanning each sample and then click "Acknowledge Samples" button once <em>all</em> samples have been scanned.</p>
-      </div>
-      <div class="col-2">
-        <form role='form' action='' method="POST" class='form'>
-            {% csrf_token %}
-            <div class="form-group">
-              <div>
-                {% if all_samples_received %}
-                  <button type="submit" name="rack-acked" class="btn btn-success btn-block">Acknowledge Samples</button>
-                {% else %}
-                  <button type="submit" onclick="return confirm('Are you sure? Not all samples have been marked as received.')" name="rack-acked" class="btn btn-warning btn-block">Acknowledge Samples</button>  
-                {% endif %}
-              </div>
-            </div>
-        </form>
-      </div>
-    </div>
-    <div class="col-12">
-      <div class="tab-pane active">
-        <br>
-          <table class="table table-bordered" id="dataTable">
-            <thead>
-              <tr>
-                <th>Rack Well</th>
-                <th>Participant ID</th>
-                <th>Group ID</th>
-                <th>Priority</th>
-                <th>Disease Area</th>
-                <th>Sample Type</th>
-                <th>Tissue Type</th>
-                <th>Lab Sample ID</th>
-                <th>Sample Volume</th>
-                <th>Log Issue</th>
-                <th>Sample recieved</th>
-              </tr>
-            </thead>
-            <tbody>
-            {% for sample, form in sample_form_dict.items %}
-            <tr>
-              <td>{{ sample.receiving_rack_well }}</td>
-              <td>{{ sample.participant_id }}</td>
-              <td>{{ sample.group_id }}</td>
-              <td>{{ sample.priority }}</td>
-              <td>{{ sample.disease_area }}</td>
-              <td>{{ sample.sample_type }}</td>
-              <td>{{ sample.clin_sample_type }}</td>
-              <td>{{ sample.laboratory_sample_id }}</td>
-              <td>{{ sample.laboratory_sample_volume }}</td>
-              {% if sample.issue_identified %} 
-              <td>                   
-                <a class='btn btn-warning' href=# data-toggle="modal" data-target="#editIssueModal-{{sample.pk}}">Edit Issue</a>
-              </td>
-                <div id='editIssueModal-{{sample.pk}}' class="modal fade" role="dialog">
-                <div class="modal-dialog">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h4 class="modal-title">Log issue for {{ sample.laboratory_sample_id }}</h4>
-                      <button type="button" class="close" data-dismiss="modal"> X </button>
-                    </div>
-                    <div class="modal-body">
-                      <strong>Participant ID:</strong> {{ sample.participant_id }}
-                      <form role='form' action='' method="POST", class='form'>
-                        {% csrf_token %}
-                        {{ form|crispy }}
-                        <br>
-                        <div class="form-group">
-                          <div class="float-right">
-                            <button type="submit" name='delete-issue' value='{{ sample.pk }}'class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this issue?')">Delete</button>
-                            <button type="submit" name='log-issue' value='{{ sample.pk }}'class="btn btn-primary">Edit</button>
-                          </div>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {% else %}
-              <td>
-                <a class='btn btn-primary' href=# data-toggle="modal" data-target="#logIssueModal-{{sample.pk}}">Log Issue</a>
-              </td>
-              <div id='logIssueModal-{{sample.pk}}' class="modal fade" role="dialog">
-                <div class="modal-dialog">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h4 class="modal-title">Log issue for {{ sample.laboratory_sample_id }}</h4>
-                      <button type="button" class="close" data-dismiss="modal"> X </button>
-                    </div>
-                    <div class="modal-body">
-                      <strong>Participant ID:</strong> {{ sample.participant_id }}
-                      <form role='form' action='' method="POST", class='form'>
-                        {% csrf_token %}
-                        {{ form|crispy }}
-                        <br>
-                        <div class="form-group">
-                          <div class="float-right">
-                            <button type="submit" name='log-issue' value='{{ sample.pk }}'class="btn btn-primary">Submit</button>
-                          </div>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {% endif %}
-              <td style="text-align:center">
+            <div class="col-4" align='center'>
                 <form role='form' action='' method="POST" class='form'>
-                  {% csrf_token %}
-                  <div class="form-group">
-                    <div>
-                      <button class='btn btn-primary-outline btn-xsl' type="submit" name='sample-received' value='{{ sample.pk }}'>
-                        <label class="switch">
-                          <input type="checkbox" {% if sample.sample_received %} checked {% endif %}>
-                          <span class="slider round"></span>
-                        </label>
-                      </button>
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <div>
+                            <button type="submit" name="rack-scanner" class="btn btn-success">Check Rack Scanner
+                            </button>
+                        </div>
                     </div>
-                  </div>
                 </form>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div> 
-    </div>  
-  </div>
+            </div>
+            <div class="col-4">
+                <div align='right'>
+                    <h4>Scan or type sample ID</h4>
+                </div>
+                <form role='form' action='' method="POST" , class='form-inline float-right'>
+                    {% csrf_token %}
+                    {{ sample_select_form|crispy }}
+                    <div class="form-group">
+                        <div class="col-lg-5 col-sm-offset-5">
+                            <button type="submit" name='sample-scanned' class="btn btn-primary">Go</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-10">
+                <p>Please acknowledge receipt of each sample in the rack by scanning each sample and then click
+                    "Acknowledge Samples" button once <em>all</em> samples have been scanned.</p>
+                <form class="form-inline" method="post" action="">
+                    {% csrf_token %}
+                    <div class="form-group mx-sm-3 mb-2">
+                        <label for="inputPassword2" class="sr-only">Issue</label>
+                        <input type="text" class="form-control" id="inputPassword2" name="comment" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary mb-2" name="mark-as-problem-rack">Submit</button>
+                </form>
+            </div>
+            <div class="col-2">
+                <form role='form' action='' method="POST" class='form'>
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <div>
+                            {% if all_samples_received %}
+                                <button type="submit" name="rack-acked" class="btn btn-success btn-block">Acknowledge
+                                    Samples
+                                </button>
+                            {% else %}
+                                <button type="submit"
+                                        onclick="return confirm('Are you sure? Not all samples have been marked as received.')"
+                                        name="rack-acked" class="btn btn-warning btn-block">Acknowledge Samples
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="tab-pane active">
+                <br>
+                <table class="table table-bordered" id="dataTable">
+                    <thead>
+                    <tr>
+                        <th>Rack Well</th>
+                        <th>Participant ID</th>
+                        <th>Group ID</th>
+                        <th>Priority</th>
+                        <th>Disease Area</th>
+                        <th>Sample Type</th>
+                        <th>Tissue Type</th>
+                        <th>Lab Sample ID</th>
+                        <th>Sample Volume</th>
+                        <th>Log Issue</th>
+                        <th>Sample recieved</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for sample, form in sample_form_dict.items %}
+                        <tr>
+                            <td>{{ sample.receiving_rack_well }}</td>
+                            <td>{{ sample.participant_id }}</td>
+                            <td>{{ sample.group_id }}</td>
+                            <td>{{ sample.priority }}</td>
+                            <td>{{ sample.disease_area }}</td>
+                            <td>{{ sample.sample_type }}</td>
+                            <td>{{ sample.clin_sample_type }}</td>
+                            <td>{{ sample.laboratory_sample_id }}</td>
+                            <td>{{ sample.laboratory_sample_volume }}</td>
+                            {% if sample.issue_identified %}
+                                <td>
+                                    <a class='btn btn-warning' href=# data-toggle="modal"
+                                       data-target="#editIssueModal-{{ sample.pk }}">Edit Issue</a>
+                                </td>
+                                <div id='editIssueModal-{{ sample.pk }}' class="modal fade" role="dialog">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h4 class="modal-title">Log issue
+                                                    for {{ sample.laboratory_sample_id }}</h4>
+                                                <button type="button" class="close" data-dismiss="modal"> X</button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <strong>Participant ID:</strong> {{ sample.participant_id }}
+                                                <form role='form' action='' method="POST" , class='form'>
+                                                    {% csrf_token %}
+                                                    {{ form|crispy }}
+                                                    <br>
+                                                    <div class="form-group">
+                                                        <div class="float-right">
+                                                            <button type="submit" name='delete-issue'
+                                                                    value='{{ sample.pk }}' class="btn btn-danger"
+                                                                    onclick="return confirm('Are you sure you want to delete this issue?')">
+                                                                Delete
+                                                            </button>
+                                                            <button type="submit" name='log-issue'
+                                                                    value='{{ sample.pk }}' class="btn btn-primary">Edit
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <td>
+                                    <a class='btn btn-primary' href=# data-toggle="modal"
+                                       data-target="#logIssueModal-{{ sample.pk }}">Log Issue</a>
+                                </td>
+                                <div id='logIssueModal-{{ sample.pk }}' class="modal fade" role="dialog">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h4 class="modal-title">Log issue
+                                                    for {{ sample.laboratory_sample_id }}</h4>
+                                                <button type="button" class="close" data-dismiss="modal"> X</button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <strong>Participant ID:</strong> {{ sample.participant_id }}
+                                                <form role='form' action='' method="POST" , class='form'>
+                                                    {% csrf_token %}
+                                                    {{ form|crispy }}
+                                                    <br>
+                                                    <div class="form-group">
+                                                        <div class="float-right">
+                                                            <button type="submit" name='log-issue'
+                                                                    value='{{ sample.pk }}' class="btn btn-primary">
+                                                                Submit
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <td style="text-align:center">
+                                <form role='form' action='' method="POST" class='form'>
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <div>
+                                            <button class='btn btn-primary-outline btn-xsl' type="submit"
+                                                    name='sample-received' value='{{ sample.pk }}'>
+                                                <label class="switch">
+                                                    <input type="checkbox" {% if sample.sample_received %}
+                                                           checked {% endif %}>
+                                                    <span class="slider round"></span>
+                                                </label>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
 {% endblock content %}

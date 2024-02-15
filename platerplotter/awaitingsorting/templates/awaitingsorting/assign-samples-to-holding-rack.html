@@ -405,15 +405,6 @@
         </div>
     </div>
 
-
-<h5>Latest</h5>
-
-
-    {{ assigned_well_list }}
-    {{ holding_rack_samples }}
-{% for sample in holding_rack_samples %}
-    {{ sample.holding_rack_well.well_id }}
-{% endfor %}
     <script>
         var form = document.getElementById('well');
         form.value = '';

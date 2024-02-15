@@ -528,15 +528,19 @@ def acknowledge_samples(request, gel1004, rack, test_status=False):
 		messages.info(request, "All samples received")
 
 	if 'mark-as-problem-rack' in request.POST:
-		rack_id = request.POST['rack_id']
-		selected_rack = Sample.objects.filter(receiving_rack__receiving_rack_id=rack_id)
-		for rack in selected_rack:
-			rack.comment = request.POST['comment']
-			rack.issue_identified = True
-			rack.issue_outcome = "Not resolved"
-			rack.save()
+		selected_rack = Sample.objects.filter(receiving_rack=rack.pk)
+		for sample in selected_rack:
+			sample.comment = request.POST['comment']
+			sample.issue_identified = True
+			sample.issue_outcome = "Not resolved"
+			sample.save()
+		url = reverse('notifications:acknowledge_samples', kwargs={
+			"gel1004": gel1004,
+			"rack": rack.receiving_rack_id,
+		})
+		return HttpResponseRedirect(url)
 
-	return render(request, 'platerplotter/acknowledge-samples.html', {"rack": rack,
+	return render(request, 'notifications/acknowledge-samples.html', {"rack": rack,
 																	  "samples": samples,
 																	  "sample_select_form": sample_select_form,
 																	  "sample_form_dict": sample_form_dict,
