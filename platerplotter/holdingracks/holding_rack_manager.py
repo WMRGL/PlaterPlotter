@@ -1,6 +1,6 @@
 from platerplotter.models import HoldingRackWell, Sample
 from django.contrib import messages
-
+from django.utils import timezone
 from platerplotter.models import Plate
 
 class HoldingRackManager():
@@ -113,6 +113,7 @@ class HoldingRackManager():
             holding_rack=self.holding_rack,
             well_id=self.well_labels[well_index])
         holding_rack_well.sample = sample
+        holding_rack_well.assigned_time = timezone.now()
         holding_rack_well.save()
         messages.info(request, sample.laboratory_sample_id + " assigned to well " + holding_rack_well.well_id)
 

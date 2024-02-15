@@ -59,7 +59,7 @@ def awaiting_holding_rack_assignment(request):
 
 
 @login_required()
-def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=None):
+def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=None, current_holding_rack_well=None):
     holding_rack_rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
     holding_rack_columns = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
     # Sample and receiving rack
@@ -264,6 +264,10 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
     else:
         holding_rack_form = HoldingRackForm()
         sample_select_form = SampleSelectForm()
+    try:
+     latest_well = HoldingRackWell.objects.filter(holding_rack=holding_rack).exclude(assigned_time__isnull=True).order_by("-assigned_time")[0].well_id
+    except IndexError:
+        latest_well = None
     return render(request, 'awaitingsorting/assign-samples-to-holding-rack.html', {
         "rack": rack,
         "problem_holding_rack": problem_holding_rack,
@@ -278,7 +282,9 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
         "assigned_well_list": assigned_well_list,
         "current_holding_racks_dict": current_holding_racks_dict,
         "holding_rack_rows": holding_rack_rows,
-        "holding_rack_columns": holding_rack_columns})
+        "holding_rack_columns": holding_rack_columns,
+        'latest_well': latest_well
+    })
 
 
 @login_required()

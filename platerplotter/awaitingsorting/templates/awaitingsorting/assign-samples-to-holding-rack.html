@@ -91,14 +91,25 @@
                                             {% if row|add:column in assigned_well_list %}
                                                 {% for sample in holding_rack_samples %}
                                                     {% if row|add:column == sample.holding_rack_well.well_id %}
-                                                        <td title='Position:{{ row|add:column }}
-                                                            Laboratory ID: {{ sample.laboratory_sample_id }}
-                                                            Participant ID: {{ sample.participant_id }}
-                                                            Group ID: {{ sample.group_id }}'
-                                                            class="assigned" id="current-sample"
-                                                            style="background-color: blue">
-                                                            <div class=" tooltip hidden"></div>
-                                                        </td>
+                                                        {% if latest_well == sample.holding_rack_well.well_id %}
+                                                            <td title='Position:{{ row|add:column }}
+                                                                Laboratory ID: {{ sample.laboratory_sample_id }}
+                                                                Participant ID: {{ sample.participant_id }}
+                                                                Group ID: {{ sample.group_id }}'
+                                                                class="assigned" id="current-sample"
+                                                                style="background-color: green">
+                                                                <div class=" tooltip hidden"></div>
+                                                            </td>
+                                                        {% else %}
+                                                            <td title='Position:{{ row|add:column }}
+                                                                Laboratory ID: {{ sample.laboratory_sample_id }}
+                                                                Participant ID: {{ sample.participant_id }}
+                                                                Group ID: {{ sample.group_id }}'
+                                                                class="assigned" id="current-sample"
+                                                                style="background-color: blue">
+                                                                <div class=" tooltip hidden"></div>
+                                                            </td>
+                                                        {% endif %}
                                                     {% endif %}
                                                 {% endfor %}
                                             {% else %}
@@ -394,6 +405,15 @@
         </div>
     </div>
 
+
+<h5>Latest</h5>
+
+
+    {{ assigned_well_list }}
+    {{ holding_rack_samples }}
+{% for sample in holding_rack_samples %}
+    {{ sample.holding_rack_well.well_id }}
+{% endfor %}
     <script>
         var form = document.getElementById('well');
         form.value = '';
@@ -419,14 +439,5 @@
         const current_sample = document.getElementById('current-sample');
         total_current_samples.textContent = all_samples.length;
 
-        // Change the last element colour
-        const new_all = Array.from(all_samples);
-        const last_element = new_all.slice(-1)[0];
-        last_element.style.backgroundColor = "green";
-
-        function changeColor(sampleId) {
-            const lastSample = document.getElementById(sampleId);
-            lastSample.style.backgroundColor = 'green'
-        }
     </script>
 {% endblock content %}

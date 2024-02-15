@@ -206,6 +206,7 @@ class HoldingRackWell(models.Model):
     holding_rack = models.ForeignKey(HoldingRack, on_delete=models.CASCADE, related_name='wells')
     well_id = models.CharField(max_length=3, choices=well_ids)
     buffer_added = models.BooleanField(default=False)
+    assigned_time = models.DateTimeField(auto_now=False, auto_now_add=False, null=True)
     sample = models.OneToOneField(Sample, on_delete=models.SET_NULL, null=True, blank=True,
                                   related_name='holding_rack_well')
 
