@@ -486,7 +486,7 @@ def acknowledge_samples(request, gel1004, rack, test_status=False):
 				sample.sample_received = True
 				sample.sample_received_datetime = datetime.now(pytz.timezone('UTC'))
 			sample.save()
-			url = reverse('acknowledge_samples', kwargs={
+			url = reverse('notifications:acknowledge_samples', kwargs={
 				"gel1004": gel1004,
 				"rack": rack.receiving_rack_id,
 			})
@@ -501,7 +501,7 @@ def acknowledge_samples(request, gel1004, rack, test_status=False):
 				sample.comment = comment
 				sample.issue_outcome = "Not resolved"
 				sample.save()
-				url = reverse('acknowledge_samples', kwargs={
+				url = reverse('notifications:acknowledge_samples', kwargs={
 					"gel1004": gel1004,
 					"rack": rack.receiving_rack_id,
 				})
@@ -515,7 +515,7 @@ def acknowledge_samples(request, gel1004, rack, test_status=False):
 				sample.comment = None
 				sample.issue_outcome = None
 				sample.save()
-				url = reverse('acknowledge_samples', kwargs={
+				url = reverse('notifications:acknowledge_samples', kwargs={
 					"gel1004": gel1004,
 					"rack": rack.receiving_rack_id,
 				})
@@ -529,15 +529,20 @@ def acknowledge_samples(request, gel1004, rack, test_status=False):
 
 	if 'mark-as-problem-rack' in request.POST:
 		selected_rack = Sample.objects.filter(receiving_rack=rack.pk)
-		for sample in selected_rack:
-			sample.comment = request.POST['comment']
-			sample.issue_identified = True
-			sample.issue_outcome = "Not resolved"
-			sample.save()
 		url = reverse('notifications:acknowledge_samples', kwargs={
 			"gel1004": gel1004,
 			"rack": rack.receiving_rack_id,
 		})
+		for sample in selected_rack:
+			if not sample.sample_received:
+				messages.error(request, "Kindly mark sample as received")
+				return HttpResponseRedirect(url)
+
+			sample.comment = request.POST['comment']
+			sample.issue_identified = True
+			sample.issue_outcome = "Not resolved"
+			sample.save()
+
 		return HttpResponseRedirect(url)
 
 	return render(request, 'notifications/acknowledge-samples.html', {"rack": rack,

@@ -46,8 +46,9 @@
                                 <th>Consignment Number</th>
                                 <th>Date of Dispatch</th>
                                 <th>Discarded</th>
-                                <th>Issue/Comment</th>
+                                <th>Issue</th>
                                 <th>Issue Outcome</th>
+                                <th>Comment</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -80,6 +81,7 @@
                                     <td>{{ sample.holding_rack_well.holding_rack.discarded }}</td>
                                     <td>{{ sample.comment }}</td>
                                     <td>{{ sample.issue_outcome }}</td>
+                                    <td>{{ sample.non_issue_comment }}</td>
                                 </tr>
                             {% endfor %}
                             </tbody>

@@ -181,6 +181,7 @@ class Sample(models.Model):
     norm_biorep_conc = models.FloatField(null=True, blank=True)
     issue_identified = models.BooleanField(default=False)
     comment = models.TextField(blank=True, null=True)
+    non_issue_comment = models.TextField(blank=True, null=True)
     issue_outcome = models.CharField(max_length=64, choices=(("Not resolved", "Not resolved"),
                                                              ("Ready for plating", "Ready for plating"),
                                                              ("Sample returned to extracting GLH",

@@ -48,4 +48,4 @@ class Gel1008Form(ModelForm):
 class SampleForm(forms.ModelForm):
 	class Meta:
 		model = Sample
-		fields = ['comment']
+		fields = ['non_issue_comment']
