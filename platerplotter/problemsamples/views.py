@@ -142,7 +142,6 @@ def problem_samples(request, holding_rack_id=None, test_status=False):
     holding_rack_columns = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
     samples = Sample.objects.filter(issue_identified=True, issue_outcome="Not resolved").exclude(
         holding_rack_well__holding_rack__holding_rack_type='Problem')
-
     sample_form_dict = {}
     for sample in samples:
         sample_form_dict[sample] = LogIssueForm(instance=sample)
@@ -264,8 +263,9 @@ def problem_samples(request, holding_rack_id=None, test_status=False):
                 return HttpResponseRedirect(url)
 
         if 'move_to_awaiting' in request.POST:
-            for sample in sample_form_dict:
-                obj = Sample.objects.get(pk=sample.pk)
+            selected_samples = request.POST.getlist('selected_sample')
+            for sample in selected_samples:
+                obj = Sample.objects.get(laboratory_sample_id=sample)
                 obj.issue_identified = False
                 obj.comment = None
                 obj.issue_outcome = None

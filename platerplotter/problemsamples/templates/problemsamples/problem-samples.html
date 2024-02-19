@@ -65,7 +65,8 @@
                                                     <td title='Position: {{ row|add:column }}
                                                         Laboratory ID: {{ sample.laboratory_sample_id }}
                                                         Participant ID: {{ sample.participant_id }}
-                                                        Group ID: {{ sample.group_id }}' style="background-color: black">
+                                                        Group ID: {{ sample.group_id }}'
+                                                        style="background-color: black">
                                                         <div class="tooltip hidden"></div>
                                                     </td>
                                                 {% endif %}
@@ -211,6 +212,19 @@
                 <h3>Problem samples awaiting well assignment</h3>
             </div>
         </div>
+        <form class="form-inline" method="post" action="" id="awaitingSort">
+            {% csrf_token %}
+
+            <div class="form-group mx-sm-3 mb-2">
+                <label class="mr-2" for="selectAllCheckbox">Select All</label>
+                <input type="checkbox" class="form-control" id="selectAllCheckbox" onclick="selectAll()">
+            </div>
+
+            <button type="submit" class="btn btn-primary mb-2" name="move_to_awaiting">
+                Submit
+            </button>
+        </form>
+
         <div class="row">
             <div class="col-12">
                 <div class="tab-pane active">
@@ -230,19 +244,10 @@
                             <th>Sample Volume</th>
                             <th>Issue</th>
                             <th>Edit Issue</th>
+                            <th>Select Sample</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr>
-                            <td>
-                                <form action="" method="post">
-                                    {% csrf_token %}
-                                    <button type="submit" name="move_to_awaiting" class="btn btn-primary">Move to
-                                        awaiting sort
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
                         {% for sample, form in sample_form_dict.items %}
                             <tr>
                                 <td>
@@ -270,27 +275,33 @@
                                 <td>{{ sample.laboratory_sample_volume }}</td>
                                 <td>{{ sample.comment }}</td>
                                 <td>
-                                    <a class='btn btn-warning' href=# data-toggle="modal"
+                                    <a class="btn btn-warning" href="#" data-toggle="modal"
                                        data-target="#editIssueModal-{{ sample.pk }}">Edit Issue</a>
                                 </td>
+                                <td>
+                                    <input type="checkbox" name="selected_sample" form="awaitingSort"
+                                           class="selected-checkbox" value="{{ sample.laboratory_sample_id }}">
+                                </td>
+
                                 <div id='editIssueModal-{{ sample.pk }}' class="modal fade" role="dialog">
                                     <div class="modal-dialog">
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <h4 class="modal-title">Log issue
-                                                    for {{ sample.laboratory_sample_id }}</h4>
+                                                    for {{ sample.laboratory_sample_id }}
+                                                </h4>
                                                 <button type="button" class="close" data-dismiss="modal"> X</button>
                                             </div>
                                             <div class="modal-body">
                                                 <strong>Participant ID:</strong> {{ sample.participant_id }}
-                                                <form role='form' action='' method="POST" , class='form'>
+                                                <form role='form' action='' method="POST" class='form'>
                                                     {% csrf_token %}
                                                     {{ form|crispy }}
                                                     <br>
                                                     <div class="form-group">
                                                         <div class="float-right">
                                                             <button type="submit" name='delete-issue'
-                                                                    value='{{ sample.pk }}' class="btn btn-danger"
+                                                                    value="{{ sample.pk }}" class="btn btn-danger"
                                                                     onclick="return confirm('Are you sure you want to delete this issue?')">
                                                                 Delete
                                                             </button>
@@ -314,13 +325,15 @@
     </div>
 
     <script>
-        var form = document.getElementById('well');
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        let form = document.getElementById('well');
         form.value = '';
 
         function myFunction(position) {
-            var unassignedWells = document.getElementsByClassName('unassigned')
-            var form = document.getElementById('well');
-            for (var i = 0; i < unassignedWells.length; i++) {
+            let unassignedWells = document.getElementsByClassName('unassigned')
+            let form = document.getElementById('well');
+            for (let i = 0; i < unassignedWells.length; i++) {
                 unassignedWells[i].style.backgroundColor = '#e9ecef'
             }
             if (position === form.value) {
@@ -331,6 +344,48 @@
                 console.log(position);
             }
         }
+
+        function selectAll() {
+            if (selectAllCheckbox.checked) {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+            } else {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+            }
+        }
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            checkboxes.forEach((checkbox) => {
+                checkbox.addEventListener('click', function () {
+                    let atLeastOneChecked = false;
+                    checkboxes.forEach((cb) => {
+                        if (cb.checked) {
+                            atLeastOneChecked = true;
+                        }
+                    });
+
+                });
+            });
+
+            document.getElementById('awaitingSort').addEventListener('submit', function (event) {
+                let atLeastOneChecked = false;
+                checkboxes.forEach((checkbox) => {
+                    if (checkbox.checked) {
+                        atLeastOneChecked = true;
+                    }
+                });
+                if (!atLeastOneChecked) {
+                    event.preventDefault();
+                    alert('Please select at least one sample');
+                }
+            });
+
+
+        });
     </script>
 
 {% endblock content %}

@@ -42,14 +42,6 @@
             <div class="col-10">
                 <p>Please acknowledge receipt of each sample in the rack by scanning each sample and then click
                     "Acknowledge Samples" button once <em>all</em> samples have been scanned.</p>
-                <form class="form-inline" method="post" action="">
-                    {% csrf_token %}
-                    <div class="form-group mx-sm-3 mb-2">
-                        <label for="inputPassword2" class="sr-only">Issue</label>
-                        <input type="text" class="form-control" id="inputPassword2" name="comment" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary mb-2" name="mark-as-problem-rack">Submit</button>
-                </form>
             </div>
             <div class="col-2">
                 <form role='form' action='' method="POST" class='form'>
@@ -73,6 +65,23 @@
         </div>
         <div class="col-12">
             <div class="tab-pane active">
+                <form class="form-inline" method="post" action="" id="problemForm">
+                    {% csrf_token %}
+
+                    <div class="form-group mx-sm-3 mb-2">
+                        <label class="mr-2" for="selectAllCheckbox">Select All</label>
+                        <input type="checkbox" class="form-control" id="selectAllCheckbox" onclick="selectAll()">
+                    </div>
+
+                    <div class="form-group mx-sm-3 mb-2">
+                        <label for="inputPassword2" class="sr-only">Issue</label>
+                        <input type="text" class="form-control" id="inputPassword2" name="comment"
+                               required>
+                    </div>
+                    <button type="submit" class="btn btn-primary mb-2" name="mark-as-problem-rack">
+                        Submit
+                    </button>
+                </form>
                 <br>
                 <table class="table table-bordered" id="dataTable">
                     <thead>
@@ -87,11 +96,15 @@
                         <th>Lab Sample ID</th>
                         <th>Sample Volume</th>
                         <th>Log Issue</th>
-                        <th>Sample recieved</th>
+                        <th>Sample received</th>
+                        <th>Select Sample</th>
                     </tr>
                     </thead>
                     <tbody>
+
+
                     {% for sample, form in sample_form_dict.items %}
+
                         <tr>
                             <td>{{ sample.receiving_rack_well }}</td>
                             <td>{{ sample.participant_id }}</td>
@@ -188,6 +201,10 @@
                                     </div>
                                 </form>
                             </td>
+                            <td>
+                                <input form="problemForm" type="checkbox" name="selected_field"
+                                       value="{{ sample.laboratory_sample_id }}" class="selected-checkbox">
+                            </td>
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -195,5 +212,51 @@
             </div>
         </div>
     </div>
+
+    <script>
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        
+        document.addEventListener('DOMContentLoaded', function () {
+            checkboxes.forEach((checkbox) => {
+                checkbox.addEventListener('click', function () {
+                    let atLeastOneChecked = false;
+                    checkboxes.forEach((cb) => {
+                        if (cb.checked) {
+                            atLeastOneChecked = true;
+                        }
+                    });
+
+                });
+            });
+
+            document.getElementById('problemForm').addEventListener('submit', function (event) {
+                let atLeastOneChecked = false;
+                checkboxes.forEach((checkbox) => {
+                    if (checkbox.checked) {
+                        atLeastOneChecked = true;
+                    }
+                });
+                if (!atLeastOneChecked) {
+                    event.preventDefault();
+                    alert('Please select at least one sample');
+                }
+            });
+
+
+        });
+
+        function selectAll() {
+            if (selectAllCheckbox.checked) {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+            } else {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+            }
+        }
+    </script>
 
 {% endblock content %}
