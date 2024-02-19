@@ -1,11 +1,20 @@
 {% extends 'platerplotter/base.html' %}
 
 {% block content %}
-    <div class="container">
+    <div class="container-fluid">
         <div class="row">
-            <div class="offset-md-7 col-md-5 float-right">
-                <form class="form-inline" method="get" action=".">
+            <div class="col-md-8 ">
+                <div class="form-inline">
                     <div class="form-group mx-sm-3 mb-2">
+                        <label for="selectAll">Select all &nbsp;</label>
+                        <input form="discardForm" class="form-control ml-auto" type="checkbox" id="selectAll">
+                    </div>
+                </div>
+
+            </div>
+            <div class="col-md-4 float-right">
+                <form class="form-inline justify-content-end" method="get" action=".">
+                    <div class="form-group mx-sm-3 mb-2 ">
                         <label for="inputPassword2" class="sr-only">Holding Rack ID</label>
                         <input type="text" class="form-control" name="q" id="inputPassword2" placeholder="Rack ID">
                     </div>
@@ -31,12 +40,6 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                        <td>
-                            <input type="checkbox" id="selectAll">
-                        </td>
-                        <td colspan="6">Select All</td>
-                    </tr>
                     {% for discard_rack in discard_racks %}
                         <tr>
                             <td>
@@ -113,6 +116,7 @@
         </div>
     {% endif %}
 
+
     <script>
 
         let dispatchDateInput = document.getElementById('dateOfDispatch');
@@ -120,78 +124,84 @@
         const discardStatusText = document.getElementById('discardStatus');
         const discardBtn = document.getElementById('discardBtn');
 
-        discardStatusText.style.backgroundColor = '#ff000047';
-        dispatchDateInput.addEventListener("change", updateValue);
+        const selectAllCheckbox = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.discard-checkbox');
+        const checkedByInput = document.querySelector('input[name="checked_by"]');
+        /*
+				discardStatusText.style.backgroundColor = '#ff000047';
+				dispatchDateInput.addEventListener("change", updateValue);
+				console.log('huihu')
 
-        function updateValue(e) {
-            const dispatchDate = new Date(e.target.value);
-            if (dispatchDate) {
+				function updateValue(e) {
+					const dispatchDate = new Date(e.target.value);
+					if (dispatchDate) {
 
-                const timeDifference = Math.abs(todayDate - dispatchDate);
-                const weeks = Math.ceil(timeDifference / (1000 * 60 * 60 * 24 * 7));
+						const timeDifference = Math.abs(todayDate - dispatchDate);
+						const weeks = Math.ceil(timeDifference / (1000 * 60 * 60 * 24 * 7));
 
-                if (weeks > 10) {
-                    discardStatusText.value = 'OK TO DISCARD';
-                    discardStatusText.style.backgroundColor = '#8bf38bbf';
-                    discardBtn.disabled = false;
-                } else {
-                    discardStatusText.value = 'DO NOT DISCARD';
-                    discardStatusText.style.backgroundColor = '#ff000047';
-                }
-            }
+						if (weeks > 10) {
+							discardStatusText.value = 'OK TO DISCARD';
+							discardStatusText.style.backgroundColor = '#8bf38bbf';
+							discardBtn.disabled = false;
+						} else {
+							discardStatusText.value = 'DO NOT DISCARD';
+							discardStatusText.style.backgroundColor = '#ff000047';
+						}
+					}
+
+				}
+
+		*/
+        document.addEventListener('DOMContentLoaded', function () {
 
 
-            document.addEventListener('DOMContentLoaded', function () {
-                const selectAllCheckbox = document.getElementById('selectAll');
-                const checkboxes = document.querySelectorAll('.discard-checkbox');
-                const checkedByInput = document.querySelector('input[name="checked_by"]');
-
-                selectAllCheckbox.addEventListener('click', function () {
-                    checkboxes.forEach((checkbox) => {
-                        checkbox.checked = this.checked;
-                        if (this.checked) {
-                            checkedByInput.setAttribute('required', 'required');
-                        } else {
-                            checkedByInput.removeAttribute('required');
-                        }
-                    });
-                });
-
+            selectAllCheckbox.addEventListener('click', function () {
                 checkboxes.forEach((checkbox) => {
-                    checkbox.addEventListener('click', function () {
-                        let atLeastOneChecked = false;
-                        checkboxes.forEach((cb) => {
-                            if (cb.checked) {
-                                atLeastOneChecked = true;
-                            }
-                        });
-                        if (atLeastOneChecked) {
-                            checkedByInput.setAttribute('required', 'required');
-                        } else {
-                            checkedByInput.removeAttribute('required');
-                        }
-                    });
-                });
-
-                document.getElementById('discardForm').addEventListener('submit', function (event) {
-                    let atLeastOneChecked = false;
-                    checkboxes.forEach((checkbox) => {
-                        if (checkbox.checked) {
-                            atLeastOneChecked = true;
-                        }
-                    });
-
-                    if (!atLeastOneChecked) {
-                        event.preventDefault(); // Prevent form submission
-                        alert('Please select at least one item to discard.');
+                    checkbox.checked = this.checked;
+                    if (this.checked) {
+                        checkedByInput.setAttribute('required', 'required');
+                    } else {
+                        checkedByInput.removeAttribute('required');
                     }
                 });
             });
-        }
+
+            checkboxes.forEach((checkbox) => {
+                checkbox.addEventListener('click', function () {
+                    let atLeastOneChecked = false;
+                    checkboxes.forEach((cb) => {
+                        if (cb.checked) {
+                            atLeastOneChecked = true;
+                        }
+                    });
+                    if (atLeastOneChecked) {
+                        checkedByInput.setAttribute('required', 'required');
+                    } else {
+                        checkedByInput.removeAttribute('required');
+                    }
+                });
+            });
+
+            document.getElementById('discardForm').addEventListener('submit', function (event) {
+                console.log("Form submission attempted");
+                let atLeastOneChecked = false;
+                checkboxes.forEach((checkbox) => {
+                    if (checkbox.checked) {
+                        atLeastOneChecked = true;
+                    }
+                });
+
+                if (!atLeastOneChecked) {
+                    event.preventDefault(); // Prevent form submission
+                    alert('Please select at least one item to discard.');
+                }
+            });
+
+
+        });
 
 
     </script>
-
 
 
 {% endblock %}
