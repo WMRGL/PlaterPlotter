@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 
 from holdingracks.forms import HoldingRackForm
@@ -265,7 +265,7 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
         holding_rack_form = HoldingRackForm()
         sample_select_form = SampleSelectForm()
     try:
-     latest_well = HoldingRackWell.objects.filter(holding_rack=holding_rack).exclude(assigned_time__isnull=True).order_by("-assigned_time")[0].well_id
+        latest_well = HoldingRackWell.objects.filter(holding_rack=holding_rack).exclude(assigned_time__isnull=True).order_by("-assigned_time")[0].well_id
     except IndexError:
         latest_well = None
     return render(request, 'awaitingsorting/assign-samples-to-holding-rack.html', {
@@ -289,18 +289,33 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
 
 @login_required()
 def delete_sample(request, gel1004, rack, holding_rack_id, sample_id):
-    try:
-        sample = HoldingRackWell.objects.get(sample__uid=sample_id)
-        sample.sample = None
-        sample.save()
-        messages.info(request, f"{sample_id} has been returned to GLH rack")
-    except HoldingRackWell.DoesNotExist:
-        messages.error(request, f"Sample with ID {sample_id} does not exist.")
-
     url = reverse('awaitingsorting:assign_samples_to_holding_rack', kwargs={
         'gel1004': gel1004,
         'rack': rack,
         'holding_rack_id': holding_rack_id,
     })
 
+    try:
+        holding_rack_well = get_object_or_404(HoldingRackWell.objects.select_related('sample'), sample__uid=sample_id)
+        result = HoldingRackWell.objects.filter(
+            holding_rack__holding_rack_type='Problem',
+            holding_rack__full=False
+        ).select_related('holding_rack').first()
+        if holding_rack_well.sample.issue_identified and result:
+            well = holding_rack_well.well_id
+            if result:
+                for rack in result.holding_rack.wells.all():
+                    if rack.sample and rack.well_id == holding_rack_well.well_id:
+                        well = None
+                holding_rack_manager = HoldingRackManager(result.holding_rack)
+                holding_rack_manager.assign_well(request=request, sample=holding_rack_well.sample, well=well)
+        elif not holding_rack_well.sample.issue_identified:
+            messages.error(request, 'Kindly log issue to sample')
+            return HttpResponseRedirect(url)
+        else:
+            messages.error(request, 'Problem rack is not available')
+            return HttpResponseRedirect(url)
+
+    except HoldingRackWell.DoesNotExist:
+        messages.error(request, f"Sample with ID {sample_id} does not exist.")
     return HttpResponseRedirect(url)

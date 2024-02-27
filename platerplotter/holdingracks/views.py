@@ -74,11 +74,11 @@ def holding_racks(request, holding_rack_id=None):
                     messages.error(request, "Holding rack not found with ID: " + holding_rack_id)
                     error = True
                 if holding_rack and not error:
-                    url = reverse('holding_racks', kwargs={
+                    url = reverse('holdingracks:holding_racks', kwargs={
                         'holding_rack_id': holding_rack.holding_rack_id,
                     })
                 else:
-                    url = reverse('holding_racks')
+                    url = reverse('holdingracks:holding_racks')
                 return HttpResponseRedirect(url)
         if 'rack-scanner' in request.POST:
             holding_rack_form = HoldingRackForm()
@@ -122,7 +122,7 @@ def holding_racks(request, holding_rack_id=None):
                 sample.comment = comment
                 sample.issue_outcome = "Not resolved"
                 sample.save()
-                url = reverse('holding_racks', kwargs={
+                url = reverse('holdingracks:holding_racks', kwargs={
                     'holding_rack_id': holding_rack.holding_rack_id,
                 })
                 return HttpResponseRedirect(url)
@@ -189,11 +189,11 @@ def holding_racks_well(request, holding_rack_id=None, holding_racks_well_id=None
                     messages.error(request, "Holding rack not found with ID: " + holding_rack_id)
                     error = True
                 if holding_rack and not error:
-                    url = reverse('holding_racks', kwargs={
+                    url = reverse('holdingracks:holding_racks', kwargs={
                         'holding_rack_id': holding_rack.holding_rack_id,
                     })
                 else:
-                    url = reverse('holding_racks')
+                    url = reverse('holdingracks:holding_racks')
                 return HttpResponseRedirect(url)
         if 'rack-scanner' in request.POST:
             holding_rack_form = HoldingRackForm()
@@ -237,7 +237,7 @@ def holding_racks_well(request, holding_rack_id=None, holding_racks_well_id=None
                 sample.comment = comment
                 sample.issue_outcome = "Not resolved"
                 sample.save()
-                url = reverse('holding_racks', kwargs={
+                url = reverse('holdingracks:holding_racks', kwargs={
                     'holding_rack_id': holding_rack.holding_rack_id,
                 })
                 return HttpResponseRedirect(url)
@@ -297,35 +297,46 @@ def plate_holding_rack(request, holding_rack_pk, test_status=False):
                         writer.writerow([well_id, well_contents, ' 2d_rackid_1', holding_rack.holding_rack_id])
     else:
         plating_form = PlatingForm()
+
+    try:
+        latest_well = HoldingRackWell.objects.filter(holding_rack=holding_rack).exclude(assigned_time__isnull=True).order_by("-assigned_time")[0].well_id
+    except IndexError:
+        latest_well = None
     return render(request, 'holdingracks/plate-holding-rack.html', {
         "holding_rack": holding_rack,
         "samples": samples,
-        "plating_form": plating_form})
+        "plating_form": plating_form,
+        "latest_well": latest_well
+    })
 
 
 @login_required()
 def delete_sample(request, gel1004, rack, holding_rack_id, sample_id):
-    try:
-        holding_rack_well = get_object_or_404(HoldingRackWell, sample__uid=sample_id)
-        if holding_rack_well:
-            sample = holding_rack_well.sample
-            problem_rack = HoldingRack.objects.get(holding_rack_type='Problem', full=False)
-            holding_rack_manager = HoldingRackManager(problem_rack)
-            holding_rack_manager.assign_well(request=request, sample=sample, well=holding_rack_well.well_id)
-
-            # holding_rack.sample = None
-            # holding_rack.save()
-            # Saving to problem rack
-            # holding_rack.sample = sample
-            # holding_rack.save()
-            messages.info(request, f"{sample_id} has been returned to GLH rack {problem_rack} "
-                                   f"and well {holding_rack_well.well_id}")
-    except HoldingRackWell.DoesNotExist:
-        messages.error(request, f"Sample with ID {sample_id} does not exist.")
-
     url = reverse('holdingracks:holding_racks', kwargs={
-
         'holding_rack_id': holding_rack_id,
     })
+    try:
+        holding_rack_well = get_object_or_404(HoldingRackWell.objects.select_related('sample'), sample__uid=sample_id)
+        result = HoldingRackWell.objects.filter(
+            holding_rack__holding_rack_type='Problem',
+            holding_rack__full=False
+        ).select_related('holding_rack').first()
+        if holding_rack_well.sample.issue_identified and result:
+            well = holding_rack_well.well_id
+            if result:
+                for rack in result.holding_rack.wells.all():
+                    if rack.sample and rack.well_id == holding_rack_well.well_id:
+                        well = None
+                holding_rack_manager = HoldingRackManager(result.holding_rack)
+                holding_rack_manager.assign_well(request=request, sample=holding_rack_well.sample, well=well)
+        elif not holding_rack_well.sample.issue_identified:
+            messages.error(request, 'Kindly log issue to sample')
+            return HttpResponseRedirect(url)
+        else:
+            messages.error(request, 'Problem rack is not available')
+            return HttpResponseRedirect(url)
+
+    except HoldingRackWell.DoesNotExist:
+        messages.error(request, f"Sample with ID {sample_id} does not exist.")
 
     return HttpResponseRedirect(url)

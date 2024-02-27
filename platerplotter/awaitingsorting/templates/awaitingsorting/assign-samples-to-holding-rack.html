@@ -154,8 +154,62 @@
                                                    data-target="#editIssueModal-{{ sample.pk }}">Log Issue</a>
                                             {% endif %}
                                         </td>
+                                        {% comment %}
                                         <td><a class="btn btn-primary"
                                                href="{% url 'awaitingsorting:delete_sample' rack.gel_1004_csv.pk rack.receiving_rack_id holding_rack.holding_rack_id sample.laboratory_sample_id %}">Return</a>
+                                        </td>
+                                        {% endcomment %}
+                                        <td>
+                                            <button type="button" class="btn btn-primary"
+                                                    value="{{ sample.laboratory_sample_id }}"
+                                                    data-toggle="modal"
+                                                    data-target="#returnSampleModal-{{ sample.pk }}">Return Sample
+                                            </button>
+
+                                            <!-- Modal -->
+                                            <div class="modal fade" id="returnSampleModal-{{ sample.pk }}" tabindex="-1"
+                                                 role="dialog"
+                                                 aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="exampleModalLabel">Return
+                                                                Sample</h5>
+                                                            <button type="button" class="close" data-dismiss="modal"
+                                                                    aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body">
+
+
+                                                            <div class="form-group">
+                                                                <label for="returnForm-{{ sample.pk }}">Lab Sample
+                                                                    ID:</label>
+                                                                <input type="text" id="returnForm-{{ sample.pk }}"
+                                                                       class="form-control" name="return_sample"
+                                                                       autofocus>
+                                                            </div>
+                                                            <button class="btn btn-primary mx-3" id="confirmSample"
+                                                                    onclick="confirmReturnSample('{{ sample.laboratory_sample_id }}','{{ sample.pk }}')">
+                                                                Confirm
+                                                            </button>
+                                                            <div role="alert" class="mt-3"
+                                                                 id="returnResult-{{ sample.pk }}">
+
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <a class="btn btn-success d-none"
+                                                               id="returnSampleButton-{{ sample.pk }}"
+                                                               href="{% url 'awaitingsorting:delete_sample' sample.receiving_rack.gel_1004_csv.pk sample.receiving_rack.receiving_rack_id holding_rack.holding_rack_id sample %}">
+                                                                Return
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                         </td>
 
                                         <div id='editIssueModal-{{ sample.pk }}' class="modal fade" role="dialog">
@@ -406,14 +460,14 @@
     </div>
 
     <script>
-        var form = document.getElementById('well');
+        let form = document.getElementById('well');
         form.value = '';
 
         function myFunction(position) {
-            var unassignedWells = document.getElementsByClassName('unassigned')
-            var form = document.getElementById('well');
+            const unassignedWells = document.getElementsByClassName('unassigned')
+            let form = document.getElementById('well');
 
-            for (var i = 0; i < unassignedWells.length; i++) {
+            for (let i = 0; i < unassignedWells.length; i++) {
                 unassignedWells[i].style.backgroundColor = '#e9ecef'
             }
             if (position === form.value) {
@@ -425,10 +479,33 @@
             }
         }
 
-        const all_samples = document.getElementsByClassName('assigned');
-        const total_current_samples = document.getElementById('total_sample');
-        const current_sample = document.getElementById('current-sample');
-        total_current_samples.textContent = all_samples.length;
+        function confirmReturnSample(currentSample, modalId) {
+            let formSample = document.querySelector(`#returnForm-${modalId}`);
+            const sampleResult = document.querySelector(`#returnResult-${modalId}`);
+            const returnSampleBtn = document.querySelector(`#returnSampleButton-${modalId}`);
+            if (formSample.value === currentSample) {
+                if (sampleResult.classList.contains('alert-danger')) {
+                    sampleResult.classList.remove('alert-danger');
+                }
+                if (returnSampleBtn.classList.contains('d-none')) {
+                    returnSampleBtn.classList.remove('d-none');
+                }
+
+                sampleResult.classList.add("alert", "alert-success");
+                sampleResult.innerHTML = "Samples Confirmed, kindly click on the return button";
+
+            } else {
+                if (sampleResult.classList.contains('alert-success')) {
+                    sampleResult.classList.remove('alert-success');
+                }
+                if (!returnSampleBtn.classList.contains('d-none')) {
+                    returnSampleBtn.classList.add('d-none');
+                }
+                sampleResult.classList.add("alert", "alert-danger");
+                sampleResult.innerHTML = "Samples not confirm, kindly try again";
+            }
+
+        }
 
     </script>
 {% endblock content %}

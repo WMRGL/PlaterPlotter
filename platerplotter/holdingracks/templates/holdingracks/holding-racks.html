@@ -70,12 +70,25 @@
                                             {% if row|add:column in assigned_well_list %}
                                                 {% for sample in holding_rack_samples %}
                                                     {% if row|add:column == sample.holding_rack_well.well_id %}
-                                                        <td title='Position:             {{ row|add:column }}
-  Laboratory ID:    {{ sample.laboratory_sample_id }}
-  Participant ID:     {{ sample.participant_id }}
-  Group ID:            {{ sample.group_id }}' class="assigned" style="background-color: blue">
-                                                            <div class="tooltip hidden"></div>
-                                                        </td>
+                                                        {% if latest_well == sample.holding_rack_well.well_id %}
+                                                            <td title='Position:{{ row|add:column }}
+                                                                Laboratory ID: {{ sample.laboratory_sample_id }}
+                                                                Participant ID: {{ sample.participant_id }}
+                                                                Group ID: {{ sample.group_id }}'
+                                                                class="assigned" id="current-sample"
+                                                                style="background-color: green">
+                                                                <div class=" tooltip hidden"></div>
+                                                            </td>
+                                                        {% else %}
+                                                            <td title='Position:{{ row|add:column }}
+                                                                Laboratory ID: {{ sample.laboratory_sample_id }}
+                                                                Participant ID: {{ sample.participant_id }}
+                                                                Group ID: {{ sample.group_id }}'
+                                                                class="assigned" id="current-sample"
+                                                                style="background-color: blue">
+                                                                <div class=" tooltip hidden"></div>
+                                                            </td>
+                                                        {% endif %}
                                                     {% endif %}
                                                 {% endfor %}
                                             {% else %}
@@ -129,7 +142,7 @@
                                             <button type="button" class="btn btn-primary"
                                                     value="{{ sample.laboratory_sample_id }}"
                                                     data-toggle="modal"
-                                                    data-target="#returnSampleModal-{{ sample.pk }}" >Return Sample
+                                                    data-target="#returnSampleModal-{{ sample.pk }}">Return Sample
                                             </button>
 
                                             <!-- Modal -->
@@ -296,15 +309,6 @@
     </div>
 
     <script>
-        var all_samples = document.getElementsByClassName('assigned');
-        var total_current_samples = document.getElementById('total_sample');
-        total_current_samples.textContent = all_samples.length;
-
-        // Change the last element colour
-        var new_all = Array.from(all_samples);
-        var last_element = new_all.slice(-1)[0];
-        last_element.style.backgroundColor = "green";
-
 
         function confirmReturnSample(currentSample, modalId) {
             let formSample = document.querySelector(`#returnForm-${modalId}`);
@@ -320,8 +324,7 @@
 
                 sampleResult.classList.add("alert", "alert-success");
                 sampleResult.innerHTML = "Samples Confirmed, kindly click on the return button";
-
-
+                
             } else {
                 if (sampleResult.classList.contains('alert-success')) {
                     sampleResult.classList.remove('alert-success');
@@ -334,10 +337,6 @@
             }
 
         }
-
-
     </script>
-
-
-
+    
 {% endblock content %}
