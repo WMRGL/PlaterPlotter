@@ -296,7 +296,7 @@
                                             </td>
                                         {% elif problem_holding_rack %}
                                             <td>
-                                                <a href="/assign-problem-rack-samples-to-holding-rack/{{ problem_holding_rack.holding_rack_id }}/{{ holding_rack.holding_rack_id }}"> {{ holding_rack.holding_rack_id }}</a>
+                                                <a href="{% url 'awaitingsorting:assign_problem_samples_to_holding_rack' rack=problem_holding_rack.holding_rack_id holding_rack_id=holding_rack.holding_rack_id %}"> {{ holding_rack.holding_rack_id }}</a>
                                             </td>
                                         {% endif %}
                                         <td>{{ holding_rack.disease_area }}</td>
@@ -462,6 +462,10 @@
     <script>
         let form = document.getElementById('well');
         form.value = '';
+
+        const all_samples = document.getElementsByClassName('assigned');
+        const total_current_samples = document.getElementById('total_sample');
+        total_current_samples.textContent = all_samples.length;
 
         function myFunction(position) {
             const unassignedWells = document.getElementsByClassName('unassigned')

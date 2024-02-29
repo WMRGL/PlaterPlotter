@@ -26,7 +26,23 @@
                                 </button>
                             </div>
                         </form>
+
+                        <div class="mt-1">
+                            <form action="" method="post" id="problem-rack-to-awaiting">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="rack-select-all">Select All</label>
+                                    <input type="checkbox" id="rack-select-all" onclick='
+                                    selectAll(rackSelectAllCheckbox, rackCheckboxes);
+                                    '>
+                                    <button type="submit" name="rack_to_awaiting" class="btn btn-success btn-lg">
+                                        Move to Awaiting Sort
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
+
                 </div>
                 <div class="col-3">
                     <div align='right'>
@@ -97,6 +113,7 @@
                                 <th>Sample Type</th>
                                 <th>Issue</th>
                                 <th>Resolve Issue</th>
+                                <th>Select Sample</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -114,6 +131,12 @@
                                     <td>
                                         <a class='btn btn-warning' href=# data-toggle="modal"
                                            data-target="#editIssueModal-{{ sample.pk }}">Edit Issue</a>
+                                    </td>
+                                    <td>
+                                        <input type="checkbox" form="problem-rack-to-awaiting"
+                                               class="rack-selected-checkboxes" name="rack_selected_sample"
+                                               value="{{ sample.laboratory_sample_id }}"
+                                        >
                                     </td>
                                     <div id='editIssueModal-{{ sample.pk }}' class="modal fade" role="dialog">
                                         <div class="modal-dialog">
@@ -217,10 +240,12 @@
 
             <div class="form-group mx-sm-3 mb-2">
                 <label class="mr-2" for="selectAllCheckbox">Select All</label>
-                <input type="checkbox" class="form-control" id="selectAllCheckbox" onclick="selectAll()">
+                <input type="checkbox" class="form-control" id="selectAllCheckbox" onclick="
+                selectAll(wellSelectAllCheckbox, wellCheckboxes)
+                ">
             </div>
 
-            <button type="submit" class="btn btn-primary mb-2" name="move_to_awaiting">
+            <button type="submit" class="btn btn-success btn-lg mb-2" name="move_to_awaiting">
                 Submit
             </button>
         </form>
@@ -280,7 +305,7 @@
                                 </td>
                                 <td>
                                     <input type="checkbox" name="selected_sample" form="awaitingSort"
-                                           class="selected-checkbox" value="{{ sample.laboratory_sample_id }}">
+                                           class="well-selected-checkbox" value="{{ sample.laboratory_sample_id }}">
                                 </td>
 
                                 <div id='editIssueModal-{{ sample.pk }}' class="modal fade" role="dialog">
@@ -325,8 +350,10 @@
     </div>
 
     <script>
-        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        const rackSelectAllCheckbox = document.querySelector("#rack-select-all");
+        const rackCheckboxes = document.querySelectorAll(".rack-selected-checkboxes");
+        const wellSelectAllCheckbox = document.getElementById('selectAllCheckbox');
+        const wellCheckboxes = document.querySelectorAll('.well-selected-checkbox');
         let form = document.getElementById('well');
         form.value = '';
 
@@ -345,24 +372,25 @@
             }
         }
 
-        function selectAll() {
-            if (selectAllCheckbox.checked) {
-                checkboxes.forEach(checkbox => {
+        // select all
+        function selectAll(allCheckboxes, singleCheckbox) {
+            if (allCheckboxes.checked) {
+                singleCheckbox.forEach(checkbox => {
                     checkbox.checked = true;
                 });
             } else {
-                checkboxes.forEach(checkbox => {
+                singleCheckbox.forEach(checkbox => {
                     checkbox.checked = false;
                 });
             }
         }
 
-
+        // well multiple checkboxes
         document.addEventListener('DOMContentLoaded', function () {
-            checkboxes.forEach((checkbox) => {
+            wellCheckboxes.forEach((checkbox) => {
                 checkbox.addEventListener('click', function () {
                     let atLeastOneChecked = false;
-                    checkboxes.forEach((cb) => {
+                    wellCheckboxes.forEach((cb) => {
                         if (cb.checked) {
                             atLeastOneChecked = true;
                         }
@@ -373,19 +401,44 @@
 
             document.getElementById('awaitingSort').addEventListener('submit', function (event) {
                 let atLeastOneChecked = false;
-                checkboxes.forEach((checkbox) => {
+                wellCheckboxes.forEach((checkbox) => {
                     if (checkbox.checked) {
                         atLeastOneChecked = true;
                     }
                 });
                 if (!atLeastOneChecked) {
                     event.preventDefault();
-                    alert('Please select at least one sample');
+                    alert('Please select at least one sample from Problem samples awaiting well assignment');
                 }
             });
-
-
         });
+
+        // rack multiple checkboxes
+        document.addEventListener('DOMContentLoaded', function() {
+            rackCheckboxes.forEach((checkbox) => {
+                checkbox.addEventListener('click', function () {
+                    let atLeastOneChecked = false;
+                    rackCheckboxes.forEach((cb) => {
+                        if (cb.checked) {
+                            atLeastOneChecked = true;
+                        }
+                    });
+                });
+            });
+            document.getElementById('problem-rack-to-awaiting').addEventListener('submit', function (event) {
+                let atLeastOneChecked = false;
+                rackCheckboxes.forEach((checkbox) => {
+                    if (checkbox.checked) {
+                        atLeastOneChecked = true;
+                    }
+                });
+                if (!atLeastOneChecked) {
+                    event.preventDefault();
+                    alert('Please select at least one sample from Problem rack')
+                }
+
+            })
+        })
     </script>
 
 {% endblock content %}

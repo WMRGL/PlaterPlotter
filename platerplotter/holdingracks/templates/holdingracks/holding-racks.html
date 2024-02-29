@@ -309,6 +309,9 @@
     </div>
 
     <script>
+        const all_samples = document.getElementsByClassName('assigned');
+        const total_current_samples = document.getElementById('total_sample');
+        total_current_samples.textContent = all_samples.length;
 
         function confirmReturnSample(currentSample, modalId) {
             let formSample = document.querySelector(`#returnForm-${modalId}`);

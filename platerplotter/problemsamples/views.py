@@ -273,6 +273,17 @@ def problem_samples(request, holding_rack_id=None, test_status=False):
 
             url = reverse('problemsamples:samples')
             return HttpResponseRedirect(url)
+
+        if 'rack_to_awaiting' in request.POST:
+            rack_selected_samples = request.POST.getlist('rack_selected_sample')
+            for sample in rack_selected_samples:
+                obj = Sample.objects.get(laboratory_sample_id=sample)
+                obj.issue_outcome = 'Ready for plating'
+                obj.save()
+            url = reverse('problemsamples:problem_samples', kwargs={
+                'holding_rack_id': holding_rack.holding_rack_id,
+            })
+            return HttpResponseRedirect(url)
     else:
         holding_rack_form = HoldingRackForm()
         sample_select_form = SampleSelectForm()
@@ -492,7 +503,11 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
     else:
         holding_rack_form = HoldingRackForm()
         sample_select_form = SampleSelectForm()
-    return render(request, 'platerplotter/assign-samples-to-holding-rack.html', {
+    try:
+        latest_well = HoldingRackWell.objects.filter(holding_rack=holding_rack).exclude(assigned_time__isnull=True).order_by("-assigned_time")[0].well_id
+    except IndexError:
+        latest_well = None
+    return render(request, 'awaitingsorting/assign-samples-to-holding-rack.html', {
         "rack": rack,
         "problem_holding_rack": problem_holding_rack,
         "samples": samples,
@@ -506,4 +521,6 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
         "assigned_well_list": assigned_well_list,
         "current_holding_racks_dict": current_holding_racks_dict,
         "holding_rack_rows": holding_rack_rows,
-        "holding_rack_columns": holding_rack_columns})
+        "holding_rack_columns": holding_rack_columns,
+        "latest_well": latest_well
+    })

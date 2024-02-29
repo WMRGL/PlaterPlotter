@@ -321,21 +321,16 @@ def delete_sample(request, gel1004, rack, holding_rack_id, sample_id):
             holding_rack__holding_rack_type='Problem',
             holding_rack__full=False
         ).select_related('holding_rack').first()
-        if holding_rack_well.sample.issue_identified and result:
-            well = holding_rack_well.well_id
-            if result:
-                for rack in result.holding_rack.wells.all():
-                    if rack.sample and rack.well_id == holding_rack_well.well_id:
-                        well = None
-                holding_rack_manager = HoldingRackManager(result.holding_rack)
-                holding_rack_manager.assign_well(request=request, sample=holding_rack_well.sample, well=well)
+
+        if result:
+            holding_rack_manager = HoldingRackManager(result.holding_rack)
+            holding_rack_manager.assign_well(request=request, sample=holding_rack_well.sample, well=None)
         elif not holding_rack_well.sample.issue_identified:
             messages.error(request, 'Kindly log issue to sample')
             return HttpResponseRedirect(url)
         else:
             messages.error(request, 'Problem rack is not available')
             return HttpResponseRedirect(url)
-
     except HoldingRackWell.DoesNotExist:
         messages.error(request, f"Sample with ID {sample_id} does not exist.")
 

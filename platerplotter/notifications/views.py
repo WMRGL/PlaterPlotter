@@ -12,8 +12,9 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 
+from holdingracks.holding_rack_manager import HoldingRackManager
 from platerplotter.config.load_config import LoadConfig
-from platerplotter.models import Sample, Gel1005Csv, Gel1004Csv, ReceivingRack
+from platerplotter.models import Sample, Gel1005Csv, Gel1004Csv, ReceivingRack, HoldingRack, HoldingRackWell
 from problemsamples.forms import SampleSelectForm, LogIssueForm
 from problemsamples.views import confirm_sample_positions
 
@@ -450,6 +451,8 @@ def import_acks(request, test_status=False):
 
 @login_required()
 def acknowledge_samples(request, gel1004, rack, test_status=False):
+    holding_rack_rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+    holding_rack_columns = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
     rack = ReceivingRack.objects.get(gel_1004_csv=gel1004, receiving_rack_id=rack)
     samples = Sample.objects.filter(receiving_rack=rack)
     sample_select_form = SampleSelectForm()
@@ -536,8 +539,20 @@ def acknowledge_samples(request, gel1004, rack, test_status=False):
             "rack": rack.receiving_rack_id,
         })
         selected = request.POST.getlist('selected_field')
+        # holding_rack, created = HoldingRack.objects.get_or_create(
+        #     holding_rack_id=rack.receiving_rack_id,
+        #     holding_rack_type='Problem',
+        # )
+        #
+        # if created:
+        #     for holding_rack_row in holding_rack_rows:
+        #         for holding_rack_column in holding_rack_columns:
+        #             HoldingRackWell.objects.create(holding_rack=holding_rack,
+        #                                            well_id=holding_rack_row + holding_rack_column)
+        # holding_rack_manager = HoldingRackManager(holding_rack)
         for sample in selected:
             obj = Sample.objects.get(laboratory_sample_id=sample)
+
             if not obj.sample_received:
                 messages.error(request, "Kindly mark sample as received")
                 return HttpResponseRedirect(url)
@@ -545,7 +560,7 @@ def acknowledge_samples(request, gel1004, rack, test_status=False):
             obj.issue_identified = True
             obj.issue_outcome = "Not resolved"
             obj.save()
-
+            # holding_rack_manager.assign_well(request=request, sample=obj, well=None)
         return HttpResponseRedirect(url)
 
     return render(request, 'notifications/acknowledge-samples.html', {"rack": rack,
