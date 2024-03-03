@@ -63,25 +63,67 @@
                 </form>
             </div>
         </div>
-        <div class="col-12">
-            <div class="tab-pane active">
-                <form class="form-inline" method="post" action="" id="problemForm">
+        <div class="row">
+            <div class="col-4 offset-1">
+                <form class="form-inline" method="post" action="" id="problem-form">
                     {% csrf_token %}
 
                     <div class="form-group mx-sm-3 mb-2">
-                        <label class="mr-2" for="selectAllCheckbox">Select All</label>
-                        <input type="checkbox" class="form-control" id="selectAllCheckbox" onclick="selectAll()">
+                        <label for="inputPassword2" class="mr-3">Issue</label>
+                        <input type="text" class="form-control" placeholder="Issue" id="inputPassword2" name="comment"
+                               >
                     </div>
 
                     <div class="form-group mx-sm-3 mb-2">
-                        <label for="inputPassword2" class="sr-only">Issue</label>
-                        <input type="text" class="form-control" id="inputPassword2" name="comment"
-                               required>
+                        <label class="mr-3" for="selectAllCheckbox">Select All</label>
+                        <input type="checkbox" class="form-control" id="selectAllCheckbox" onclick="selectAll()">
                     </div>
                     <button type="submit" class="btn btn-primary mb-2" name="mark-as-problem-rack">
                         Submit
                     </button>
+
+                    <div class="form-group mx-sm-3 mb-2">
+                        <label for="inputPassword2" class="mr-3">Problem Rack ID:</label>
+                        <input type="text" class="form-control" id="inputPassword2" placeholder="Rack ID"
+                               name="problem_rack_id"
+                               >
+                    </div>
+
+                    <button type="submit" class="btn btn-primary mb-2" name="mark-as-problem-rack-well">
+                        Submit
+                    </button>
                 </form>
+            </div>
+
+            <div class="col-6">
+                {% comment %}
+                <form class="form-inline" method="post" action="" >
+                    {% csrf_token %}
+                    <div class="form-group mx-sm-3 mb-2">
+                        <label for="inputPassword2" class="mr-3">Problem Rack ID:</label>
+                        <input type="text" class="form-control" id="inputPassword2" placeholder="Rack ID"
+                               name="problem_rack_id"
+                               required>
+                    </div>
+
+                    <div class="form-group mx-sm-3 mb-2">
+                        <label class="mr-2" for="select-all-checkbox-well">Select All</label>
+                        <input type="checkbox" class="form-control" id="select-all-checkbox-well" onclick="selectAll()">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary mb-2" name="mark-as-problem-rack-well">
+                        Submit
+                    </button>
+                </form>
+                {% endcomment %}
+            </div>
+        </div>
+
+
+        <div class="col-12">
+            <div class="tab-pane active">
+
+
                 <br>
                 <table class="table table-bordered" id="dataTable">
                     <thead>
@@ -202,7 +244,7 @@
                                 </form>
                             </td>
                             <td>
-                                <input form="problemForm" type="checkbox" name="selected_field"
+                                <input form="problem-form" type="checkbox" name="selected_field"
                                        value="{{ sample.laboratory_sample_id }}" class="selected-checkbox">
                             </td>
                         </tr>
@@ -230,7 +272,7 @@
                 });
             });
 
-            document.getElementById('problemForm').addEventListener('submit', function (event) {
+            document.getElementById('problem-form').addEventListener('submit', function (event) {
                 let atLeastOneChecked = false;
                 checkboxes.forEach((checkbox) => {
                     if (checkbox.checked) {

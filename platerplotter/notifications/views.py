@@ -551,6 +551,7 @@ def acknowledge_samples(request, gel1004, rack, test_status=False):
         #                                            well_id=holding_rack_row + holding_rack_column)
         # holding_rack_manager = HoldingRackManager(holding_rack)
         for sample in selected:
+
             obj = Sample.objects.get(laboratory_sample_id=sample)
 
             if not obj.sample_received:
@@ -561,6 +562,31 @@ def acknowledge_samples(request, gel1004, rack, test_status=False):
             obj.issue_outcome = "Not resolved"
             obj.save()
             # holding_rack_manager.assign_well(request=request, sample=obj, well=None)
+
+            return HttpResponseRedirect(url)
+
+    elif 'mark-as-problem-rack-well' in request.POST:
+        url = reverse('notifications:acknowledge_samples', kwargs={
+            "gel1004": gel1004,
+            "rack": rack.receiving_rack_id,
+        })
+        selected_samples = request.POST.getlist('selected_field')
+        problem_rack_id = request.POST['problem_rack_id']
+        holding_rack, created = HoldingRack.objects.get_or_create(
+            holding_rack_id=problem_rack_id, holding_rack_type='Problem')
+        if created:
+            for holding_rack_row in holding_rack_rows:
+                for holding_rack_column in holding_rack_columns:
+                    HoldingRackWell.objects.create(holding_rack=holding_rack,
+                                                   well_id=holding_rack_row + holding_rack_column)
+        holding_rack_manager = HoldingRackManager(holding_rack)
+        for sample in selected_samples:
+            sample_obj = Sample.objects.get(laboratory_sample_id=sample)
+            if not sample_obj.sample_received:
+                messages.error(request, "Kindly mark sample as received")
+                return HttpResponseRedirect(url)
+            holding_rack_manager.assign_well(request=request, sample=sample_obj, well=sample_obj.receiving_rack_well)
+
         return HttpResponseRedirect(url)
 
     return render(request, 'notifications/acknowledge-samples.html', {"rack": rack,
