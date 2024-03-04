@@ -539,17 +539,6 @@ def acknowledge_samples(request, gel1004, rack, test_status=False):
             "rack": rack.receiving_rack_id,
         })
         selected = request.POST.getlist('selected_field')
-        # holding_rack, created = HoldingRack.objects.get_or_create(
-        #     holding_rack_id=rack.receiving_rack_id,
-        #     holding_rack_type='Problem',
-        # )
-        #
-        # if created:
-        #     for holding_rack_row in holding_rack_rows:
-        #         for holding_rack_column in holding_rack_columns:
-        #             HoldingRackWell.objects.create(holding_rack=holding_rack,
-        #                                            well_id=holding_rack_row + holding_rack_column)
-        # holding_rack_manager = HoldingRackManager(holding_rack)
         for sample in selected:
 
             obj = Sample.objects.get(laboratory_sample_id=sample)
@@ -561,7 +550,6 @@ def acknowledge_samples(request, gel1004, rack, test_status=False):
             obj.issue_identified = True
             obj.issue_outcome = "Not resolved"
             obj.save()
-            # holding_rack_manager.assign_well(request=request, sample=obj, well=None)
 
             return HttpResponseRedirect(url)
 
@@ -579,13 +567,18 @@ def acknowledge_samples(request, gel1004, rack, test_status=False):
                 for holding_rack_column in holding_rack_columns:
                     HoldingRackWell.objects.create(holding_rack=holding_rack,
                                                    well_id=holding_rack_row + holding_rack_column)
-        holding_rack_manager = HoldingRackManager(holding_rack)
         for sample in selected_samples:
-            sample_obj = Sample.objects.get(laboratory_sample_id=sample)
-            if not sample_obj.sample_received:
+            obj = Sample.objects.get(laboratory_sample_id=sample)
+            if not obj.sample_received:
                 messages.error(request, "Kindly mark sample as received")
                 return HttpResponseRedirect(url)
-            holding_rack_manager.assign_well(request=request, sample=sample_obj, well=sample_obj.receiving_rack_well)
+
+            obj.issue_identified = True
+            obj.comment = request.POST['comment']
+            obj.issue_outcome = "Not resolved"
+            obj.save()
+            holding_rack_manager = HoldingRackManager(holding_rack)
+            holding_rack_manager.assign_well(request=request, sample=obj, well=None)
 
         return HttpResponseRedirect(url)
 
