@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 
@@ -261,11 +261,35 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
                             'rack': rack.receiving_rack_id,
                         })
                 return HttpResponseRedirect(url)
+
+        if 'return_rack' in request.POST:
+            url = reverse('awaitingsorting:assign_samples_to_holding_rack', kwargs={
+                'gel1004': gel1004,
+                'rack': rack,
+                'holding_rack_id': holding_rack_id,
+            })
+            return_sample = request.POST['return_sample']
+            return_problem_rack_id = request.POST['return_holding_rack']
+            sample = get_object_or_404(Sample, laboratory_sample_id=return_sample)
+            problem_rack, created = HoldingRack.objects.get_or_create(holding_rack_id=return_problem_rack_id,
+                                                                      holding_rack_type='Problem')
+
+            if not sample.issue_identified:
+                messages.error(request, 'Kindly log issue to sample')
+                return HttpResponseRedirect(url)
+
+            if sample:
+                holding_rack_manager = HoldingRackManager(holding_rack=problem_rack)
+                holding_rack_manager.assign_well(request=request, sample=sample, well=None)
+
+            return HttpResponseRedirect(url)
     else:
         holding_rack_form = HoldingRackForm()
         sample_select_form = SampleSelectForm()
     try:
-        latest_well = HoldingRackWell.objects.filter(holding_rack=holding_rack).exclude(assigned_time__isnull=True).order_by("-assigned_time")[0].well_id
+        latest_well = \
+        HoldingRackWell.objects.filter(holding_rack=holding_rack).exclude(assigned_time__isnull=True).order_by(
+            "-assigned_time")[0].well_id
     except IndexError:
         latest_well = None
     return render(request, 'awaitingsorting/assign-samples-to-holding-rack.html', {

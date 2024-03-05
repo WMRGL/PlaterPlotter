@@ -126,6 +126,26 @@ def holding_racks(request, holding_rack_id=None):
                     'holding_rack_id': holding_rack.holding_rack_id,
                 })
                 return HttpResponseRedirect(url)
+
+        if 'return_rack' in request.POST:
+            url = reverse('holdingracks:holding_racks', kwargs={
+                'holding_rack_id': holding_rack_id,
+            })
+            return_sample = request.POST['return_sample']
+            return_problem_rack_id = request.POST['return_holding_rack']
+            sample = get_object_or_404(Sample, laboratory_sample_id=return_sample)
+            problem_rack, created = HoldingRack.objects.get_or_create(holding_rack_id=return_problem_rack_id,
+                                                                      holding_rack_type='Problem')
+
+            if not sample.issue_identified:
+                messages.error(request, 'Kindly log issue to sample')
+                return HttpResponseRedirect(url)
+
+            if sample:
+                holding_rack_manager = HoldingRackManager(holding_rack=problem_rack)
+                holding_rack_manager.assign_well(request=request, sample=sample, well=None)
+
+                return HttpResponseRedirect(url)
     else:
         holding_rack_form = HoldingRackForm()
     return render(request, 'holdingracks/holding-racks.html', {
