@@ -261,7 +261,7 @@ def problem_samples(request, holding_rack_id=None, test_status=False):
                     'holding_rack_id': holding_rack.holding_rack_id,
                 })
                 return HttpResponseRedirect(url)
-
+        """
         if 'move_to_awaiting' in request.POST:
             selected_samples = request.POST.getlist('selected_sample')
             for sample in selected_samples:
@@ -273,7 +273,7 @@ def problem_samples(request, holding_rack_id=None, test_status=False):
 
             url = reverse('problemsamples:samples')
             return HttpResponseRedirect(url)
-
+        """
         if 'rack_to_awaiting' in request.POST:
             rack_selected_samples = request.POST.getlist('rack_selected_sample')
             for sample in rack_selected_samples:

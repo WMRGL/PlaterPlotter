@@ -448,7 +448,6 @@ def import_acks(request, test_status=False):
         "unacked_racks_dict": unacked_racks_dict,
     })
 
-
 @login_required()
 def acknowledge_samples(request, gel1004, rack, test_status=False):
     holding_rack_rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
@@ -526,61 +525,64 @@ def acknowledge_samples(request, gel1004, rack, test_status=False):
                     "rack": rack.receiving_rack_id,
                 })
                 return HttpResponseRedirect(url)
+
+        """
+        if 'mark-as-problem-rack' in request.POST:
+            url = reverse('notifications:acknowledge_samples', kwargs={
+                "gel1004": gel1004,
+                "rack": rack.receiving_rack_id,
+            })
+            selected = request.POST.getlist('selected_field')
+            for sample in selected:
+    
+                obj = Sample.objects.get(laboratory_sample_id=sample)
+    
+                if not obj.sample_received:
+                    messages.error(request, "Kindly mark sample as received")
+                    return HttpResponseRedirect(url)
+                obj.comment = request.POST['comment']
+                obj.issue_identified = True
+                obj.issue_outcome = "Not resolved"
+                obj.save()
+    
+                return HttpResponseRedirect(url)
+        """
+
+        if 'mark-as-problem-rack-well' in request.POST:
+            url = reverse('notifications:acknowledge_samples', kwargs={
+                "gel1004": gel1004,
+                "rack": rack.receiving_rack_id,
+            })
+            selected_samples = request.POST.getlist('selected_field')
+            problem_rack_id = request.POST['problem_rack_id']
+            holding_rack, created = HoldingRack.objects.get_or_create(
+                holding_rack_id=problem_rack_id, holding_rack_type='Problem')
+            if created:
+                for holding_rack_row in holding_rack_rows:
+                    for holding_rack_column in holding_rack_columns:
+                        HoldingRackWell.objects.create(holding_rack=holding_rack,
+                                                       well_id=holding_rack_row + holding_rack_column)
+            for sample in selected_samples:
+                obj = Sample.objects.get(laboratory_sample_id=sample)
+                if not obj.sample_received:
+                    messages.error(request, "Kindly mark sample as received")
+                    return HttpResponseRedirect(url)
+
+                obj.issue_identified = True
+                obj.comment = request.POST['comment']
+                obj.issue_outcome = "Not resolved"
+                obj.save()
+                holding_rack_manager = HoldingRackManager(holding_rack)
+                holding_rack_manager.assign_well(request=request, sample=obj, well=None)
+
+            return HttpResponseRedirect(url)
+
     all_samples_received = True
     for sample in samples:
         if not sample.sample_received:
             all_samples_received = False
     if all_samples_received:
         messages.info(request, "All samples received")
-
-    if 'mark-as-problem-rack' in request.POST:
-        url = reverse('notifications:acknowledge_samples', kwargs={
-            "gel1004": gel1004,
-            "rack": rack.receiving_rack_id,
-        })
-        selected = request.POST.getlist('selected_field')
-        for sample in selected:
-
-            obj = Sample.objects.get(laboratory_sample_id=sample)
-
-            if not obj.sample_received:
-                messages.error(request, "Kindly mark sample as received")
-                return HttpResponseRedirect(url)
-            obj.comment = request.POST['comment']
-            obj.issue_identified = True
-            obj.issue_outcome = "Not resolved"
-            obj.save()
-
-            return HttpResponseRedirect(url)
-
-    elif 'mark-as-problem-rack-well' in request.POST:
-        url = reverse('notifications:acknowledge_samples', kwargs={
-            "gel1004": gel1004,
-            "rack": rack.receiving_rack_id,
-        })
-        selected_samples = request.POST.getlist('selected_field')
-        problem_rack_id = request.POST['problem_rack_id']
-        holding_rack, created = HoldingRack.objects.get_or_create(
-            holding_rack_id=problem_rack_id, holding_rack_type='Problem')
-        if created:
-            for holding_rack_row in holding_rack_rows:
-                for holding_rack_column in holding_rack_columns:
-                    HoldingRackWell.objects.create(holding_rack=holding_rack,
-                                                   well_id=holding_rack_row + holding_rack_column)
-        for sample in selected_samples:
-            obj = Sample.objects.get(laboratory_sample_id=sample)
-            if not obj.sample_received:
-                messages.error(request, "Kindly mark sample as received")
-                return HttpResponseRedirect(url)
-
-            obj.issue_identified = True
-            obj.comment = request.POST['comment']
-            obj.issue_outcome = "Not resolved"
-            obj.save()
-            holding_rack_manager = HoldingRackManager(holding_rack)
-            holding_rack_manager.assign_well(request=request, sample=obj, well=None)
-
-        return HttpResponseRedirect(url)
 
     return render(request, 'notifications/acknowledge-samples.html', {"rack": rack,
                                                                       "samples": samples,

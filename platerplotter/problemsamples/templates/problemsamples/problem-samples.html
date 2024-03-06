@@ -32,9 +32,7 @@
                                 {% csrf_token %}
                                 <div class="form-group">
                                     <label for="rack-select-all">Select All</label>
-                                    <input type="checkbox" id="rack-select-all" onclick='
-                                    selectAll(rackSelectAllCheckbox, rackCheckboxes);
-                                    '>
+                                    <input type="checkbox" id="rack-select-all" onclick="selectAll()">
                                     <button type="submit" name="rack_to_awaiting" class="btn btn-success btn-lg">
                                         Move to Awaiting Sort
                                     </button>
@@ -48,7 +46,7 @@
                     <div align='right'>
                         <h4>Scan or type sample ID</h4>
                     </div>
-                    <form role='form' action='' method="POST" , class='form-inline float-right'>
+                    <form role='form' action='' method="POST"  class='form-inline float-right'>
                         {% csrf_token %}
                         <input type="hidden" id="well" name="well">
                         {{ sample_select_form|crispy }}
@@ -66,7 +64,6 @@
                         <table class="plate">
                             <tbody>
                             <tr>
-                                <th></th>
                                 {% for column in holding_rack_columns %}
                                     <th>{{ column }}</th>
                                 {% endfor %}
@@ -235,6 +232,7 @@
                 <h3>Problem samples awaiting well assignment</h3>
             </div>
         </div>
+    {% comment %}
         <form class="form-inline" method="post" action="" id="awaitingSort">
             {% csrf_token %}
 
@@ -249,7 +247,7 @@
                 Submit
             </button>
         </form>
-
+        {% endcomment %}
         <div class="row">
             <div class="col-12">
                 <div class="tab-pane active">
@@ -269,7 +267,7 @@
                             <th>Sample Volume</th>
                             <th>Issue</th>
                             <th>Edit Issue</th>
-                            <th>Select Sample</th>
+{#                            <th>Select Sample</th>#}
                         </tr>
                         </thead>
                         <tbody>
@@ -303,11 +301,12 @@
                                     <a class="btn btn-warning" href="#" data-toggle="modal"
                                        data-target="#editIssueModal-{{ sample.pk }}">Edit Issue</a>
                                 </td>
+                            {% comment %}
                                 <td>
                                     <input type="checkbox" name="selected_sample" form="awaitingSort"
                                            class="well-selected-checkbox" value="{{ sample.laboratory_sample_id }}">
                                 </td>
-
+                            {% endcomment %}
                                 <div id='editIssueModal-{{ sample.pk }}' class="modal fade" role="dialog">
                                     <div class="modal-dialog">
                                         <div class="modal-content">
@@ -373,13 +372,14 @@
         }
 
         // select all
-        function selectAll(allCheckboxes, singleCheckbox) {
-            if (allCheckboxes.checked) {
-                singleCheckbox.forEach(checkbox => {
+        function selectAll() {
+            if (rackSelectAllCheckbox.checked) {
+                 rackCheckboxes.forEach(checkbox => {
                     checkbox.checked = true;
                 });
-            } else {
-                singleCheckbox.forEach(checkbox => {
+            }
+            else {
+                 rackCheckboxes.forEach(checkbox => {
                     checkbox.checked = false;
                 });
             }

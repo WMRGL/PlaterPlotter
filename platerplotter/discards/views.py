@@ -50,13 +50,17 @@ def discards_index(request):
             discard_racks.append(holding_rack)
 
     if query:
-        results = HoldingRack.objects.filter(holding_rack_id__icontains=query)
+        results = HoldingRack.objects.filter(Q(holding_rack_id__icontains=query))
         if results:
             for result in results:
-                if result.plate is None or result.plate.gel_1008_csv is None:
-                    messages.info(request, 'Holding is not due for discard')
+                if is_discard_due(result):
+                    messages.success(request, 'Holding Rack is due for discard')
+                elif result.discarded:
+                    messages.success(request, 'Holding Rack has been discarded')
+                else:
+                    messages.error(request, 'Holding Rack is not due for discard')
         else:
-            messages.info(request, 'Holding is not available for discard')
+            messages.error(request, 'Holding Rack is not due for discard')
 
     if request.method == 'POST':
         if discard_form.is_valid():

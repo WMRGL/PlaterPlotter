@@ -4,7 +4,6 @@
 {% endblock title %}
 {% load crispy_forms_tags %}
 
-
 {% block content %}
     <div class="container-fluid">
         <div class="row">
@@ -78,17 +77,12 @@
                                required>
                     </div>
 
-                    <button type="submit" class="btn btn-primary mb-2" name="mark-as-problem-rack">
-                        Submit
-                    </button>
-
                     <div class="form-group mx-sm-3 mb-2">
                         <label for="inputPassword2" class="mr-3">Problem Rack ID:</label>
                         <input type="text" class="form-control" id="inputPassword2" placeholder="Rack ID"
                                name="problem_rack_id"
-                               >
+                        >
                     </div>
-
                     <button type="submit" class="btn btn-primary mb-2" name="mark-as-problem-rack-well">
                         Submit
                     </button>
@@ -97,11 +91,8 @@
 
         </div>
 
-
         <div class="col-12">
             <div class="tab-pane active">
-
-
                 <br>
                 <table class="table table-bordered" id="dataTable">
                     <thead>
@@ -121,7 +112,6 @@
                     </tr>
                     </thead>
                     <tbody>
-
 
                     {% for sample, form in sample_form_dict.items %}
 
