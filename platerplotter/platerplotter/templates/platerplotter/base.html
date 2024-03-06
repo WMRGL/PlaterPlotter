@@ -1,57 +1,67 @@
 <html>
 <!DOCTYPE html>
 <head>
-	<title>
-		{% block title %}
-			PlaterPlotter
-		{% endblock title %}
-	</title>
-	<meta charset="UTF-8">
-	{% load static %}
+    <title>
+        {% block title %}
+            PlaterPlotter
+        {% endblock title %}
+    </title>
+    <meta charset="UTF-8">
+    {% load static %}
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <!-- DataTables, required for pagination-->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css">
     <!-- Fontawesome -->
-     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+          integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 </head>
 <body>
-	<div>
+<div>
 
-		<nav class="navbar navbar-expand-lg navbar-light" style="background-color: #e9ecef;">
-	        <div class="container-fluid">
-	            <div class="navbar-header">
-	                <a class="navbar-brand" href=""><strong>PlaterPlotter</strong></a>
-	            </div>
-	            {% if user.is_authenticated %}
-	            <ul class="nav">
-	            	{% with url_name=request.resolver_match.url_name %}
-	                <li class="nav nav-item">
-	                    <a class="nav-link {% if url_name == 'index' or url_name == 'acknowledge_samples'%}active{% endif %}" href="{% url 'index' %}">Rack Notifications</a>
-	                </li>
-	                <li class="nav nav-item">
-	                    <a class="nav-link {% if url_name == 'samples' %}active{% endif %}" href="{% url 'problemsamples:samples' %}">Problem Samples</a>
-	                </li>
-	                <li class="nav nav-item">
-	                    <a class="nav-link {% if url_name == 'awaiting_holding_rack_assignment' or url_name == 'assign_samples_to_holding_rack' or url_name == 'assign_problem_samples_to_holding_rack' %}active{% endif %}" href="{% url 'awaitingsorting:awaiting_holding_rack_assignment' %}">Awaiting Sorting</a>
-	                </li>
-	                <li class="nav nav-item">
-	                    <a class="nav-link {% if url_name == 'holding_racks' %}active{% endif %}" href="{% url 'holdingracks:holding_racks' %}">Holding Racks</a>
-	                </li>
-	                <li class="nav nav-item">
-	                    <a class="nav-link {% if url_name == 'ready_to_plate' %}active{% endif %}" href="{% url 'ready:ready_to_plate' %}">Ready to Plate</a>
-	                </li>
-	                <li class="nav nav-item">
-	                    <a class="nav-link {% if url_name == 'ready_to_dispatch' %}active{% endif %}" href="{% url 'ready:ready_to_dispatch' %}">Ready for Dispatch</a>
-	                </li>
-	               	<li class="nav nav-item">
-	                    <a class="nav-link {% if url_name == 'consignments_for_collection' %}active{% endif %}" href="{% url 'ready:consignments_for_collection' %}">Consignments for Collection</a>
-	                </li>
-	                <li class="nav nav-item">
-	                    <a class="nav-link {% if url_name == 'audit' %}active{% endif %}" href="{% url 'ready:audit' %}">Audit</a>
-	                </li>
+    <nav class="navbar navbar-expand-lg navbar-light" style="background-color: #e9ecef;">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href=""><strong>PlaterPlotter</strong></a>
+            </div>
+            {% if user.is_authenticated %}
+                <ul class="nav">
+                    {% with url_name=request.resolver_match.url_name %}
+                        <li class="nav nav-item">
+                            <a class="nav-link {% if url_name == 'index' or url_name == 'acknowledge_samples' %}active{% endif %}"
+                               href="{% url 'index' %}">Rack Notifications</a>
+                        </li>
+                        <li class="nav nav-item">
+                            <a class="nav-link {% if url_name == 'samples' %}active{% endif %}"
+                               href="{% url 'problemsamples:samples' %}">Problem Samples</a>
+                        </li>
+                        <li class="nav nav-item">
+                            <a class="nav-link {% if url_name == 'awaiting_holding_rack_assignment' or url_name == 'assign_samples_to_holding_rack' or url_name == 'assign_problem_samples_to_holding_rack' %}active{% endif %}"
+                               href="{% url 'awaitingsorting:awaiting_holding_rack_assignment' %}">Awaiting Sorting</a>
+                        </li>
+                        <li class="nav nav-item">
+                            <a class="nav-link {% if url_name == 'holding_racks' %}active{% endif %}"
+                               href="{% url 'holdingracks:holding_racks' %}">Holding Racks</a>
+                        </li>
+                        <li class="nav nav-item">
+                            <a class="nav-link {% if url_name == 'ready_to_plate' %}active{% endif %}"
+                               href="{% url 'ready:ready_to_plate' %}">Ready to Plate</a>
+                        </li>
+                        <li class="nav nav-item">
+                            <a class="nav-link {% if url_name == 'ready_to_dispatch' %}active{% endif %}"
+                               href="{% url 'ready:ready_to_dispatch' %}">Ready for Dispatch</a>
+                        </li>
+                        <li class="nav nav-item">
+                            <a class="nav-link {% if url_name == 'consignments_for_collection' %}active{% endif %}"
+                               href="{% url 'ready:consignments_for_collection' %}">Consignments for Collection</a>
+                        </li>
+                        <li class="nav nav-item">
+                            <a class="nav-link {% if url_name == 'audit' %}active{% endif %}"
+                               href="{% url 'ready:audit' %}">Audit</a>
+                        </li>
                         <li class="nav nav-item dropdown">
                             <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button"
                                aria-haspopup="true" aria-expanded="false">Discards</a>
@@ -62,75 +72,84 @@
                                    href="{% url 'discards:all_discards_view' %}">Discarded</a>
 
                         </li>
-		            <li class="nav-item dropdown">
-	                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span><i class="fas fa-user"></i></span> {{ request.user.username }}</a>
-	                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-	                        <a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
-	                    </div>
-	                </li>
-	                {% endwith %}
-	            </ul>
-	            {% endif %}
-	        </div>
-    	</nav> <br>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span><i
+                                    class="fas fa-user"></i></span> {{ request.user.username }}</a>
+                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                                <a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i>
+                                    Logout</a>
+                            </div>
+                        </li>
+                    {% endwith %}
+                </ul>
+            {% endif %}
+        </div>
+    </nav>
+    <br>
 
-	</div>
-	<div class="container-fluid">
-	    {% if messages %}
-	      {% for message in messages %}
-	      	{% if 'safe' in message.tags %}
-		        {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
-		          <div class="alert alert-danger" role="alert"><strong>{{ message|safe }}</strong></div>
-		        {% endif %}
-		        {% if message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
-		          <div class="alert alert-warning" role="alert"><strong>{{ message|safe }}</strong></div>
-		        {% endif %}
-		        {% if message.level == DEFAULT_MESSAGE_LEVELS.INFO %}
-		          <div class="alert alert-success" role="alert"><strong>{{ message|safe }}</strong></div>
-		        {% endif %}
-				{% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
-		          <div class="alert alert-success" role="alert"><strong>{{ message }}</strong></div>
-		        {% endif %}
-		    {% else %}
-		   		{% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
-		          <div class="alert alert-danger" role="alert"><strong>{{ message }}</strong></div>
-		        {% endif %}
-		        {% if message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
-		          <div class="alert alert-warning" role="alert"><strong>{{ message }}</strong></div>
-		        {% endif %}
-		        {% if message.level == DEFAULT_MESSAGE_LEVELS.INFO %}
-		          <div class="alert alert-success" role="alert"><strong>{{ message }}</strong></div>
-		        {% endif %}
-				{% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
-		          <div class="alert alert-success" role="alert"><strong>{{ message }}</strong></div>
-		        {% endif %}
-		    {% endif %}
-	      {% endfor %}
-	    {% endif %}
-	</div>
-	<div>
-		{% block content %}{% endblock content %}
-	</div>
-    {% block footer %}{% endblock footer %}
-    <!--Bootstrap JS-->
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-     <!-- Datatables for bootstrap 4 -->
-    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
-    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
-    <!-- Datatables buttons -->
-    <script type="text/javascript" src="{% static 'DataTables/jquery.dataTables.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'DataTables/dataTables.buttons.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'DataTables/buttons.flash.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'DataTables/jszip.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'DataTables/buttons.html5.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'DataTables/buttons.print.min.js' %}"></script>
-    <link rel="stylesheet" type="text/css" href="{% static 'DataTables/jquery.dataTables.min.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'DataTables/buttons.dataTables.min.css' %}">
-	<!-- Local JS -->
-    <script type="text/javascript" src="{% static 'js/javascript.js' %}"></script>
-    {% block javascript %}{% endblock %}
+</div>
+<div class="container-fluid">
+    {% if messages %}
+        {% for message in messages %}
+            {% if 'safe' in message.tags %}
+                {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                    <div class="alert alert-danger" role="alert"><strong>{{ message|safe }}</strong></div>
+                {% endif %}
+                {% if message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
+                    <div class="alert alert-warning" role="alert"><strong>{{ message|safe }}</strong></div>
+                {% endif %}
+                {% if message.level == DEFAULT_MESSAGE_LEVELS.INFO %}
+                    <div class="alert alert-success" role="alert"><strong>{{ message|safe }}</strong></div>
+                {% endif %}
+                {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+                    <div class="alert alert-success" role="alert"><strong>{{ message }}</strong></div>
+                {% endif %}
+            {% else %}
+                {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                    <div class="alert alert-danger" role="alert"><strong>{{ message }}</strong></div>
+                {% endif %}
+                {% if message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
+                    <div class="alert alert-warning" role="alert"><strong>{{ message }}</strong></div>
+                {% endif %}
+                {% if message.level == DEFAULT_MESSAGE_LEVELS.INFO %}
+                    <div class="alert alert-success" role="alert"><strong>{{ message }}</strong></div>
+                {% endif %}
+                {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+                    <div class="alert alert-success" role="alert"><strong>{{ message }}</strong></div>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+</div>
+<div>
+    {% block content %}{% endblock content %}
+</div>
+{% block footer %}{% endblock footer %}
+<!--Bootstrap JS-->
+{#    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>#}
+<script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+<!-- Datatables for bootstrap 4 -->
+{#    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>#}
+<script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
+<!-- Datatables buttons -->
+<script type="text/javascript" src="{% static 'DataTables/jquery.dataTables.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'DataTables/dataTables.buttons.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'DataTables/buttons.flash.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'DataTables/jszip.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'DataTables/buttons.html5.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'DataTables/buttons.print.min.js' %}"></script>
+<link rel="stylesheet" type="text/css" href="{% static 'DataTables/jquery.dataTables.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'DataTables/buttons.dataTables.min.css' %}">
+<!-- Local JS -->
+<script type="text/javascript" src="{% static 'js/javascript.js' %}"></script>
+{% block javascript %}{% endblock %}
 </body>
 </html>

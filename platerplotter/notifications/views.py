@@ -14,12 +14,127 @@ from django.urls import reverse
 
 from holdingracks.holding_rack_manager import HoldingRackManager
 from platerplotter.config.load_config import LoadConfig
-from platerplotter.models import Sample, Gel1005Csv, Gel1004Csv, ReceivingRack, HoldingRack, HoldingRackWell
+from platerplotter.models import Sample, Gel1005Csv, Gel1004Csv, ReceivingRack, HoldingRack, HoldingRackWell, \
+    RackScanner, RackScannerSample
 from problemsamples.forms import SampleSelectForm, LogIssueForm
-from problemsamples.views import confirm_sample_positions
 
 
 # Create your views here.
+def pad_zeros(well):
+    if len(well) == 2:
+        return well[0] + '0' + well[1]
+    else:
+        return well
+
+def rack_scan(test_status=False):
+    if test_status:
+        directory = str(Path.cwd().parent) + '/TestData/Inbound/RackScanner/'
+    else:
+        directory = LoadConfig().load()['rack_scanner_path']
+    for filename in os.listdir(directory):
+        if filename.endswith(".csv"):
+            path = directory + filename
+            date_modified = datetime.fromtimestamp(os.path.getmtime(path), pytz.timezone('UTC'))
+            with open(path, 'r') as csvFile:
+                reader = csv.reader(csvFile, delimiter=',', skipinitialspace=True)
+                for row in reader:
+                    if row[2] != '':
+                        rack_scanner, created = RackScanner.objects.get_or_create(
+                            filename=filename,
+                            scanned_id=row[0].strip(),
+                            date_modified=date_modified)
+                        RackScannerSample.objects.get_or_create(rack_scanner=rack_scanner,
+                                                                sample_id=row[2].strip(),
+                                                                position=pad_zeros(row[1].strip()))
+            os.rename(path, directory + "processed/" + filename)
+
+
+
+def confirm_sample_positions(request, rack, rack_samples, first_check=False,
+                             final_check=False, test_status=False):
+    rack_scan(test_status=test_status)
+    if first_check:
+        rack_id = rack.receiving_rack_id
+    else:
+        rack_id = rack.holding_rack_id
+    rack_scanner = RackScanner.objects.filter(scanned_id__iexact=rack_id,
+                                              acknowledged=False).order_by('-date_modified')
+    if rack_scanner:
+        rack_scanner_samples = RackScannerSample.objects.filter(rack_scanner=rack_scanner[0])
+        samples_in_wrong_position = []
+        extra_samples = []
+        missing_samples = []
+        for sample in rack_samples:
+            found = False
+            for rack_scanner_sample in rack_scanner_samples:
+                if sample.laboratory_sample_id == rack_scanner_sample.sample_id:
+                    found = True
+                    rack_scanner_sample.matched = True
+                    rack_scanner_sample.save()
+                    if first_check:
+                        if sample.receiving_rack_well == rack_scanner_sample.position:
+                            sample.sample_received = True
+                            sample.sample_received_datetime = datetime.now(pytz.timezone('UTC'))
+                            sample.save()
+                        else:
+                            samples_in_wrong_position.append((sample, rack_scanner_sample.position))
+                    else:
+                        if sample.holding_rack_well.well_id == rack_scanner_sample.position:
+                            if final_check:
+                                sample.sample_matched = True
+                                sample.save()
+                        else:
+                            samples_in_wrong_position.append((sample, rack_scanner_sample.position))
+            if not found:
+                missing_samples.append(sample)
+        for rack_scanner_sample in rack_scanner_samples:
+            if not rack_scanner_sample.matched:
+                extra_samples.append(rack_scanner_sample)
+        if samples_in_wrong_position or extra_samples or missing_samples:
+            wrong = ''
+            missing = ''
+            extra = ''
+            if samples_in_wrong_position:
+                wrong = 'The following samples are in the wrong positions:<ul>'
+                for sample, wrong_position in samples_in_wrong_position:
+                    if first_check:
+                        sample_well = sample.receiving_rack_well
+                    else:
+                        sample_well = sample.holding_rack_well.well_id
+                    wrong += "<li>" + sample.laboratory_sample_id + " found in well " + wrong_position + \
+                             " but should be in well " + sample_well + "</li>"
+                wrong += "</ul>"
+            if missing_samples:
+                missing = 'The following samples are missing from the holding rack:<ul>'
+                for sample in missing_samples:
+                    if first_check:
+                        sample_well = sample.receiving_rack_well
+                    else:
+                        sample_well = sample.holding_rack_well.well_id
+                    missing += "<li>" + sample.laboratory_sample_id + " was expected in well " + \
+                               sample_well + " but it was not found in the holding rack </li>"
+                missing += "</ul>"
+            if extra_samples:
+                extra = 'The following extra samples are in the holding rack but were not expected:<ul>'
+                for sample in extra_samples:
+                    extra += "<li>" + sample.sample_id + " found in well " + sample.position + \
+                             " but it was not expected</li>"
+                extra += "</ul>"
+            messages.error(request, "Rack scan date stamp: " + str(rack_scanner[0].date_modified) + \
+                           ". Scanned rack does not match with assigned rack wells for this rack!<br><br>" + \
+                           wrong + missing + extra, extra_tags='safe')
+        else:
+            if final_check:
+                rack.positions_confirmed = True
+                rack.save()
+            messages.info(request, "Rack scan date stamp: " + str(rack_scanner[0].date_modified) + \
+                          ". Positions confirmed and correct.")
+        for rack_scanner_item in rack_scanner:
+            rack_scanner_item.acknowledged = True
+            rack_scanner_item.save()
+    else:
+        messages.error(request, "Rack " + rack_id + " not found in Rack scanner CSV. Has the rack been scanned?")
+
 
 def check_participant_id(participant_id):
     error = None

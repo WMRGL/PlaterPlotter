@@ -13,7 +13,7 @@ from .holding_rack_manager import HoldingRackManager
 from platerplotter.models import HoldingRackWell, HoldingRack, Plate
 from platerplotter.models import Sample, ReceivingRack
 from problemsamples.forms import LogIssueForm, SampleSelectForm
-from problemsamples.views import confirm_sample_positions
+from notifications.views import confirm_sample_positions
 
 
 # Create your views here.

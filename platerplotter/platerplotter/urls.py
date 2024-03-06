@@ -1,8 +1,9 @@
 from django.urls import path
 from django.urls import include
 
+from notifications.views import post_volume_check
 from . import views
-from notifications.views import import_acks, post_volume_check
+from .views import import_acks
 
 urlpatterns = [
 	path('', include('django.contrib.auth.urls')),
