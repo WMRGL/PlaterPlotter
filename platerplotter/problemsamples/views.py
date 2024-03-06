@@ -11,7 +11,7 @@ from django.shortcuts import render
 from django.urls import reverse
 
 from holdingracks.forms import HoldingRackForm
-from notifications.views import pad_zeros
+from notifications.views import pad_zeros, confirm_sample_positions
 from platerplotter.config.load_config import LoadConfig
 from platerplotter.models import Sample, ReceivingRack, RackScanner, RackScannerSample, HoldingRack, HoldingRackWell
 from .forms import LogIssueForm, ResolveIssueForm, SampleSelectForm
