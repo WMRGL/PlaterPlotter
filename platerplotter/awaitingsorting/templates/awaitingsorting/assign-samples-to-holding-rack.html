@@ -28,7 +28,7 @@
                                        role="button">Change Holding Rack</a>
                                 {% elif problem_holding_rack %}
                                     <a class="btn btn-primary btn-lg"
-                                       href="/assign-samples-to-holding-rack/{{ problem_holding_rack.holding_rack_id }}"
+                                       href="{% url 'awaitingsorting:assign_samples_to_holding_rack' problem_holding_rack.holding_rack_id  %}"
                                        role="button">Change Holding Rack</a>
                                 {% endif %}
                                 {% if holding_rack.ready_to_plate %}

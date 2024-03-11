@@ -53,10 +53,10 @@ def discards_index(request):
         results = HoldingRack.objects.filter(Q(holding_rack_id__icontains=query))
         if results:
             for result in results:
-                if is_discard_due(result):
+                if result.discarded:
+                    messages.error(request, 'Holding Rack has been discarded')
+                elif is_discard_due(result):
                     messages.success(request, 'Holding Rack is due for discard')
-                elif result.discarded:
-                    messages.success(request, 'Holding Rack has been discarded')
                 else:
                     messages.error(request, 'Holding Rack is not due for discard')
         else:

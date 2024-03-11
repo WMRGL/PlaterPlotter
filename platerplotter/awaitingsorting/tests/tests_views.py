@@ -341,6 +341,7 @@ class AssignSamplesToHoldingRackTestCase(TestCase):
 
     def test_sample(self):
         gel_1004 = Gel1004Csv.objects.get(filename='test1004.csv')
+        sample = Sample.objects.get(laboratory_sample_id='1234567890')
         # not found in receiving rack
         response = self.client.post(reverse('awaitingsorting:assign_samples_to_holding_rack', kwargs={
             'rack': 'SA12345678', 'gel1004': gel_1004.pk, 'holding_rack_id': 'HH12345678'}), {
@@ -372,6 +373,25 @@ class AssignSamplesToHoldingRackTestCase(TestCase):
             'rack': 'SA12345678', 'gel1004': gel_1004.pk, 'holding_rack_id': 'HH87654321'}), {
                                         'sample': [''], 'lab_sample_id': '1234567689', 'well': ['']}, follow=True)
         self.assertContains(response, 'assigned to well A01')
+
+        # return sample without log issue
+        response = self.client.post(reverse('awaitingsorting:assign_samples_to_holding_rack', kwargs={
+            'rack': 'SA12345678', 'gel1004': gel_1004.pk, 'holding_rack_id': 'HH12345678'}), {
+                                        'return_rack': [''], 'return_sample': '1234567890',
+                                        'return_holding_rack': 'PP12345678'}, follow=True)
+        self.assertContains(response, 'Kindly log issue to sample')
+
+        #return sample with issue
+        response = self.client.post(reverse('awaitingsorting:assign_samples_to_holding_rack', kwargs={
+            'rack': 'SA12345678', 'gel1004': gel_1004.pk, 'holding_rack_id': 'HH12345678'}), {
+                                        'log-issue': sample.pk, 'comment': 'issue identified'}, follow=True)
+
+        response = self.client.post(reverse('awaitingsorting:assign_samples_to_holding_rack', kwargs={
+            'rack': 'SA12345678', 'gel1004': gel_1004.pk, 'holding_rack_id': 'HH12345678'}), {
+                                        'return_rack': [''], 'return_sample': '1234567890',
+                                        'return_holding_rack': 'PP12345678'}, follow=True)
+        self.assertContains(response, '1234567890 assigned to well')
+
 
     def test_log_issue_normal(self):
         gel_1004 = Gel1004Csv.objects.get(filename='test1004.csv')

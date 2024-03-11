@@ -259,24 +259,24 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
                                                            well_id=holding_rack_row + holding_rack_column)
                 if holding_rack and not error:
                     if gel1004:
-                        url = reverse('assign_samples_to_holding_rack', kwargs={
+                        url = reverse('awaitingsorting:assign_samples_to_holding_rack', kwargs={
                             'gel1004': rack.gel_1004_csv.pk,
                             'rack': rack.receiving_rack_id,
                             'holding_rack_id': holding_rack.holding_rack_id,
                         })
                     else:
-                        url = reverse('assign_problem_samples_to_holding_rack', kwargs={
+                        url = reverse('awaitingsorting:assign_problem_samples_to_holding_rack', kwargs={
                             'rack': problem_holding_rack.holding_rack_id,
                             'holding_rack_id': holding_rack.holding_rack_id,
                         })
                 else:
                     if gel1004:
-                        url = reverse('assign_samples_to_holding_rack', kwargs={
+                        url = reverse('awaitingsorting:assign_samples_to_holding_rack', kwargs={
                             'gel1004': rack.gel_1004_csv.pk,
                             'rack': rack.receiving_rack_id,
                         })
                     else:
-                        url = reverse('assign_samples_to_holding_rack', kwargs={
+                        url = reverse('awaitingsorting:assign_samples_to_holding_rack', kwargs={
                             'rack': problem_holding_rack.holding_rack_id,
                         })
                 return HttpResponseRedirect(url)
@@ -340,12 +340,12 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
                 else:
                     messages.error(request, lab_sample_id + " not found in GLH Rack " + rack.receiving_rack_id)
                 if problem_holding_rack:
-                    url = reverse('assign_problem_samples_to_holding_rack', kwargs={
+                    url = reverse('awaitingsorting:assign_problem_samples_to_holding_rack', kwargs={
                         'rack': problem_holding_rack.holding_rack_id,
                         'holding_rack_id': holding_rack.holding_rack_id,
                     })
                 else:
-                    url = reverse('assign_samples_to_holding_rack', kwargs={
+                    url = reverse('awaitingsorting:assign_samples_to_holding_rack', kwargs={
                         'gel1004': rack.gel_1004_csv.pk,
                         'rack': rack.receiving_rack_id,
                         'holding_rack_id': holding_rack.holding_rack_id,
@@ -363,23 +363,23 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
                 sample.save()
                 if problem_holding_rack:
                     if holding_rack:
-                        url = reverse('assign_problem_samples_to_holding_rack', kwargs={
+                        url = reverse('awaitingsorting:assign_problem_samples_to_holding_rack', kwargs={
                             'rack': problem_holding_rack.holding_rack_id,
                             'holding_rack_id': holding_rack.holding_rack_id,
                         })
                     else:
-                        url = reverse('assign_samples_to_holding_rack', kwargs={
+                        url = reverse('awaitingsorting:assign_samples_to_holding_rack', kwargs={
                             'rack': problem_holding_rack.holding_rack_id,
                         })
                 else:
                     if holding_rack:
-                        url = reverse('assign_samples_to_holding_rack', kwargs={
+                        url = reverse('awaitingsorting:assign_samples_to_holding_rack', kwargs={
                             'gel1004': rack.gel_1004_csv.pk,
                             'rack': rack.receiving_rack_id,
                             'holding_rack_id': holding_rack.holding_rack_id,
                         })
                     else:
-                        url = reverse('assign_samples_to_holding_rack', kwargs={
+                        url = reverse('awaitingsorting:assign_samples_to_holding_rack', kwargs={
                             'gel1004': rack.gel_1004_csv.pk,
                             'rack': rack.receiving_rack_id,
                         })
