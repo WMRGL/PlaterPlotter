@@ -164,9 +164,7 @@ def problem_samples(request, holding_rack_id=None, test_status=False):
                 obj = Sample.objects.get(laboratory_sample_id=sample)
                 obj.issue_outcome = 'Ready for plating'
                 obj.save()
-            url = reverse('problemsamples:problem_samples', kwargs={
-                'holding_rack_id': holding_rack.holding_rack_id,
-            })
+            url = reverse('awaitingsorting:awaiting_holding_rack_assignment')
             return HttpResponseRedirect(url)
     else:
         holding_rack_form = HoldingRackForm()
