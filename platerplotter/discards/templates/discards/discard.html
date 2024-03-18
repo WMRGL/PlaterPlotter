@@ -116,6 +116,28 @@
         </div>
     {% endif %}
 
+    <div class="container-fluid">
+        <div class="pagination mt-3">
+    <span class="step-links">
+        {% if discard_racks.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ discard_racks.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ discard_racks.number }} of {{ discard_racks.paginator.num_pages }}.
+        </span>
+
+        {% if discard_racks.has_next %}
+            <a href="?page={{ discard_racks.next_page_number }}">next</a>
+            <a href="?page={{ discard_racks.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+        </div>
+    </div>
+
+
+
 
     <script>
 
