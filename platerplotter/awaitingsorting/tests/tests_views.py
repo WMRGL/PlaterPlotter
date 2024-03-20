@@ -5,7 +5,8 @@ from django.contrib.auth.models import User
 from django.test import TestCase, Client
 from django.urls import reverse
 
-from platerplotter.models import Gel1004Csv, Gel1005Csv, HoldingRack, Sample, ReceivingRack, HoldingRackWell
+from platerplotter.models import Gel1005Csv, HoldingRack, Sample, ReceivingRack, HoldingRackWell, Gel1004Csv
+
 
 # Create your tests here.
 
