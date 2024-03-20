@@ -15,6 +15,7 @@ class Gel1005Csv(models.Model):
         return self.filename
 
     class Meta:
+        app_label = 'platerplotter'
         db_table = 'Gel1005Csv'
         verbose_name = 'Gel1005 CSV'
         verbose_name_plural = 'Gel1005 CSVs'
@@ -30,6 +31,7 @@ class Gel1004Csv(models.Model):
         return self.filename
 
     class Meta:
+        app_label = 'platerplotter'
         db_table = 'Gel1004Csv'
         verbose_name = 'Gel1004 CSV'
         verbose_name_plural = 'Gel1004 CSVs'
@@ -46,6 +48,7 @@ class Gel1008Csv(models.Model):
         return self.filename
 
     class Meta:
+        app_label = 'platerplotter'
         db_table = 'Gel1008Csv'
         verbose_name = 'Gel1008 CSV'
         verbose_name_plural = 'Gel1008 CSVs'
@@ -82,6 +85,7 @@ class ReceivingRack(models.Model):
         return empty
 
     class Meta:
+        app_label = 'platerplotter'
         db_table = 'ReceivingRack'
         verbose_name = 'Receiving rack'
         verbose_name_plural = 'Receiving racks'
@@ -96,6 +100,7 @@ class Plate(models.Model):
         return self.plate_id
 
     class Meta:
+        app_label = 'platerplotter'
         db_table = 'Plate'
         verbose_name = 'Plate'
         verbose_name_plural = 'Plates'
@@ -130,6 +135,7 @@ class HoldingRack(models.Model):
         return "Holding Rack ID: " + self.holding_rack_id
 
     class Meta:
+        app_label = 'platerplotter'
         db_table = 'HoldingRack'
         verbose_name = 'Holding rack'
         verbose_name_plural = 'Holding racks'
@@ -191,6 +197,7 @@ class Sample(models.Model):
         return reverse('ready:sample_comment', kwargs={'pk': self.pk})
 
     class Meta:
+        app_label = 'platerplotter'
         db_table = 'Sample'
         verbose_name = 'Sample'
         verbose_name_plural = 'Samples'
@@ -208,6 +215,7 @@ class HoldingRackWell(models.Model):
         return self.holding_rack.holding_rack_id + ' ' + self.well_id
 
     class Meta:
+        app_label = 'platerplotter'
         db_table = 'HoldingRackWell'
         verbose_name = 'Holding rack well'
         verbose_name_plural = 'Holding rack wells'
@@ -221,6 +229,7 @@ class RackScanner(models.Model):
 
     class Meta:
         unique_together = (('filename', 'scanned_id', 'date_modified'),)
+        app_label = 'platerplotter'
         db_table = 'RackScanner'
         verbose_name = 'Rack scanner'
         verbose_name_plural = 'Rack scanners'
@@ -237,6 +246,7 @@ class RackScannerSample(models.Model):
 
     class Meta:
         unique_together = (('rack_scanner', 'sample_id', 'position'))
+        app_label = 'platerplotter'
         db_table = 'RackScannerSample'
         verbose_name = 'Rack scanner sample'
         verbose_name_plural = 'Rack scanner samples'
