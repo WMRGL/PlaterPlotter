@@ -210,7 +210,7 @@
                                 {% for holding_rack, count in current_holding_racks_dict.items %}
                                     <tr>
                                         <td>
-                                            <a href="{% url 'problemsamples:problem_samples' holding_rack_id=holding_rack.holding_rack_id %}">{{ holding_rack.holding_rack_id }}</a>
+                                            <a href="{% url 'problemsamples:problem_samples' holding_rack.holding_rack_id %}">{{ holding_rack.holding_rack_id }}</a>
                                         </td>
                                         <td>Mixed</td>
                                         <td>{{ holding_rack.holding_rack_type }}</td>
