@@ -64,7 +64,7 @@ def discards_index(request):
             print(discard_form.errors)
 
     # Pagination
-    paginator = Paginator(discard_racks, 50)
+    paginator = Paginator(discard_racks, 100)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
@@ -75,6 +75,8 @@ def discards_index(request):
     }
 
     return render(request, 'discards/discard.html', context=context)
+
+
 @login_required()
 def all_discards_view(request):
     discards = HoldingRack.objects.filter(discarded=True)
