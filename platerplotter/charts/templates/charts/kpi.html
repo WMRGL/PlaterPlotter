@@ -1,0 +1,107 @@
+{% extends 'charts/base.html' %}
+
+
+{% block content %}
+    <div class="card p-5">
+        <canvas id="myChart"></canvas>
+    </div>
+
+{% endblock %}
+
+{% block js %}
+
+    <script>
+        const ctx = document.getElementById('myChart').getContext('2d');
+        const kpi = JSON.parse('{{ context_json|escapejs }}');
+        console.log(kpi)
+        const data = {
+            datasets: [
+                {
+                    label: 'RD Proband',
+                    data: kpi,
+                    backgroundColor: 'rgba(173, 216, 230, 1)',
+                    parsing: {
+                        yAxisKey: 'data.rd_proband'
+                    }
+                },
+                {
+                    label: 'RD Family',
+                    data: kpi,
+                    backgroundColor: 'rgba(240, 128, 128, 1)',
+                    parsing: {
+                        yAxisKey: 'data.rd_family'
+                    }
+                },
+                {
+                    label: 'Cancer Germline',
+                    data: kpi,
+                    backgroundColor: 'rgba(152, 251, 152, 1)',
+                    parsing: {
+                        yAxisKey: 'data.cancer_germline'
+                    }
+                },
+                {
+                    label: 'Cancer Tumour',
+                    data: kpi,
+                    backgroundColor: 'rgba(250, 250, 210, 1)',
+                    parsing: {
+                        yAxisKey: 'data.cancer_tumour'
+                    }
+                },
+                {
+                    label: 'Troubleshooting Ongoing',
+                    data: kpi,
+                    backgroundColor: 'rgba(216, 191, 216, 1)',
+                    parsing: {
+                        yAxisKey: 'data.troubleshooting_ongoing'
+                    }
+                },
+                {
+                    label: 'Troubleshooting Discards',
+                    data: kpi,
+                    backgroundColor: 'rgba(255, 160, 122, 1)',
+                    parsing: {
+                        yAxisKey: 'data.troubleshooting_discards'
+                    }
+                },
+                {
+                    label: 'Troubleshooting Returns',
+                    data: kpi,
+                    backgroundColor: 'rgba(175, 238, 238, 1)',
+                    parsing: {
+                        yAxisKey: 'data.troubleshooting_returns'
+                    }
+                },
+
+            ]
+        }
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            parsing: {
+                 xAxisKey: 'glh',
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        font: {
+                            size: 20
+                        }
+                    }
+
+                },
+
+            }
+        }
+
+        new Chart(ctx, {
+            type: 'bar',
+            data,
+            options
+        });
+
+
+    </script>
+{% endblock %}

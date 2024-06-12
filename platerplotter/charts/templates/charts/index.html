@@ -1,0 +1,93 @@
+{% extends 'charts/base.html' %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title">Filter by date </h5>
+        </div>
+        <div class="card-body">
+            <form class="row row-cols-md-auto align-items-center" method="post">
+                {% csrf_token %}
+                <div class="col-12">
+                    <label for="inlineFormInputName2">Start: </label>
+                    <input type="date" class="form-control mb-2 me-sm-2" id="inlineFormInputName2" name="start"
+                           required>
+                </div>
+                <div class="col-12">
+                    <label for="inlineFormInputGroupUsername2">End:</label>
+                    <div class="input-group mb-2 me-sm-2">
+                        <input type="date" class="form-control" id="inlineFormInputGroupUsername2" name="end" required>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary mb-2">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <canvas id="myChart" class=""></canvas>
+    </div>
+
+{% endblock %}
+
+{% block js %}
+    <script>
+
+
+        const ctx = document.getElementById('myChart').getContext('2d');
+        const data = {
+            labels: ['Cancer', 'Rare Disease'],
+            datasets: [{
+                label: 'Cancer vs Rare Disease',
+                data: [{{ cancer }}, {{ rare_disease }}],
+                backgroundColor: ['#FF6384', '#36A2EB'],
+                hoverBackgroundColor: ['#FF6384', '#36A2EB'],
+                borderWidth: 1
+            }]
+        }
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        font: {
+                            size: 40
+                        }
+                    }
+
+                },
+                title: {
+                    display: true,
+                    text: 'Custom Chart Title',
+                    padding: {
+                        top: 10,
+                        bottom: 30
+                    },
+                    font: {
+                        size: 40
+                    }
+                }
+            }
+        }
+
+        new Chart(ctx, {
+            type: 'bar',
+            data,
+            options
+        });
+
+    </script>
+    <style>
+        #myChart {
+            width: 100% !important;
+            height: 400px !important;
+            padding: 20px;
+
+        }
+    </style>
+{% endblock %}

@@ -27,6 +27,7 @@ STATIC_DIR = os.path.join(BASE_DIR, 'webapp/static')
 STATIC_ROOT = os.path.join(BASE_DIR, 'webapp/static_files')
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'webapp/static'),
+    os.path.join(BASE_DIR, 'charts/static')
 )
 
 # Application definition
@@ -49,6 +50,7 @@ INSTALLED_APPS = [
     'bootstrap4',
     'easyaudit',
     'crispy_bootstrap4',
+    'charts'
     
 ]
 
