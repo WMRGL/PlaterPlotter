@@ -20,7 +20,7 @@
                     </div>
                 </div>
                 <div class="col-12">
-                    <button type="submit" class="btn btn-primary mb-2">Submit</button>
+                    <button type="submit" class="btn btn-primary mt-3">Submit</button>
                 </div>
             </form>
         </div>
@@ -40,12 +40,17 @@
         const data = {
             labels: ['Cancer', 'Rare Disease'],
             datasets: [{
-                label: 'Cancer vs Rare Disease',
+                label: 'Cancer ',
                 data: [{{ cancer }}, {{ rare_disease }}],
                 backgroundColor: ['#FF6384', '#36A2EB'],
                 hoverBackgroundColor: ['#FF6384', '#36A2EB'],
                 borderWidth: 1
-            }]
+            },
+                {
+                   label: 'Rare Disease',
+                    backgroundColor: '#36A2EB',
+                }
+            ]
         }
 
         const options = {
@@ -63,7 +68,7 @@
                 },
                 title: {
                     display: true,
-                    text: 'Custom Chart Title',
+                    text: 'Cancer vs Rare Disease',
                     padding: {
                         top: 10,
                         bottom: 30

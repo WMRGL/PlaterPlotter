@@ -4,33 +4,27 @@ from datetime import datetime
 from django.db.models import Count, Case, When, IntegerField, Q
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.views.generic import View
+from django.views.generic import View, FormView
 
 from platerplotter.models import Sample
+from .forms import DateRangeForm
 
 
 # Create your views here.
 
-class ChartsView(View):
+class CancerRareDiseaseView(FormView):
+    template_name = 'charts/cancer_rd.html'
+    form_class = DateRangeForm
+
+    def form_valid(self, form):
+        start_date = form.cleaned_data['start']
+        end_date = form.cleaned_data['end']
+        context = self.get_filtered_disease_counts(start_date, end_date)
+        return self.render_to_response(self.get_context_data(**context))
 
     def get(self, request, *args, **kwargs):
         context = self.get_total_disease_counts()
-        return render(request, 'charts/index.html', context)
-
-    def post(self, request, *args, **kwargs):
-        try:
-            date_range_1_start, date_range_1_end = self.extract_date_range(request)
-        except ValueError as e:
-            return JsonResponse({'error': str(e)}, status=400)
-
-        context = self.get_filtered_disease_counts(date_range_1_start, date_range_1_end)
-        return render(request, 'charts/index.html', context)
-
-    def extract_date_range(self, request):
-        # Extracts and validates date ranges from the request.
-        date_range_1_start = datetime.strptime(request.POST.get('start'), '%Y-%m-%d')
-        date_range_1_end = datetime.strptime(request.POST.get('end'), '%Y-%m-%d')
-        return date_range_1_start, date_range_1_end
+        return self.render_to_response(self.get_context_data(**context))
 
     def get_total_disease_counts(self):
         # Returns total counts for each disease area.
@@ -44,13 +38,69 @@ class ChartsView(View):
         }
 
     def get_filtered_disease_counts(self, start_date, end_date):
-        # Returns counts for each disease area within the specified date range
+        # Returns counts for each disease area within the specified date range.
         disease_counts = Sample.objects.aggregate(
             cancer_count=Count(Case(
                 When(Q(disease_area='Cancer') & Q(sample_received_datetime__range=(start_date, end_date)), then=1),
                 output_field=IntegerField()
             )),
-            rare_disease=Count(Case(
+            rare_disease_count=Count(Case(
+                When(Q(disease_area='Rare Disease') & Q(sample_received_datetime__range=(start_date, end_date)), then=1),
+                output_field=IntegerField()
+            )),
+        )
+        return {
+            'cancer': disease_counts['cancer_count'],
+            'rare_disease': disease_counts['rare_disease_count']
+        }
+
+
+class ChartsView(View):
+
+    def get(self, request, *args, **kwargs):
+        try:
+            date_range_start, date_range_end = self.extract_date_range(request)
+            context = self.get_filtered_disease_counts(date_range_start, date_range_end)
+        except (TypeError, ValueError):
+            context = self.get_total_disease_counts()
+
+        return render(request, 'charts/cancer_rd.html', context)
+
+    def extract_date_range(self, request):
+        # Extracts and validates date ranges from the request.
+        start = request.GET.get('start')
+        end = request.GET.get('end')
+
+        if not start or not end:
+            raise ValueError("Start and end dates are required")
+
+        try:
+            date_range_start = datetime.strptime(start, '%Y-%m-%d')
+            date_range_end = datetime.strptime(end, '%Y-%m-%d')
+        except ValueError:
+            raise ValueError("Invalid date format, should be YYYY-MM-DD")
+
+        return date_range_start, date_range_end
+
+    def get_total_disease_counts(self):
+        # Returns total counts for each disease area.
+        disease_counts = Sample.objects.aggregate(
+            cancer_count=Count(Case(When(disease_area='Cancer', then=1), output_field=IntegerField())),
+            rare_disease_count=Count(Case(When(disease_area='Rare Disease', then=1), output_field=IntegerField()))
+        )
+        return {
+            'cancer': disease_counts['cancer_count'],
+            'rare_disease': disease_counts['rare_disease_count']
+        }
+
+    def get_filtered_disease_counts(self, start_date, end_date):
+        # Returns counts for each disease area within the specified date range.
+        disease_counts = Sample.objects.aggregate(
+            cancer_count=Count(Case(
+                When(Q(disease_area='Cancer') & Q(sample_received_datetime__range=(start_date, end_date)), then=1),
+                output_field=IntegerField()
+            )),
+            rare_disease_count=Count(Case(
                 When(Q(disease_area='Rare Disease') & Q(sample_received_datetime__range=(start_date, end_date)),
                      then=1),
                 output_field=IntegerField()
@@ -58,7 +108,7 @@ class ChartsView(View):
         )
         return {
             'cancer': disease_counts['cancer_count'],
-            'rare_disease': disease_counts['rare_disease']
+            'rare_disease': disease_counts['rare_disease_count']
         }
 
 
@@ -66,14 +116,26 @@ class KpiView(View):
     def get(self, request, *args, **kwargs):
         context = {}
 
-        hh = []
         today = datetime.today()
         month = today.month
         year = today.year
 
+        glh_list = self.get_glh(year, month)
+        context['context_json'] = glh_list
+
+        return render(request, 'charts/kpi.html', context)
+
+    def post(self, request, *args, **kwargs):
+        context = {}
+        print(request.GET)
+        return render(request, 'charts/kpi.html', context)
+
+    def get_glh(self, year, month):
+        glhs_list = []
+
         samples = Sample.objects.filter(
             receiving_rack__gel_1004_csv__report_received_datetime__year=year,
-            receiving_rack__gel_1004_csv__report_received_datetime__month=3
+            receiving_rack__gel_1004_csv__report_received_datetime__month=month
         ).order_by("receiving_rack__gel_1004_csv__report_received_datetime")
 
         glhs = ["yne", "now", "eme", "lnn", "lns", "wwm", "sow"]
@@ -90,7 +152,7 @@ class KpiView(View):
                                                      receiving_rack__laboratory_id=glh).count()
             total = samples.filter(receiving_rack__laboratory_id=glh).count()
 
-            hh.append({
+            glhs_list.append({
                 'glh': glh,
                 'data': {
                     'rd_proband': rd_proband,
@@ -104,7 +166,4 @@ class KpiView(View):
                 },
             })
 
-        context['context_json'] = json.dumps(hh)
-        print(context['context_json'])
-
-        return render(request, 'charts/kpi.html', context)
+        return json.dumps(glhs_list)
