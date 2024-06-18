@@ -7,14 +7,14 @@ from django.shortcuts import render
 from django.views.generic import View, FormView
 
 from platerplotter.models import Sample
-from .forms import DateRangeForm
+from . import forms
 
 
 # Create your views here.
 
 class CancerRareDiseaseView(FormView):
     template_name = 'charts/cancer_rd.html'
-    form_class = DateRangeForm
+    form_class = forms.DateRangeForm
 
     def form_valid(self, form):
         start_date = form.cleaned_data['start']
@@ -55,26 +55,30 @@ class CancerRareDiseaseView(FormView):
         }
 
 
-class KpiView(View):
-    def get(self, request, *args, **kwargs):
-        context = {}
+class KpiView(FormView):
+    form_class = forms.KPIForm
+    template_name = 'charts/kpi.html'
+    context = {}
 
+    def get(self, request, *args, **kwargs):
         today = datetime.today()
         month = today.month
         year = today.year
 
         glh_list = self.get_glh(year, month)
-        context['all_glhs'] = glh_list
+        self.context['all_glhs'] = glh_list
+        self.context['form'] = self.get_form()
+        return self.render_to_response(self.get_context_data(**self.context))
 
-        return render(request, 'charts/kpi.html', context)
+    def form_valid(self, form):
+        date = form.cleaned_data['month']
+        month = date.month
+        year = date.year
+        glh_list = self.get_glh(year, month)
+        self.context['all_glhs'] = glh_list
+        self.context['form'] = form
 
-    def post(self, request, *args, **kwargs):
-        context = {}
-        date = request.POST['month'].split('-')
-
-        year, month = date[0], date[1]
-        context['all_glhs'] = self.get_glh(year, month)
-        return render(request, 'charts/kpi.html', context)
+        return self.render_to_response(self.get_context_data(**self.context))
 
     def get_glh(self, year, month):
         glhs_list = []
