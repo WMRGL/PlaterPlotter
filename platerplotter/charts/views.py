@@ -55,63 +55,6 @@ class CancerRareDiseaseView(FormView):
         }
 
 
-class ChartsView(View):
-
-    def get(self, request, *args, **kwargs):
-        try:
-            date_range_start, date_range_end = self.extract_date_range(request)
-            context = self.get_filtered_disease_counts(date_range_start, date_range_end)
-        except (TypeError, ValueError):
-            context = self.get_total_disease_counts()
-
-        return render(request, 'charts/cancer_rd.html', context)
-
-    def extract_date_range(self, request):
-        # Extracts and validates date ranges from the request.
-        start = request.GET.get('start')
-        end = request.GET.get('end')
-
-        if not start or not end:
-            raise ValueError("Start and end dates are required")
-
-        try:
-            date_range_start = datetime.strptime(start, '%Y-%m-%d')
-            date_range_end = datetime.strptime(end, '%Y-%m-%d')
-        except ValueError:
-            raise ValueError("Invalid date format, should be YYYY-MM-DD")
-
-        return date_range_start, date_range_end
-
-    def get_total_disease_counts(self):
-        # Returns total counts for each disease area.
-        disease_counts = Sample.objects.aggregate(
-            cancer_count=Count(Case(When(disease_area='Cancer', then=1), output_field=IntegerField())),
-            rare_disease_count=Count(Case(When(disease_area='Rare Disease', then=1), output_field=IntegerField()))
-        )
-        return {
-            'cancer': disease_counts['cancer_count'],
-            'rare_disease': disease_counts['rare_disease_count']
-        }
-
-    def get_filtered_disease_counts(self, start_date, end_date):
-        # Returns counts for each disease area within the specified date range.
-        disease_counts = Sample.objects.aggregate(
-            cancer_count=Count(Case(
-                When(Q(disease_area='Cancer') & Q(sample_received_datetime__range=(start_date, end_date)), then=1),
-                output_field=IntegerField()
-            )),
-            rare_disease_count=Count(Case(
-                When(Q(disease_area='Rare Disease') & Q(sample_received_datetime__range=(start_date, end_date)),
-                     then=1),
-                output_field=IntegerField()
-            )),
-        )
-        return {
-            'cancer': disease_counts['cancer_count'],
-            'rare_disease': disease_counts['rare_disease_count']
-        }
-
-
 class KpiView(View):
     def get(self, request, *args, **kwargs):
         context = {}
@@ -121,13 +64,16 @@ class KpiView(View):
         year = today.year
 
         glh_list = self.get_glh(year, month)
-        context['context_json'] = glh_list
+        context['all_glhs'] = glh_list
 
         return render(request, 'charts/kpi.html', context)
 
     def post(self, request, *args, **kwargs):
         context = {}
-        print(request.GET)
+        date = request.POST['month'].split('-')
+
+        year, month = date[0], date[1]
+        context['all_glhs'] = self.get_glh(year, month)
         return render(request, 'charts/kpi.html', context)
 
     def get_glh(self, year, month):

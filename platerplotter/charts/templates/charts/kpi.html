@@ -15,11 +15,11 @@
                     {% csrf_token %}
                     <div class="col-12">
                         <label class="visually-hidden" for="inlineFormInputName2">Select Month and Year</label>
-                        <input type="month" class="form-control mb-2 me-sm-2" id="inlineFormInputName2">
+                        <input type="month" class="form-control mb-2 me-sm-2" id="inlineFormInputName2" name="month">
                     </div>
 
                     <div class="col-12">
-                        <button type="submit" class="btn btn-pill mb-2 mt-3 btn-outline-primary">Submit</button>
+                        <button type="submit" class="btn btn-pill btn-outline-primary">Submit</button>
                     </div>
                 </form>
             </div>
@@ -27,13 +27,7 @@
 
 
         <div class="card mt-4">
-            <div class="card-header pb-0">
-                <h6>Sales overview</h6>
-                <p class="text-sm">
-                    <i class="fa fa-arrow-up text-success"></i>
-                    <span class="font-weight-bold">4% more</span> in 2021
-                </p>
-            </div>
+
             <div class="card-body  p-3">
                 <div class="chart">
                     <canvas id="myChart" class="chart-canvas" height="300"></canvas>
@@ -48,7 +42,7 @@
 
     <script>
         const ctx = document.getElementById('myChart').getContext('2d');
-        const kpi = JSON.parse('{{ context_json|escapejs }}');
+        const kpi = JSON.parse('{{ all_glhs|escapejs }}');
         console.log(kpi)
         const data = {
             datasets: [
