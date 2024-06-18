@@ -6,5 +6,6 @@ class DateRangeForm(forms.Form):
     end = forms.DateField(input_formats=['%Y-%m-%d'], required=True)
 
 
-class KPIForm(forms.Form):
+class MonthForm(forms.Form):
     month = forms.DateField(input_formats=['%Y-%m'], required=True)
+

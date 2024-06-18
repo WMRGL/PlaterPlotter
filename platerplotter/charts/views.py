@@ -56,7 +56,7 @@ class CancerRareDiseaseView(FormView):
 
 
 class KpiView(FormView):
-    form_class = forms.KPIForm
+    form_class = forms.MonthForm
     template_name = 'charts/kpi.html'
     context = {}
 
@@ -117,3 +117,38 @@ class KpiView(FormView):
             })
 
         return json.dumps(glhs_list)
+
+
+class MonthTotalView(FormView):
+    form_class = forms.MonthForm
+    template_name = 'charts/monthly_total.html'
+    context = {}
+
+    def form_valid(self, form):
+        date = form.cleaned_data['month']
+        month = date.month
+        year = date.year
+        self.context['month_total'] = self.get_total(year, month)
+        return self.render_to_response(self.get_context_data(**self.context))
+
+    def get(self, request, *args, **kwargs):
+        today = datetime.today()
+        month = today.month
+        year = today.year
+        self.context['month_total'] = self.get_total(year, month)
+        return self.render_to_response(self.get_context_data(**self.context))
+
+    def get_total(self, year, month):
+        glhs_list = []
+        samples = Sample.objects.filter(
+            receiving_rack__gel_1004_csv__report_received_datetime__year=year,
+            receiving_rack__gel_1004_csv__report_received_datetime__month=month
+        ).order_by("receiving_rack__gel_1004_csv__report_received_datetime")
+        glhs = ["yne", "now", "eme", "lnn", "lns", "wwm", "sow"]
+        for glh in glhs:
+            total = samples.filter(receiving_rack__laboratory_id=glh).count()
+            glhs_list.append({
+                'glh': glh,
+                'total': total
+            })
+        return glhs_list
