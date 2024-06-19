@@ -1,7 +1,10 @@
 {% extends 'charts/base.html' %}
 
+{% block title %} Monthly Total {% endblock %}
+{% block breadcrumb %} Monthly Total {% endblock %}
+
 {% block content %}
-    <div class="container mt-4">
+    <div class=" mt-4">
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title">Filter by Month and year</h5>
@@ -11,7 +14,7 @@
                     {% csrf_token %}
                     <div class="col-12">
                         <label class="visually-hidden" for="inlineFormInputName2">Select Month and Year</label>
-                        <input type="month" class="form-control mb-2 me-sm-2" id="inlineFormInputName2" name="month">
+                        <input type="month" class="form-control me-sm-2" id="inlineFormInputName2" name="month">
                     </div>
 
                     <div class="col-12">

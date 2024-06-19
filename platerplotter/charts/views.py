@@ -1,16 +1,33 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.db.models import Count, Case, When, IntegerField, Q
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.views.generic import View, FormView
+from django.views.generic import View, FormView, TemplateView
 
 from platerplotter.models import Sample
 from . import forms
 
 
 # Create your views here.
+# Returns counts for each disease area within the specified date range.
+def get_disease_counts(start_date, end_date):
+    disease_counts = Sample.objects.aggregate(
+        cancer_count=Count(Case(
+            When(Q(disease_area='Cancer') & Q(sample_received_datetime__range=(start_date, end_date)), then=1),
+            output_field=IntegerField()
+        )),
+        rare_disease_count=Count(Case(
+            When(Q(disease_area='Rare Disease') & Q(sample_received_datetime__range=(start_date, end_date)), then=1),
+            output_field=IntegerField()
+        )),
+    )
+    return {
+        'cancer': disease_counts['cancer_count'],
+        'rare_disease': disease_counts['rare_disease_count']
+    }
+
 
 class CancerRareDiseaseView(FormView):
     template_name = 'charts/cancer_rd.html'
@@ -45,7 +62,8 @@ class CancerRareDiseaseView(FormView):
                 output_field=IntegerField()
             )),
             rare_disease_count=Count(Case(
-                When(Q(disease_area='Rare Disease') & Q(sample_received_datetime__range=(start_date, end_date)), then=1),
+                When(Q(disease_area='Rare Disease') & Q(sample_received_datetime__range=(start_date, end_date)),
+                     then=1),
                 output_field=IntegerField()
             )),
         )
@@ -151,4 +169,52 @@ class MonthTotalView(FormView):
                 'glh': glh,
                 'total': total
             })
+        return glhs_list
+
+
+class WeekTotalView(FormView):
+    template_name = 'charts/week_total.html'
+    form_class = forms.WeekForm
+    context = {}
+
+    def form_valid(self, form):
+        monday = form.cleaned_data['week']
+        friday = monday + timedelta(days=4)
+        self.context['week_total'] = self.week_total(monday, friday)
+
+        return self.render_to_response(self.get_context_data(**self.context))
+
+    def get(self, request, *args, **kwargs):
+        monday_date, friday_date = self.get_current_week_monday()
+        result = self.week_total(monday_date, friday_date)
+
+        self.context['week_total'] = result
+        self.context['form'] = self.get_form()
+        return self.render_to_response(self.get_context_data(**self.context))
+
+    def get_current_week_monday(self):
+        today = datetime.today()
+        monday = today - timedelta(days=today.weekday())
+        friday = monday + timedelta(days=4)
+        return monday.date(), friday.date()
+
+    def week_total(self, start, end):
+        glhs = ["yne", "now", "eme", "lnn", "lns", "wwm", "sow"]
+        glhs_list = []
+        samples = Sample.objects.filter(sample_received_datetime__range=(start, end))
+        for glh in glhs:
+            rd_proband = samples.filter(sample_type="Proband", receiving_rack__laboratory_id=glh).count()
+            rd_family = samples.filter(sample_type="Family", receiving_rack__laboratory_id=glh).count()
+            cancer_germline = samples.filter(sample_type="Cancer Germline", receiving_rack__laboratory_id=glh).count()
+            cancer_tumour = samples.filter(sample_type="Tumour", receiving_rack__laboratory_id=glh).count()
+
+            glhs_list.append(
+                {'glh': glh,
+                 'data': {
+                     'rd_proband': rd_proband,
+                     'rd_family': rd_family,
+                     'cancer_germline': cancer_germline,
+                     'cancer_tumour': cancer_tumour}
+                 }
+            )
         return glhs_list

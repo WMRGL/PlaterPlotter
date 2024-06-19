@@ -1,21 +1,23 @@
 {% extends 'charts/base.html' %}
+{% block title %} Cancer vs Rare Disease {% endblock %}
+{% block breadcrumb %} Cancer vs Rare Disease {% endblock %}
 
 {% block content %}
     <div class="card">
         <div class="card-header">
-            <h5 class="card-title">Filter by date </h5>
+            <h5 class=" fw-bold">Filter by date </h5>
         </div>
         <div class="card-body">
             <form class="row row-cols-md-auto align-items-center" method="post">
                 {% csrf_token %}
                 <div class="col-12">
                     <label for="inlineFormInputName2">Start: </label>
-                    <input type="date" class="form-control mb-2 me-sm-2" id="inlineFormInputName2" name="start"
+                    <input type="date" class="form-control  me-sm-2" id="inlineFormInputName2" name="start"
                            required>
                 </div>
                 <div class="col-12">
                     <label for="inlineFormInputGroupUsername2">End:</label>
-                    <div class="input-group mb-2 me-sm-2">
+                    <div class="input-group  me-sm-2">
                         <input type="date" class="form-control" id="inlineFormInputGroupUsername2" name="end" required>
                     </div>
                 </div>
