@@ -34,6 +34,7 @@ urlpatterns = [
     path('ready/', include('ready.urls')),
     path('discard/', include('discards.urls')),
     path('charts/', include('charts.urls')),
+    path('users/', include('users.urls')),
     path('', import_acks, name='index'),
 ]
 

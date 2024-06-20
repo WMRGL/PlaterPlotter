@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     'bootstrap4',
     'easyaudit',
     'crispy_bootstrap4',
-    'charts'
+    'charts',
+    'users'
     
 ]
 
