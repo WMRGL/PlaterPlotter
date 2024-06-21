@@ -85,6 +85,7 @@ def add_admin(request):
         return HttpResponseRedirect(reverse('users:add_admin'))
 
     admins = User.objects.filter(groups__name='Charts')
+
     eligible_users = User.objects.filter(is_active=True, is_staff=False, is_superuser=False).exclude(
         groups__name='Charts')
     eligible_users_list = []
