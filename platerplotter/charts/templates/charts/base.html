@@ -35,36 +35,36 @@
             </a>
 
             <ul class="navbar-nav d-none d-lg-flex">
-                <li class="nav-item px-2 ">
+                <li class="nav-item px-2">
                     <a class="nav-link fw-bolder" href="{% url 'index' %}">
                         Rack Notifications
                     </a>
                 </li>
-                <li class="nav-item px-2 ">
+                <li class="nav-item px-2">
                     <a class="nav-link fw-bolder" href="{% url 'problemsamples:samples' %}" role="button">
                         Problem Samples
                     </a>
                 </li>
-                <li class="nav-item px-2 ">
+                <li class="nav-item px-2">
                     <a class="nav-link fw-bolder" href="{% url 'awaitingsorting:awaiting_holding_rack_assignment' %}">
                         Awaiting Sorting
                     </a>
                 </li>
-                <li class="nav-item px-2 ">
+                <li class="nav-item px-2">
                     <a class="nav-link fw-bolder" href="{% url 'holdingracks:holding_racks' %}">Holding Racks</a>
                 </li>
-                <li class="nav-item px-2 ">
+                <li class="nav-item px-2">
                     <a class="nav-link fw-bolder" href="{% url 'ready:ready_to_plate' %}">Ready to Plate</a>
                 </li>
-                <li class="nav-item px-2 ">
+                <li class="nav-item px-2">
                     <a class="nav-link fw-bolder" href="{% url 'ready:ready_to_dispatch' %}">Ready for Dispatch</a>
                 </li>
-                <li class="nav-item px-2 ">
+                <li class="nav-item px-2">
                     <a class="nav-link fw-bolder" href="{% url 'ready:consignments_for_collection' %}">
                         Consignments for Collection
                     </a>
                 </li>
-                <li class="nav-item px-2 ">
+                <li class="nav-item px-2">
                     <a class="nav-link fw-bolder" href="{% url 'ready:audit' %}">Audit</a>
                 </li>
 
@@ -81,12 +81,12 @@
                 </li>
                 {% if user|has_group:"Charts" %}
                     <li class="nav-item dropdown fw-bolder">
-                        <a class="nav-link dropdown-toggle" href="#" id="discardsDropdown" role="button"
+                        <a class="nav-link dropdown-toggle" href="#" id="chartsDropdown" role="button"
                            data-bs-toggle="dropdown" aria-haspopup="true"
                            aria-expanded="false">
                             Charts
                         </a>
-                        <div class="dropdown-menu" aria-labelledby="discardsDropdown">
+                        <div class="dropdown-menu" aria-labelledby="chartsDropdown">
                             <a class="dropdown-item" href="{% url 'charts:week_total' %}">Weekly KPI</a>
                             <a class="dropdown-item" href="{% url 'charts:kpi' %}">Monthly KPI</a>
                             <a class="dropdown-item" href="{% url 'charts:month_total' %}">Monthly Total KPI</a>
@@ -94,18 +94,17 @@
                         </div>
                     </li>
                 {% endif %}
-
-                <li class="nav-item dropdown fw-bolder">
-                    <a class="nav-link dropdown-toggle" href="#" id="discardsDropdown" role="button"
-                       data-bs-toggle="dropdown" aria-haspopup="true"
-                       aria-expanded="false">
-                        <i data-feather="user"></i> {{ request.user.username }}
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="discardsDropdown">
-                        <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
-                    </div>
-                </li>
             </ul>
+            <div class="ms-auto nav-item dropdown fw-bolder">
+                <a class="nav-link dropdown-toggle text-capitalize" href="#" id="userDropdown" role="button"
+                   data-bs-toggle="dropdown" aria-haspopup="true"
+                   aria-expanded="false">
+                    <i data-feather="user"></i> {{ request.user.username }}
+                </a>
+                <div class="dropdown-menu" aria-labelledby="userDropdown">
+                    <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
+                </div>
+            </div>
         </nav>
 
 
