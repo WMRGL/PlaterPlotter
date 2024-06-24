@@ -5,6 +5,7 @@ from django.db.models import Count, Case, When, IntegerField, Q
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.generic import View, FormView, TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from platerplotter.models import Sample
 from . import forms
@@ -29,7 +30,7 @@ def get_disease_counts(start_date, end_date):
     }
 
 
-class CancerRareDiseaseView(FormView):
+class CancerRareDiseaseView(LoginRequiredMixin, FormView):
     template_name = 'charts/cancer_rd.html'
     form_class = forms.DateRangeForm
 
@@ -73,7 +74,7 @@ class CancerRareDiseaseView(FormView):
         }
 
 
-class KpiView(FormView):
+class KpiView(LoginRequiredMixin, FormView):
     form_class = forms.MonthForm
     template_name = 'charts/kpi.html'
     context = {}
@@ -137,7 +138,7 @@ class KpiView(FormView):
         return json.dumps(glhs_list)
 
 
-class MonthTotalView(FormView):
+class MonthTotalView(LoginRequiredMixin, FormView):
     form_class = forms.MonthForm
     template_name = 'charts/monthly_total.html'
     context = {}
@@ -172,7 +173,7 @@ class MonthTotalView(FormView):
         return glhs_list
 
 
-class WeekTotalView(FormView):
+class WeekTotalView(LoginRequiredMixin, FormView):
     template_name = 'charts/week_total.html'
     form_class = forms.WeekForm
     context = {}
