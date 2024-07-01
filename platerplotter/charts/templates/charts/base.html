@@ -36,39 +36,39 @@
 
             <ul class="navbar-nav d-none d-lg-flex">
                 <li class="nav-item px-2">
-                    <a class="nav-link fw-bolder" href="{% url 'index' %}">
+                    <a class="nav-link fw-semibold" href="{% url 'index' %}">
                         Rack Notifications
                     </a>
                 </li>
                 <li class="nav-item px-2">
-                    <a class="nav-link fw-bolder" href="{% url 'problemsamples:samples' %}" role="button">
+                    <a class="nav-link fw-semibold" href="{% url 'problemsamples:samples' %}" role="button">
                         Problem Samples
                     </a>
                 </li>
                 <li class="nav-item px-2">
-                    <a class="nav-link fw-bolder" href="{% url 'awaitingsorting:awaiting_holding_rack_assignment' %}">
+                    <a class="nav-link fw-semibold" href="{% url 'awaitingsorting:awaiting_holding_rack_assignment' %}">
                         Awaiting Sorting
                     </a>
                 </li>
                 <li class="nav-item px-2">
-                    <a class="nav-link fw-bolder" href="{% url 'holdingracks:holding_racks' %}">Holding Racks</a>
+                    <a class="nav-link fw-semibold" href="{% url 'holdingracks:holding_racks' %}">Holding Racks</a>
                 </li>
                 <li class="nav-item px-2">
-                    <a class="nav-link fw-bolder" href="{% url 'ready:ready_to_plate' %}">Ready to Plate</a>
+                    <a class="nav-link fw-semibold" href="{% url 'ready:ready_to_plate' %}">Ready to Plate</a>
                 </li>
                 <li class="nav-item px-2">
-                    <a class="nav-link fw-bolder" href="{% url 'ready:ready_to_dispatch' %}">Ready for Dispatch</a>
+                    <a class="nav-link fw-semibold" href="{% url 'ready:ready_to_dispatch' %}">Ready for Dispatch</a>
                 </li>
                 <li class="nav-item px-2">
-                    <a class="nav-link fw-bolder" href="{% url 'ready:consignments_for_collection' %}">
+                    <a class="nav-link fw-semibold" href="{% url 'ready:consignments_for_collection' %}">
                         Consignments for Collection
                     </a>
                 </li>
                 <li class="nav-item px-2">
-                    <a class="nav-link fw-bolder" href="{% url 'ready:audit' %}">Audit</a>
+                    <a class="nav-link fw-semibold" href="{% url 'ready:audit' %}">Audit</a>
                 </li>
 
-                <li class="nav-item dropdown fw-bolder">
+                <li class="nav-item dropdown fw-semibold">
                     <a class="nav-link dropdown-toggle" href="#" id="discardsDropdown" role="button"
                        data-bs-toggle="dropdown" aria-haspopup="true"
                        aria-expanded="false">
@@ -79,8 +79,8 @@
                         <a class="dropdown-item" href="{% url 'discards:all_discards_view' %}">Discarded</a>
                     </div>
                 </li>
-                {% if user|has_group:"Charts" %}
-                    <li class="nav-item dropdown fw-bolder">
+                {% if user|has_group:"Charts" or user.is_staff %}
+                    <li class="nav-item dropdown fw-semibold">
                         <a class="nav-link dropdown-toggle" href="#" id="chartsDropdown" role="button"
                            data-bs-toggle="dropdown" aria-haspopup="true"
                            aria-expanded="false">
@@ -94,8 +94,13 @@
                         </div>
                     </li>
                 {% endif %}
+            {% if user.is_staff %}
+                <li class="nav-item px-2">
+                    <a class="nav-link fw-semibold" href="{% url 'users:add_admin' %}">Charts Viewers</a>
+                </li>
+            {% endif %}
             </ul>
-            <div class="ms-auto nav-item dropdown fw-bolder">
+            <div class="ms-auto nav-item dropdown fw-semibold">
                 <a class="nav-link dropdown-toggle text-capitalize" href="#" id="userDropdown" role="button"
                    data-bs-toggle="dropdown" aria-haspopup="true"
                    aria-expanded="false">
@@ -106,8 +111,6 @@
                 </div>
             </div>
         </nav>
-
-
         <main class="content">
             <div class="container-fluid p-0">
 
