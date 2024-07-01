@@ -77,26 +77,19 @@ def logout_user(request):
 def add_admin(request):
     context = {}
     if request.method == 'POST':
-        user_id = request.POST.get('new_admin_id')
-        user = User.objects.get(id=user_id)
-        group = Group.objects.get(name='Charts')
-        user.groups.add(group)
-        user.save()
+        user_ids = request.POST.get('admins').split(",")
+        for user in user_ids:
+            user = User.objects.get(id=user)
+            group = Group.objects.get(name='Charts')
+            user.groups.add(group)
+            user.save()
         return HttpResponseRedirect(reverse('users:add_admin'))
 
     admins = User.objects.filter(groups__name='Charts')
 
     eligible_users = User.objects.filter(is_active=True, is_staff=False, is_superuser=False).exclude(
         groups__name='Charts')
-    eligible_users_list = []
-
-    for user in eligible_users:
-        eligible_users_list.append({
-            'id': user.id,
-            'title': user.get_full_name(),
-        })
-
-    context['eligible_users'] = json.dumps(eligible_users_list)
+    context['eligible_users'] = eligible_users
     context['admins'] = admins
     return render(request, 'users/admin.html', context)
 
