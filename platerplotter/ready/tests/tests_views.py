@@ -108,3 +108,11 @@ class ReadyToPlateAndPlateHoldingRackTestCase(TestCase):
             os.remove(f)
         directory = str(Path.cwd().parent) + '/TestData/Outbound/PlatePlots/'
         self.assertEqual(len(os.listdir(directory)), 0)
+
+    def test_add_comment(self):
+        sample = Sample.objects.get(uid=1234567895)
+        response = self.client.post(reverse('ready:sample_comment', kwargs={'pk': sample.pk}), {
+            'comment': 'test comment'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed('ready/audit.html')
+        self.assertContains(response, 'Comment added successfully')

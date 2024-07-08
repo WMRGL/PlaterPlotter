@@ -1,10 +1,10 @@
-from django.test import SimpleTestCase
+from django.test import TestCase
 from django.urls import reverse, resolve
 
 from discards import views
 
 
-class TestUrls(SimpleTestCase):
+class Urls(TestCase):
 
     def test_discards_index_url(self):
         url = reverse('discards:discards_index')
