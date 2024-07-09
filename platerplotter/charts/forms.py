@@ -1,11 +1,15 @@
 from datetime import datetime
 
+from django.utils.translation import gettext_lazy as _
 from django import forms
 
 
 class DateRangeForm(forms.Form):
-    start = forms.DateField(input_formats=['%Y-%m-%d'], required=True)
-    end = forms.DateField(input_formats=['%Y-%m-%d'], required=True)
+
+    range_calendar = forms.CharField(
+
+        required=True
+    )
 
 
 class MonthForm(forms.Form):

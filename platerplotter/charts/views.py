@@ -35,9 +35,8 @@ class CancerRareDiseaseView(LoginRequiredMixin, FormView):
     form_class = forms.DateRangeForm
 
     def form_valid(self, form):
-        start_date = form.cleaned_data['start']
-        end_date = form.cleaned_data['end']
-        context = self.get_filtered_disease_counts(start_date, end_date)
+        date_range = form.cleaned_data['range_calendar'].split()
+        context = self.get_filtered_disease_counts(date_range[0], date_range[2])
         return self.render_to_response(self.get_context_data(**context))
 
     def get(self, request, *args, **kwargs):
