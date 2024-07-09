@@ -5,9 +5,7 @@ from django import forms
 
 
 class DateRangeForm(forms.Form):
-
     range_calendar = forms.CharField(
-
         required=True
     )
 

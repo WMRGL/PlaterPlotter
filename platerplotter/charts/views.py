@@ -73,9 +73,9 @@ class CancerRareDiseaseView(LoginRequiredMixin, FormView):
         }
 
 
-class KpiView(LoginRequiredMixin, FormView):
+class MonthlyKpiView(LoginRequiredMixin, FormView):
     form_class = forms.MonthForm
-    template_name = 'charts/kpi.html'
+    template_name = 'charts/monthly_kpi.html'
     context = {}
 
     def get(self, request, *args, **kwargs):
@@ -218,3 +218,4 @@ class WeekTotalView(LoginRequiredMixin, FormView):
                  }
             )
         return glhs_list
+
