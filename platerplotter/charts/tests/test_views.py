@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta
 
 import pytz
@@ -55,6 +56,44 @@ class Chart(TestCase):
         self.monthly_total = views.MonthTotalView()
         self.glhs = ["yne", "now", "eme", "lnn", "lns", "wwm", "sow"]
         self.sample_type = ["Proband", "Family", "Tumour", "Cancer Germline"]
+        self.today = datetime.today()
+        self.month = self.today.month
+        self.year = self.today.year
+        self.monthly_expected_result = {}
+        for glh in self.glhs:
+            self.monthly_expected_result[glh] = Sample.objects.filter(
+                receiving_rack__gel_1004_csv__report_received_datetime__year=self.year,
+                receiving_rack__gel_1004_csv__report_received_datetime__month=self.month,
+                receiving_rack__laboratory_id=glh
+            ).count()
+        self.monthly_kpi_expected_result = []
+        samples = Sample.objects.filter(
+            receiving_rack__gel_1004_csv__report_received_datetime__year=self.year,
+            receiving_rack__gel_1004_csv__report_received_datetime__month=self.month
+        ).order_by("receiving_rack__gel_1004_csv__report_received_datetime")
+        for glh in self.glhs:
+            rd_proband = samples.filter(sample_type="Proband", receiving_rack__laboratory_id=glh).count()
+            rd_family = samples.filter(sample_type="Family", receiving_rack__laboratory_id=glh).count()
+            cancer_germline = samples.filter(sample_type="Cancer Germline", receiving_rack__laboratory_id=glh).count()
+            cancer_tumour = samples.filter(sample_type="Tumour", receiving_rack__laboratory_id=glh).count()
+            troubleshooting_ongoing = samples.filter(issue_outcome="Not resolved",
+                                                     receiving_rack__laboratory_id=glh).count()
+            troubleshooting_discards = samples.filter(issue_outcome="Sample destroyed",
+                                                      receiving_rack__laboratory_id=glh).count()
+            troubleshooting_returns = samples.filter(issue_outcome="Sample returned to extracting GLH",
+                                                     receiving_rack__laboratory_id=glh).count()
+            self.monthly_kpi_expected_result.append({
+                'glh': glh,
+                'data': {
+                    'rd_proband': rd_proband,
+                    'rd_family': rd_family,
+                    'cancer_germline': cancer_germline,
+                    'cancer_tumour': cancer_tumour,
+                    'troubleshooting_ongoing': troubleshooting_ongoing,
+                    'troubleshooting_discards': troubleshooting_discards,
+                    'troubleshooting_returns': troubleshooting_returns,
+                },
+            })
 
     def test_chart_cancer_rd(self):
         response = self.client.get(reverse('charts:cancer_rd'))
@@ -102,7 +141,7 @@ class Chart(TestCase):
         self.assertEqual(result[1]['data']['cancer_tumour'], expected_result['Tumour'])
 
     def test_weekly_total_filtered(self):
-        now = datetime.now()
+        now = datetime.today()
         monday = now - timedelta(days=now.weekday())
         iso_week = monday.strftime('%G-W%V')
 
@@ -110,7 +149,6 @@ class Chart(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn('week_total', response.context)
-
         week_total = response.context['week_total']
         self.assertIsInstance(week_total, list)
         self.assertEqual(week_total[1]['data']['rd_proband'], 1)
@@ -137,39 +175,74 @@ class Chart(TestCase):
         self.assertTemplateUsed(response, 'charts/monthly_total.html')
 
     def test_monthly_total(self):
-        today = datetime.today()
-        month = today.month
-        year = today.year
-        expected_result = {}
-        for glh in self.glhs:
-            expected_result[glh] = Sample.objects.filter(
-                receiving_rack__gel_1004_csv__report_received_datetime__year=year,
-                receiving_rack__gel_1004_csv__report_received_datetime__month=month,
-                receiving_rack__laboratory_id=glh
-            ).count()
+        response = self.client.get(reverse('charts:month_total'))
+        result = self.monthly_total.get_total(self.year, self.month)
+        for glh in range(len(self.glhs)):
+            self.assertEqual(result[glh]['total'], self.monthly_expected_result[self.glhs[glh]])
+            self.assertEqual(response.context['month_total'][glh]['total'],
+                             self.monthly_expected_result[self.glhs[glh]])
 
-        result = self.monthly_total.get_total(year, month)
-        # print result
-        # for glh in self.glhs:
-        #     self.assertEqual(result[glh]['total'], expected_result[glh])
+    def test_monthly_total_filtered(self):
+        response = self.client.post(reverse('charts:month_total'), {'month': f'{self.year}-{self.month}'})
+        month_total = response.context['month_total']
 
-    def test_get_glh(self):
-        today = datetime.today()
-        month = today.month
-        year = today.year
-        expected_result = {}
-        for glh in self.glhs:
-            expected_result[glh] = Sample.objects.filter(
-                receiving_rack__gel_1004_csv__report_received_datetime__year=year,
-                receiving_rack__gel_1004_csv__report_received_datetime__month=month,
-                receiving_rack__laboratory_id=glh
-            ).count()
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('month_total', response.context)
+        self.assertIsInstance(month_total, list)
 
-        result = views.MonthlyKpiView().get_glh(year, month)
-        # print result
-        # for glh in self.glhs:
-        #     self.assertEqual(result[glh]['total'], expected_result[glh])
-        # self.assertEqual(expected_result, self.glhs)
+        for glh in range(len(self.glhs)):
+            self.assertEqual(response.context['month_total'][glh]['total'],
+                             self.monthly_expected_result[self.glhs[glh]])
+
+        for glh_data in month_total:
+            self.assertIn('glh', glh_data)
+            self.assertIn('total', glh_data)
+            self.assertIsInstance(glh_data['total'], int)
+            
+    def test_monthly_kpi(self):
+        response = self.client.get(reverse('charts:kpi'))
+        all_glhs_json = response.context['all_glhs']
+        all_glhs = json.loads(all_glhs_json)
+
+        for glh in range(len(self.glhs)):
+            self.assertEqual(all_glhs[glh]['glh'], self.monthly_kpi_expected_result[glh]['glh'])
+            self.assertEqual(all_glhs[glh]['data']['rd_proband'],
+                             self.monthly_kpi_expected_result[glh]['data']['rd_proband'])
+            self.assertEqual(all_glhs[glh]['data']['rd_family'],
+                             self.monthly_kpi_expected_result[glh]['data']['rd_family'])
+            self.assertEqual(all_glhs[glh]['data']['cancer_germline'],
+                             self.monthly_kpi_expected_result[glh]['data']['cancer_germline'])
+            self.assertEqual(all_glhs[glh]['data']['cancer_tumour'],
+                             self.monthly_kpi_expected_result[glh]['data']['cancer_tumour'])
+            self.assertEqual(all_glhs[glh]['data']['troubleshooting_ongoing'],
+                             self.monthly_kpi_expected_result[glh]['data']['troubleshooting_ongoing'])
+            self.assertEqual(all_glhs[glh]['data']['troubleshooting_discards'],
+                             self.monthly_kpi_expected_result[glh]['data']['troubleshooting_discards'])
+            self.assertEqual(all_glhs[glh]['data']['troubleshooting_returns'],
+                             self.monthly_kpi_expected_result[glh]['data']['troubleshooting_returns'])
+
+    def test_monthly_kpi_filtered(self):
+        response = self.client.post(reverse('charts:kpi'), {'month': f'{self.year}-{self.month}'})
+        all_glhs_json = response.context['all_glhs']
+        all_glhs = json.loads(all_glhs_json)
+
+        for glh in range(len(self.glhs)):
+            self.assertEqual(all_glhs[glh]['glh'], self.monthly_kpi_expected_result[glh]['glh'])
+            self.assertEqual(all_glhs[glh]['data']['rd_proband'],
+                             self.monthly_kpi_expected_result[glh]['data']['rd_proband'])
+            self.assertEqual(all_glhs[glh]['data']['rd_family'],
+                             self.monthly_kpi_expected_result[glh]['data']['rd_family'])
+            self.assertEqual(all_glhs[glh]['data']['cancer_germline'],
+                             self.monthly_kpi_expected_result[glh]['data']['cancer_germline'])
+            self.assertEqual(all_glhs[glh]['data']['cancer_tumour'],
+                             self.monthly_kpi_expected_result[glh]['data']['cancer_tumour'])
+            self.assertEqual(all_glhs[glh]['data']['troubleshooting_ongoing'],
+                             self.monthly_kpi_expected_result[glh]['data']['troubleshooting_ongoing'])
+            self.assertEqual(all_glhs[glh]['data']['troubleshooting_discards'],
+                             self.monthly_kpi_expected_result[glh]['data']['troubleshooting_discards'])
+            self.assertEqual(all_glhs[glh]['data']['troubleshooting_returns'],
+                             self.monthly_kpi_expected_result[glh]['data']['troubleshooting_returns'])
+
 
     def test_chart_monthly_kpi(self):
         response = self.client.get(reverse('charts:month_total'))
