@@ -12,6 +12,10 @@ from charts import views
 from platerplotter.models import Sample, ReceivingRack, Gel1004Csv, Gel1005Csv
 
 
+def retrieve_samples_by_date(start_date, end_date):
+    samples = Sample.objects.filter(sample_received_datetime__range=(start_date, end_date))
+    return samples
+
 class Chart(TestCase):
 
     def setUp(self):
@@ -99,26 +103,37 @@ class Chart(TestCase):
         response = self.client.get(reverse('charts:cancer_rd'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'charts/cancer_rd.html')
-
-    def test_cancer_rd_total(self):
-        expected_result = {'cancer': 1, 'rare_disease': 1}
-        self.assertEqual(self.cancer_rd.get_total_disease_counts(), expected_result)
+        self.assertEqual(response.context['cancer'], 1)
+        self.assertEqual(response.context['rare_disease'], 1)
 
     def test_cancer_rd_filtered_disease_counts(self):
-        start_date = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        end_date = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)
+        start_date = self.today.date()
+        end_date = self.today.date()
+
+        start_datetime = timezone.make_aware(datetime.combine(start_date, datetime.min.time()),
+                                             timezone.get_current_timezone())
+        end_datetime = timezone.make_aware(datetime.combine(end_date, datetime.max.time()),
+                                           timezone.get_current_timezone())
+
+        response = self.client.post(reverse('charts:cancer_rd'), {
+            'range_calendar': f'{start_date} to {end_date}'
+        })
 
         expected_cancer_count = Sample.objects.filter(
-            Q(disease_area='Cancer') & Q(sample_received_datetime__range=(start_date, end_date))
+            Q(disease_area='Cancer') & Q(sample_received_datetime__range=(start_datetime, end_datetime))
         ).count()
         expected_rare_disease_count = Sample.objects.filter(
-            Q(disease_area='Rare Disease') & Q(sample_received_datetime__range=(start_date, end_date))
+            Q(disease_area='Rare Disease') & Q(sample_received_datetime__range=(start_datetime, end_datetime))
         ).count()
 
-        result = self.cancer_rd.get_filtered_disease_counts(start_date, end_date)
+        print(f"Expected Cancer Count: {expected_cancer_count}")
+        print(f"Expected Rare Disease Count: {expected_rare_disease_count}")
 
-        self.assertEqual(result['cancer'], expected_cancer_count)
-        self.assertEqual(result['rare_disease'], expected_rare_disease_count)
+        print(f"Response Cancer Count: {response.context['cancer']}")
+        print(f"Response Rare Disease Count: {response.context['rare_disease']}")
+
+        self.assertEqual(response.context['cancer'], expected_cancer_count)
+        self.assertEqual(response.context['rare_disease'], expected_rare_disease_count)
 
     def test_chart_weekly_kpi(self):
         response = self.client.get(reverse('charts:week_total'))
@@ -198,7 +213,7 @@ class Chart(TestCase):
             self.assertIn('glh', glh_data)
             self.assertIn('total', glh_data)
             self.assertIsInstance(glh_data['total'], int)
-            
+
     def test_monthly_kpi(self):
         response = self.client.get(reverse('charts:kpi'))
         all_glhs_json = response.context['all_glhs']
@@ -242,7 +257,6 @@ class Chart(TestCase):
                              self.monthly_kpi_expected_result[glh]['data']['troubleshooting_discards'])
             self.assertEqual(all_glhs[glh]['data']['troubleshooting_returns'],
                              self.monthly_kpi_expected_result[glh]['data']['troubleshooting_returns'])
-
 
     def test_chart_monthly_kpi(self):
         response = self.client.get(reverse('charts:month_total'))

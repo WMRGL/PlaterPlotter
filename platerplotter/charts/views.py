@@ -11,32 +11,15 @@ from platerplotter.models import Sample
 from . import forms
 
 
-# Create your views here.
-# Returns counts for each disease area within the specified date range.
-def get_disease_counts(start_date, end_date):
-    disease_counts = Sample.objects.aggregate(
-        cancer_count=Count(Case(
-            When(Q(disease_area='Cancer') & Q(sample_received_datetime__range=(start_date, end_date)), then=1),
-            output_field=IntegerField()
-        )),
-        rare_disease_count=Count(Case(
-            When(Q(disease_area='Rare Disease') & Q(sample_received_datetime__range=(start_date, end_date)), then=1),
-            output_field=IntegerField()
-        )),
-    )
-    return {
-        'cancer': disease_counts['cancer_count'],
-        'rare_disease': disease_counts['rare_disease_count']
-    }
-
-
 class CancerRareDiseaseView(LoginRequiredMixin, FormView):
     template_name = 'charts/cancer_rd.html'
     form_class = forms.DateRangeForm
 
     def form_valid(self, form):
-        date_range = form.cleaned_data['range_calendar'].split()
-        context = self.get_filtered_disease_counts(date_range[0], date_range[2])
+        date_range = form.cleaned_data['range_calendar'].split(' to ')
+        start_date = datetime.strptime(date_range[0], '%Y-%m-%d').date()
+        end_date = datetime.strptime(date_range[1], '%Y-%m-%d').date()
+        context = self.get_filtered_disease_counts(start_date, end_date)
         return self.render_to_response(self.get_context_data(**context))
 
     def get(self, request, *args, **kwargs):
@@ -58,11 +41,12 @@ class CancerRareDiseaseView(LoginRequiredMixin, FormView):
         # Returns counts for each disease area within the specified date range.
         disease_counts = Sample.objects.aggregate(
             cancer_count=Count(Case(
-                When(Q(disease_area='Cancer') & Q(sample_received_datetime__range=(start_date, end_date)), then=1),
+                When(Q(disease_area='Cancer') & Q(sample_received_datetime__date__range=(start_date, end_date)),
+                     then=1),
                 output_field=IntegerField()
             )),
             rare_disease_count=Count(Case(
-                When(Q(disease_area='Rare Disease') & Q(sample_received_datetime__range=(start_date, end_date)),
+                When(Q(disease_area='Rare Disease') & Q(sample_received_datetime__date__range=(start_date, end_date)),
                      then=1),
                 output_field=IntegerField()
             )),

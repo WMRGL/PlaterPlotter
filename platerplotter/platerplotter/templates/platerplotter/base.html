@@ -89,6 +89,13 @@
                             </li>
                         {% endif %}
 
+                        {% if user.is_staff %}
+                            <li class="nav nav-item">
+                                <a class="nav-link {% if url_name == 'samples' %}active{% endif %}"
+                                   href="{% url 'users:add_admin' %}">Charts Viewers</a>
+                            </li>
+                        {% endif %}
+
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span><i
