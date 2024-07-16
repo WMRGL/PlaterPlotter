@@ -182,7 +182,7 @@
                                                                      id="returnResult-{{ sample.pk }}">
                                                                 </div>
                                                             </form>
-                                                            <button class="btn btn-primary mx-3" id="confirmSample"
+                                                            <button class="btn btn-primary mx-3" id="confirmSample-{{ sample.pk }}"
                                                                     onclick="confirmReturnSample('{{ sample.laboratory_sample_id }}','{{ sample.pk }}')">
                                                                 Confirm
                                                             </button>
@@ -327,6 +327,8 @@
             let formSample = document.querySelector(`#returnForm-${modalId}`);
             const sampleResult = document.querySelector(`#returnResult-${modalId}`);
             const returnSampleBtn = document.querySelector(`#returnSampleButton-${modalId}`);
+            const confirmSampleBtn = document.querySelector(`#confirmSample-${modalId}`);
+
             if (formSample.value === currentSample) {
                 if (sampleResult.classList.contains('alert-danger')) {
                     sampleResult.classList.remove('alert-danger');
@@ -336,7 +338,8 @@
                 }
 
                 sampleResult.classList.add("alert", "alert-success");
-                sampleResult.innerHTML = "Samples Confirmed, kindly click on the return button";
+                sampleResult.innerHTML = "Samples Confirmed, kindly click on the submit button";
+                confirmSampleBtn.classList.add('d-none');
 
             } else {
                 if (sampleResult.classList.contains('alert-success')) {
@@ -350,8 +353,8 @@
             }
 
         }
-        
-         function modalAutofocus(modalId) {
+
+        function modalAutofocus(modalId) {
             $('#returnSampleModal-' + modalId).on('shown.bs.modal', function () {
                 $(this).find('#returnForm-' + modalId).focus();
             });

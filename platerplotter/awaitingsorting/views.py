@@ -1,18 +1,30 @@
+import re
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 
 from holdingracks.forms import HoldingRackForm
 from holdingracks.holding_rack_manager import HoldingRackManager
+from notifications.views import confirm_sample_positions
 from platerplotter.models import HoldingRack, HoldingRackWell
 from platerplotter.models import Sample, ReceivingRack
 from problemsamples.forms import LogIssueForm, SampleSelectForm
-from notifications.views import confirm_sample_positions
 
 
 # Create your views here.
+
+def return_rack_clean(holding_rack):
+    holding_rack_id = holding_rack.upper()
+    if not re.match(r'^[A-Z]{2}\d{8}$', holding_rack_id):
+        raise ValidationError("Invalid rack ID")
+    else:
+        return holding_rack_id.upper()
+
+
 @login_required()
 def awaiting_holding_rack_assignment(request):
     unplated_samples = Sample.objects.filter(holding_rack_well__isnull=True,
@@ -114,7 +126,8 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
                     receiving_rack = ReceivingRack.objects.get(receiving_rack_id=holding_rack_id)
                     if not receiving_rack.is_empty():
                         messages.error(request,
-                                       "You have scanned an active receiving rack. Please scan an exisiting or new Problem rack.")
+                                       "You have scanned an active receiving rack. Please scan an exisiting or new "
+                                       "Problem rack.")
                         error = True
                 except:
                     pass
@@ -271,25 +284,42 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
             return_sample = request.POST['return_sample']
             return_problem_rack_id = request.POST['return_holding_rack']
             sample = get_object_or_404(Sample, laboratory_sample_id=return_sample)
-            problem_rack, created = HoldingRack.objects.get_or_create(holding_rack_id=return_problem_rack_id,
+            try:
+                receiving_rack = ReceivingRack.objects.get(receiving_rack_id=return_problem_rack_id)
+            except ReceivingRack.MultipleObjectsReturned:
+                receiving_rack = ReceivingRack.objects.filter(receiving_rack_id=return_problem_rack_id).first()
+            except ReceivingRack.DoesNotExist:
+                receiving_rack = None
+
+            if receiving_rack:
+                messages.error(request, "You have scanned a receiving rack. "
+                                        "Please scan an existing or a new Problem rack")
+                return HttpResponseRedirect(url)
+
+            problem_rack_id = return_rack_clean(return_problem_rack_id)
+            problem_rack, created = HoldingRack.objects.get_or_create(holding_rack_id=problem_rack_id,
                                                                       holding_rack_type='Problem')
+            if created:
+                for holding_rack_row in holding_rack_rows:
+                    for holding_rack_column in holding_rack_columns:
+                        HoldingRackWell.objects.create(holding_rack=problem_rack,
+                                                       well_id=holding_rack_row + holding_rack_column)
 
             if not sample.issue_identified:
                 messages.error(request, 'Kindly log issue to sample')
                 return HttpResponseRedirect(url)
 
-            if sample:
-                holding_rack_manager = HoldingRackManager(holding_rack=problem_rack)
-                holding_rack_manager.assign_well(request=request, sample=sample, well=None)
-
+            holding_rack_manager = HoldingRackManager(problem_rack)
+            holding_rack_manager.assign_well(request=request, sample=sample, well=None)
+            url = reverse("problemsamples:problem_samples", kwargs={"holding_rack_id": problem_rack.holding_rack_id})
             return HttpResponseRedirect(url)
     else:
         holding_rack_form = HoldingRackForm()
         sample_select_form = SampleSelectForm()
     try:
         latest_well = \
-        HoldingRackWell.objects.filter(holding_rack=holding_rack).exclude(assigned_time__isnull=True).order_by(
-            "-assigned_time")[0].well_id
+            HoldingRackWell.objects.filter(holding_rack=holding_rack).exclude(assigned_time__isnull=True).order_by(
+                "-assigned_time")[0].well_id
     except IndexError:
         latest_well = None
     return render(request, 'awaitingsorting/assign-samples-to-holding-rack.html', {

@@ -28,7 +28,7 @@
                                        role="button">Change Holding Rack</a>
                                 {% elif problem_holding_rack %}
                                     <a class="btn btn-primary btn-lg"
-                                       href="{% url 'awaitingsorting:assign_samples_to_holding_rack' problem_holding_rack.holding_rack_id  %}"
+                                       href="{% url 'awaitingsorting:assign_samples_to_holding_rack' problem_holding_rack.holding_rack_id %}"
                                        role="button">Change Holding Rack</a>
                                 {% endif %}
                                 {% if holding_rack.ready_to_plate %}
@@ -160,13 +160,13 @@
                                         </td>
                                         {% endcomment %}
                                         <td>
-                                            <button type="button" class="btn btn-primary"
-                                                    value="{{ sample.laboratory_sample_id }}"
-                                                    data-toggle="modal"
-                                                    data-target="#returnSampleModal-{{ sample.pk }}"
-                                                    onclick="modalAutofocus({{ sample.pk }})" data-autofocus
-                                            >Return Sample
-                                            </button>
+
+                                                <button type="button" class="btn btn-primary"
+                                                        value="{{ sample.laboratory_sample_id }}"
+                                                        data-toggle="modal"
+                                                        data-target="#returnSampleModal-{{ sample.pk }}"
+                                                        onclick="modalAutofocus({{ sample.pk }})" data-autofocus
+                                                >Return Sample </button>
 
                                             <!-- Modal -->
                                             <div class="modal fade" id="returnSampleModal-{{ sample.pk }}" tabindex="-1"
@@ -183,7 +183,6 @@
                                                             </button>
                                                         </div>
                                                         <div class="modal-body">
-
                                                             <form action="" method="post" id="form-{{ sample.pk }}">
                                                                 {% csrf_token %}
                                                                 <div class="form-group">
@@ -205,7 +204,8 @@
                                                                      id="returnResult-{{ sample.pk }}">
                                                                 </div>
                                                             </form>
-                                                            <button class="btn btn-primary mx-3" id="confirmSample"
+                                                            <button class="btn btn-primary mx-3"
+                                                                    id="confirmSample-{{ sample.pk }}"
                                                                     onclick="confirmReturnSample('{{ sample.laboratory_sample_id }}','{{ sample.pk }}')">
                                                                 Confirm
                                                             </button>
@@ -223,6 +223,7 @@
                                                 </div>
                                             </div>
 
+                                            <!-- Problem Modal -->
                                         </td>
 
                                         <div id='editIssueModal-{{ sample.pk }}' class="modal fade" role="dialog">
@@ -500,6 +501,8 @@
             let formSample = document.querySelector(`#returnForm-${modalId}`);
             const sampleResult = document.querySelector(`#returnResult-${modalId}`);
             const returnSampleBtn = document.querySelector(`#returnSampleButton-${modalId}`);
+            const confirmSampleBtn = document.querySelector(`#confirmSample-${modalId}`);
+
             if (formSample.value === currentSample) {
                 if (sampleResult.classList.contains('alert-danger')) {
                     sampleResult.classList.remove('alert-danger');
@@ -509,7 +512,8 @@
                 }
 
                 sampleResult.classList.add("alert", "alert-success");
-                sampleResult.innerHTML = "Samples Confirmed, kindly click on the return button";
+                sampleResult.innerHTML = "Samples Confirmed, kindly click on the submit button";
+                confirmSampleBtn.classList.add('d-none');
 
             } else {
                 if (sampleResult.classList.contains('alert-success')) {

@@ -670,6 +670,11 @@ def acknowledge_samples(request, gel1004, rack, test_status=False):
             })
             selected_samples = request.POST.getlist('selected_field')
             problem_rack_id = request.POST['problem_rack_id']
+            receiving_rack = ReceivingRack.objects.filter(receiving_rack_id=problem_rack_id)
+            if receiving_rack:
+                messages.error(request, f"Select a different Rack ID, {problem_rack_id} is a receiving rack")
+                return HttpResponseRedirect(url)
+
             holding_rack, created = HoldingRack.objects.get_or_create(
                 holding_rack_id=problem_rack_id, holding_rack_type='Problem')
             if created:

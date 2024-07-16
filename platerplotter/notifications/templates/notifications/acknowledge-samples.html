@@ -66,10 +66,7 @@
             <div class="">
                 <form class="form-inline" method="post" action="" id="problem-form">
                     {% csrf_token %}
-                    <div class="form-group mx-sm-3 mb-2">
-                        <label class="mr-3" for="selectAllCheckbox">Select All</label>
-                        <input type="checkbox" class="form-control" id="selectAllCheckbox" onclick="selectAll()">
-                    </div>
+
 
                     <div class="form-group mx-sm-3 mb-2">
                         <label for="inputPassword2" class="mr-3">Issue</label>
@@ -224,7 +221,6 @@
     </div>
 
     <script>
-        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
         const checkboxes = document.querySelectorAll('.selected-checkbox');
 
         document.addEventListener('DOMContentLoaded', function () {
@@ -256,17 +252,6 @@
 
         });
 
-        function selectAll() {
-            if (selectAllCheckbox.checked) {
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = true;
-                });
-            } else {
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = false;
-                });
-            }
-        }
     </script>
 
 {% endblock content %}
