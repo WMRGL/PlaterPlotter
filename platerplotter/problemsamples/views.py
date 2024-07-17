@@ -171,6 +171,13 @@ def problem_samples(request, holding_rack_id=None, test_status=False):
         holding_rack_form = HoldingRackForm()
         sample_select_form = SampleSelectForm()
 
+    try:
+        latest_well = \
+            HoldingRackWell.objects.filter(holding_rack=holding_rack).exclude(assigned_time__isnull=True).order_by(
+                "-assigned_time")[0].well_id
+    except IndexError:
+        latest_well = None
+
     return render(request, 'problemsamples/problem-samples.html', {"sample_form_dict": sample_form_dict,
                                                                    "holding_rack_form": holding_rack_form,
                                                                    "sample_select_form": sample_select_form,
@@ -180,7 +187,9 @@ def problem_samples(request, holding_rack_id=None, test_status=False):
                                                                    "assigned_well_list": assigned_well_list,
                                                                    "current_holding_racks_dict": current_holding_racks_dict,
                                                                    "holding_rack_rows": holding_rack_rows,
-                                                                   "holding_rack_columns": holding_rack_columns})
+                                                                   "holding_rack_columns": holding_rack_columns,
+                                                                   "latest_well": latest_well,
+                                                                   })
 
 
 @login_required()

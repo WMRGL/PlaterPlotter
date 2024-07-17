@@ -46,7 +46,7 @@
                     <div align='right'>
                         <h4>Scan or type sample ID</h4>
                     </div>
-                    <form role='form' action='' method="POST"  class='form-inline float-right'>
+                    <form role='form' action='' method="POST" class='form-inline float-right'>
                         {% csrf_token %}
                         <input type="hidden" id="well" name="well">
                         {{ sample_select_form|crispy }}
@@ -76,13 +76,24 @@
                                         {% if row|add:column in assigned_well_list %}
                                             {% for sample in holding_rack_samples %}
                                                 {% if row|add:column == sample.holding_rack_well.well_id %}
-                                                    <td title='Position: {{ row|add:column }}
-                                                        Laboratory ID: {{ sample.laboratory_sample_id }}
-                                                        Participant ID: {{ sample.participant_id }}
-                                                        Group ID: {{ sample.group_id }}'
-                                                        style="background-color: black">
-                                                        <div class="tooltip hidden"></div>
-                                                    </td>
+                                                    {% if latest_well == sample.holding_rack_well.well_id %}
+                                                        <td title='Position:{{ row|add:column }}
+                                                                Laboratory ID: {{ sample.laboratory_sample_id }}
+                                                                Participant ID: {{ sample.participant_id }}
+                                                                Group ID: {{ sample.group_id }}'
+                                                            class="assigned" id="current-sample"
+                                                            style="background-color: #ffc107">
+                                                            <div class=" tooltip hidden"></div>
+                                                        </td>
+                                                    {% else %}
+                                                        <td title='Position: {{ row|add:column }}
+                                                                Laboratory ID: {{ sample.laboratory_sample_id }}
+                                                                Participant ID: {{ sample.participant_id }}
+                                                                Group ID: {{ sample.group_id }}'
+                                                            style="background-color: black">
+                                                            <div class="tooltip hidden"></div>
+                                                        </td>
+                                                    {% endif %}
                                                 {% endif %}
                                             {% endfor %}
                                         {% else %}
@@ -97,6 +108,7 @@
                     </div>
                 </div>
                 <div class='col-8' style="height: 350px; overflow-y:scroll;">
+                    {{ return_sample }} - fhgueoghw
                     <div class="tab-pane active">
                         <table class="table table-bordered" id="dataTable">
                             <thead>
@@ -233,7 +245,7 @@
                 <h3>Problem samples awaiting well assignment</h3>
             </div>
         </div>
-    {% comment %}
+        {% comment %}
         <form class="form-inline" method="post" action="" id="awaitingSort">
             {% csrf_token %}
 
@@ -268,7 +280,7 @@
                             <th>Sample Volume</th>
                             <th>Issue</th>
                             <th>Edit Issue</th>
-{#                            <th>Select Sample</th>#}
+                            {#                            <th>Select Sample</th>#}
                         </tr>
                         </thead>
                         <tbody>
@@ -302,7 +314,7 @@
                                     <a class="btn btn-warning" href="#" data-toggle="modal"
                                        data-target="#editIssueModal-{{ sample.pk }}">Edit Issue</a>
                                 </td>
-                            {% comment %}
+                                {% comment %}
                                 <td>
                                     <input type="checkbox" name="selected_sample" form="awaitingSort"
                                            class="well-selected-checkbox" value="{{ sample.laboratory_sample_id }}">
@@ -375,12 +387,11 @@
         // select all
         function selectAll() {
             if (rackSelectAllCheckbox.checked) {
-                 rackCheckboxes.forEach(checkbox => {
+                rackCheckboxes.forEach(checkbox => {
                     checkbox.checked = true;
                 });
-            }
-            else {
-                 rackCheckboxes.forEach(checkbox => {
+            } else {
+                rackCheckboxes.forEach(checkbox => {
                     checkbox.checked = false;
                 });
             }
@@ -415,7 +426,7 @@
         });
 
         // rack multiple checkboxes
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             rackCheckboxes.forEach((checkbox) => {
                 checkbox.addEventListener('click', function () {
                     let atLeastOneChecked = false;

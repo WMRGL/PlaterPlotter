@@ -284,16 +284,10 @@ def assign_samples_to_holding_rack(request, rack, gel1004=None, holding_rack_id=
             return_sample = request.POST['return_sample']
             return_problem_rack_id = request.POST['return_holding_rack']
             sample = get_object_or_404(Sample, laboratory_sample_id=return_sample)
-            try:
-                receiving_rack = ReceivingRack.objects.get(receiving_rack_id=return_problem_rack_id)
-            except ReceivingRack.MultipleObjectsReturned:
-                receiving_rack = ReceivingRack.objects.filter(receiving_rack_id=return_problem_rack_id).first()
-            except ReceivingRack.DoesNotExist:
-                receiving_rack = None
 
-            if receiving_rack:
-                messages.error(request, "You have scanned a receiving rack. "
-                                        "Please scan an existing or a new Problem rack")
+            if ReceivingRack.objects.filter(receiving_rack_id=return_problem_rack_id).exists():
+                messages.error(request,
+                               "You have scanned a receiving rack. Please scan an existing or a new Problem rack")
                 return HttpResponseRedirect(url)
 
             problem_rack_id = return_rack_clean(return_problem_rack_id)
