@@ -12,20 +12,22 @@ from .forms import DiscardForm
 from platerplotter.models import HoldingRack
 
 
+# Function to check if a plate is due for discard
+def is_discard_due(plate):
+    if plate:
+        dispatch_date = plate.gel_1008_csv.date_of_dispatch.date()
+        weeks = (date.today() - dispatch_date).days // 7
+        return weeks >= 10
+    return False
+
+
+@login_required()
 def discards_index(request):
     holding_racks = HoldingRack.objects.filter(discarded=False)
     discard_racks = []
     current_user = request.user
     discard_form = DiscardForm(request.POST or None)
     query = request.GET.get('q')
-
-    # Function to check if a plate is due for discard
-    def is_discard_due(plate):
-        if plate:
-            dispatch_date = plate.gel_1008_csv.date_of_dispatch.date()
-            weeks = (date.today() - dispatch_date).days // 7
-            return weeks >= 10
-        return False
 
     # Iterate through holding racks to find those due for discard
     for holding_rack in holding_racks:
@@ -60,8 +62,6 @@ def discards_index(request):
                 obj.save()
             messages.success(request, 'Holding Racks discarded successfully')
             return redirect('discards:discards_index')
-        else:
-            print(discard_form.errors)
 
     # Pagination
     paginator = Paginator(discard_racks, 100)
