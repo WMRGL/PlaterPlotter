@@ -1,5 +1,6 @@
+{% load group_tags %}
 <!doctype html>
-<html lang="en" >
+<html lang="en">
 <head>
     <title>
         {% block title %}
@@ -16,7 +17,8 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
           integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 </head>
 <body>
 <div>
@@ -71,6 +73,29 @@
                                    href="{% url 'discards:all_discards_view' %}">Discarded</a>
 
                         </li>
+                        {% if user|has_group:"Charts" or user.is_staff %}
+                            <li class="nav nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button"
+                                   aria-haspopup="true" aria-expanded="false">Charts</a>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item {% if url_name == 'week_total' %}active{% endif %}"
+                                       href="{% url 'charts:week_total' %}">Weekly KPI</a>
+                                    <a class="dropdown-item {% if url_name == 'all_discards_view' %}active{% endif %}"
+                                       href="{% url 'charts:kpi' %}">Monthly KPI</a>
+                                    <a class="dropdown-item {% if url_name == 'all_discards_view' %}active{% endif %}"
+                                       href="{% url 'charts:month_total' %}">Monthly Total KPI</a>
+                                    <a class="dropdown-item {% if url_name == 'all_discards_view' %}active{% endif %}"
+                                       href="{% url 'charts:cancer_rd' %}">Cancer and Rare Disease</a>
+                            </li>
+                        {% endif %}
+
+                        {% if user.is_staff %}
+                            <li class="nav nav-item">
+                                <a class="nav-link {% if url_name == 'samples' %}active{% endif %}"
+                                   href="{% url 'users:add_admin' %}">Charts Viewers</a>
+                            </li>
+                        {% endif %}
+
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span><i
@@ -126,22 +151,28 @@
 </div>
 {% block footer %}{% endblock footer %}
 <!--Bootstrap JS-->
- <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-     <!-- Datatables for bootstrap 4 -->
-    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
-    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
-    <!-- Datatables buttons -->
-    <script type="text/javascript" src="{% static 'DataTables/jquery.dataTables.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'DataTables/dataTables.buttons.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'DataTables/buttons.flash.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'DataTables/jszip.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'DataTables/buttons.html5.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'DataTables/buttons.print.min.js' %}"></script>
-    <link rel="stylesheet" type="text/css" href="{% static 'DataTables/jquery.dataTables.min.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'DataTables/buttons.dataTables.min.css' %}"><!-- Local JS -->
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+<!-- Datatables for bootstrap 4 -->
+<script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+<script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
+<!-- Datatables buttons -->
+<script type="text/javascript" src="{% static 'DataTables/jquery.dataTables.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'DataTables/dataTables.buttons.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'DataTables/buttons.flash.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'DataTables/jszip.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'DataTables/buttons.html5.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'DataTables/buttons.print.min.js' %}"></script>
+<link rel="stylesheet" type="text/css" href="{% static 'DataTables/jquery.dataTables.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'DataTables/buttons.dataTables.min.css' %}"><!-- Local JS -->
 <script type="text/javascript" src="{% static 'js/javascript.js' %}"></script>
 {% block javascript %}{% endblock %}
 </body>

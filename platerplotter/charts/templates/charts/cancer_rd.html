@@ -1,0 +1,104 @@
+{% extends 'charts/base.html' %}
+{% block title %} Cancer vs Rare Disease {% endblock %}
+{% block breadcrumb %} Cancer vs Rare Disease {% endblock %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header">
+            <h5 class=" fw-bold">Filter by date </h5>
+        </div>
+        <div class="card-body">
+
+            <form class="row row-cols-md-auto align-items-center" method="post">
+                {% csrf_token %}
+                <div class="col-12">
+                    <div class="mb-3">
+                        <label class="form-label" for="rangeCalendar">Range Calendar</label>
+                        <input type="text" class="form-control flatpickr-range flatpickr-input" name="range_calendar"
+                               id="rangeCalendar"
+                               placeholder="Select date.."
+                               readonly="readonly">
+                    </div>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary mt-3">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <canvas id="myChart" class=""></canvas>
+    </div>
+
+{% endblock %}
+
+{% block js %}
+    <script>
+        // flatpickr
+        flatpickr("#rangeCalendar", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+        });
+
+        const ctx = document.getElementById('myChart').getContext('2d');
+        const data = {
+            labels: ['Cancer', 'Rare Disease'],
+            datasets: [{
+                label: 'Cancer ',
+                data: [{{ cancer }}, {{ rare_disease }}],
+                backgroundColor: ['#FF6384', '#36A2EB'],
+                hoverBackgroundColor: ['#FF6384', '#36A2EB'],
+                borderWidth: 1
+            },
+                {
+                    label: 'Rare Disease',
+                    backgroundColor: '#36A2EB',
+                }
+            ]
+        }
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        font: {
+                            size: 40
+                        }
+                    }
+
+                },
+                title: {
+                    display: true,
+                    text: 'Cancer vs Rare Disease',
+                    padding: {
+                        top: 10,
+                        bottom: 30
+                    },
+                    font: {
+                        size: 40
+                    }
+                }
+            }
+        }
+
+        new Chart(ctx, {
+            type: 'bar',
+            data,
+            options
+        });
+
+    </script>
+    <style>
+        #myChart {
+            width: 100% !important;
+            height: 400px !important;
+            padding: 20px;
+
+        }
+    </style>
+
+{% endblock %}
