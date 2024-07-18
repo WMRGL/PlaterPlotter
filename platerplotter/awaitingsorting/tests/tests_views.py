@@ -431,3 +431,29 @@ class AssignSamplesToHoldingRackTestCase(TestCase):
         sample = Sample.objects.get(laboratory_sample_id='1234567890')
         self.assertTrue(sample.issue_identified)
         self.assertEqual(sample.issue_outcome, 'Not resolved')
+
+    def test_return_sample_without_issue(self):
+        gel_1004 = Gel1004Csv.objects.get(filename='test1004.csv')
+        sample = Sample.objects.get(laboratory_sample_id='1234567890')
+        response = self.client.post(reverse('awaitingsorting:assign_samples_to_holding_rack', kwargs={
+            'rack': 'SA12345678', 'gel1004': gel_1004.pk, 'holding_rack_id': 'HH12345678'}), {
+            'return_sample': '1234567890', 'return_holding_rack': 'PP12345678', 'return_rack': ''
+        }, follow=True)
+        self.assertContains(response, 'Kindly log issue to sample')
+
+    def test_return_sample_with_issue(self):
+        gel_1004 = Gel1004Csv.objects.get(filename='test1004.csv')
+        sample = Sample.objects.get(laboratory_sample_id='1234567890')
+        response = self.client.post(reverse('awaitingsorting:assign_samples_to_holding_rack', kwargs={
+            'rack': 'PP12345678'}), {
+                                        'log-issue': sample.pk, 'comment': 'issue identified'}, follow=True)
+        sample = Sample.objects.get(laboratory_sample_id='1234567890')
+        self.assertTrue(sample.issue_identified)
+        self.assertEqual(sample.issue_outcome, 'Not resolved')
+        response = self.client.post(reverse('awaitingsorting:assign_samples_to_holding_rack', kwargs={
+            'rack': 'SA12345678', 'gel1004': gel_1004.pk, 'holding_rack_id': 'HH12345678'}), {
+                                        'return_rack': [''], 'return_sample': '1234567890',
+                                        'return_holding_rack': 'PP12345670'}, follow=True)
+        self.assertContains(response, f"{sample} assigned to well ")
+
+
