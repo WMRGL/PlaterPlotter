@@ -1,10 +1,14 @@
 import json
 
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+
+from .forms import ProfileUpdateForm
 
 
 # Create your views here.
@@ -74,6 +78,24 @@ def logout_user(request):
     return HttpResponseRedirect('/')
 
 
+@login_required()
+def profile(request):
+    user = request.user
+
+    if request.method == 'POST':
+        form = ProfileUpdateForm(request.POST)
+        if form.is_valid():
+            print(form.cleaned_data)
+            user.first_name = form.cleaned_data['first_name']
+            user.last_name = form.cleaned_data['last_name']
+            user.save()
+            messages.success(request, f'Your account has been updated!')
+            return HttpResponseRedirect(reverse('users:profile'))
+
+    return render(request, 'users/profile.html', {'user': user})
+
+
+@login_required()
 def add_admin(request):
     context = {}
     if request.method == 'POST':
@@ -94,6 +116,7 @@ def add_admin(request):
     return render(request, 'users/admin.html', context)
 
 
+@login_required()
 def remove_admin(request, pk):
     user = User.objects.get(id=pk)
     group = Group.objects.get(name='Charts')

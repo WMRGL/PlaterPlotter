@@ -2,7 +2,6 @@ from datetime import date, datetime
 
 from django.contrib import messages
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
