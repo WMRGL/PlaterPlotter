@@ -23,7 +23,7 @@
                 <form class="form-inline justify-content-end" method="get" action=".">
                     <div class="form-group mx-sm-3 mb-2 ">
                         <label for="inputPassword2" class="sr-only">Holding Rack ID</label>
-                        <input type="text" class="form-control" name="q" id="inputPassword2" placeholder="Rack ID">
+                        <input type="text" class="form-control" name="q" id="inputPassword2" placeholder="Rack ID" autofocus>
                     </div>
                     <button type="submit" class="btn btn-primary mb-2">Go</button>
                 </form>
@@ -43,7 +43,6 @@
                         <th>Date of dispatch</th>
                         <th>Status</th>
                         <th>Discarded by</th>
-                        <th>Checked by</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -119,26 +118,6 @@
             </div>
         </div>
     {% endif %}
-
-    <div class="container-fluid">
-        <div class="pagination mt-3">
-    <span class="step-links">
-        {% if discard_racks.has_previous %}
-            <a href="?page=1">&laquo; first</a>
-            <a href="?page={{ discard_racks.previous_page_number }}">previous</a>
-        {% endif %}
-
-        <span class="current">
-            Page {{ discard_racks.number }} of {{ discard_racks.paginator.num_pages }}.
-        </span>
-
-        {% if discard_racks.has_next %}
-            <a href="?page={{ discard_racks.next_page_number }}">next</a>
-            <a href="?page={{ discard_racks.paginator.num_pages }}">last &raquo;</a>
-        {% endif %}
-    </span>
-        </div>
-    </div>
 
     <script>
 

@@ -2,6 +2,7 @@ from datetime import date, datetime
 
 from django.contrib import messages
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
@@ -14,11 +15,26 @@ from platerplotter.models import HoldingRack
 
 # Function to check if a plate is due for discard
 def is_discard_due(plate):
-    if plate:
-        dispatch_date = plate.gel_1008_csv.date_of_dispatch.date()
-        weeks = (date.today() - dispatch_date).days // 7
-        return weeks >= 10
-    return False
+    # Check if plate or necessary attributes are None
+    if plate is None or not hasattr(plate, 'gel_1008_csv') or not hasattr(plate.gel_1008_csv, 'date_of_dispatch'):
+        return False
+
+    # Ensure date_of_dispatch is not None and is a datetime or date
+    dispatch_date = plate.gel_1008_csv.date_of_dispatch
+    if dispatch_date is None:
+        return False
+
+    # If dispatch_date is datetime, convert to date
+    if isinstance(dispatch_date, datetime):
+        dispatch_date = dispatch_date.date()
+    elif not isinstance(dispatch_date, date):
+        return False
+
+    # Calculate the number of weeks since dispatch_date
+    today_date = date.today()
+    weeks = (today_date - dispatch_date).days // 7
+    return weeks >= 10
+
 
 
 @login_required()
@@ -54,7 +70,6 @@ def discards_index(request):
             selected_racks = request.POST.getlist('selected_rack')
             for rack_id in selected_racks:
                 obj = HoldingRack.objects.filter(holding_rack_id=rack_id).last()
-                # Update rack information after discard
                 obj.checked_by = discard_form.cleaned_data['checked_by']
                 obj.discarded = True
                 obj.discarded_by = current_user
@@ -63,13 +78,8 @@ def discards_index(request):
             messages.success(request, 'Holding Racks discarded successfully')
             return redirect('discards:discards_index')
 
-    # Pagination
-    paginator = Paginator(discard_racks, 100)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
-
     context = {
-        'discard_racks': page_obj,
+        'discard_racks': discard_racks,
         'discard_form': discard_form,
         'user': current_user
     }
