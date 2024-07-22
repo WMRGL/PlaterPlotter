@@ -85,7 +85,6 @@ def profile(request):
     if request.method == 'POST':
         form = ProfileUpdateForm(request.POST)
         if form.is_valid():
-            print(form.cleaned_data)
             user.first_name = form.cleaned_data['first_name']
             user.last_name = form.cleaned_data['last_name']
             user.save()
@@ -102,7 +101,7 @@ def add_admin(request):
         user_ids = request.POST.get('admins').split(",")
         for user in user_ids:
             user = User.objects.get(id=user)
-            group = Group.objects.get(name='Charts')
+            group, created = Group.objects.get_or_create(name='Charts')
             user.groups.add(group)
             user.save()
         return HttpResponseRedirect(reverse('users:add_admin'))
