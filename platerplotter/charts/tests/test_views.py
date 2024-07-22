@@ -16,6 +16,7 @@ def retrieve_samples_by_date(start_date, end_date):
     samples = Sample.objects.filter(sample_received_datetime__range=(start_date, end_date))
     return samples
 
+
 class Chart(TestCase):
 
     def setUp(self):

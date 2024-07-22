@@ -2,18 +2,26 @@ import json
 from datetime import datetime, timedelta
 
 from django.db.models import Count, Case, When, IntegerField, Q
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.shortcuts import render
 from django.views.generic import View, FormView, TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
 from platerplotter.models import Sample
 from . import forms
 
 
-class CancerRareDiseaseView(LoginRequiredMixin, FormView):
+class CancerRareDiseaseView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     template_name = 'charts/cancer_rd.html'
     form_class = forms.DateRangeForm
+
+    def test_func(self):
+        # Check if the user belongs to the 'Charts' group.
+        return self.request.user.groups.filter(name='Charts').exists()
+
+    def handle_no_permission(self):
+        # Custom handling when user doesn't have permission
+        return HttpResponseForbidden("You do not have permission to access this page.")
 
     def form_valid(self, form):
         date_range = form.cleaned_data['range_calendar'].split(' to ')
@@ -57,16 +65,23 @@ class CancerRareDiseaseView(LoginRequiredMixin, FormView):
         }
 
 
-class MonthlyKpiView(LoginRequiredMixin, FormView):
+class MonthlyKpiView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     form_class = forms.MonthForm
     template_name = 'charts/monthly_kpi.html'
     context = {}
+
+    def test_func(self):
+        # Check if the user belongs to the 'Charts' group.
+        return self.request.user.groups.filter(name='Charts').exists()
+
+    def handle_no_permission(self):
+        # Custom handling when user doesn't have permission
+        return HttpResponseForbidden("You do not have permission to access this page.")
 
     def get(self, request, *args, **kwargs):
         today = datetime.today()
         month = today.month
         year = today.year
-
         glh_list = self.get_glh(year, month)
         self.context['all_glhs'] = glh_list
         self.context['form'] = self.get_form()
@@ -121,10 +136,18 @@ class MonthlyKpiView(LoginRequiredMixin, FormView):
         return json.dumps(glhs_list)
 
 
-class MonthTotalView(LoginRequiredMixin, FormView):
+class MonthTotalView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     form_class = forms.MonthForm
     template_name = 'charts/monthly_total.html'
     context = {}
+
+    def test_func(self):
+        # Check if the user belongs to the 'Charts' group.
+        return self.request.user.groups.filter(name='Charts').exists()
+
+    def handle_no_permission(self):
+        # Custom handling when user doesn't have permission
+        return HttpResponseForbidden("You do not have permission to access this page.")
 
     def form_valid(self, form):
         date = form.cleaned_data['month']
@@ -156,10 +179,18 @@ class MonthTotalView(LoginRequiredMixin, FormView):
         return glhs_list
 
 
-class WeekTotalView(LoginRequiredMixin, FormView):
+class WeekTotalView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     template_name = 'charts/week_total.html'
     form_class = forms.WeekForm
     context = {}
+
+    def test_func(self):
+        # Check if the user belongs to the 'Charts' group.
+        return self.request.user.groups.filter(name='Charts').exists()
+
+    def handle_no_permission(self):
+        # Custom handling when user doesn't have permission
+        return HttpResponseForbidden("You do not have permission to access this page.")
 
     def form_valid(self, form):
         monday = form.cleaned_data['week']
