@@ -4,7 +4,7 @@
     <div class="container-fluid">
         {% if discards %}
             <div class="container-fluid">
-                <table class="table table-bordered" id="dataTable">
+                <table class="table table-bordered" id="dataTable3">
                     <thead>
                     <tr>
                         <th>Holding rack ID</th>
@@ -40,7 +40,7 @@
 
     <script>
         $(document).ready(function () {
-            var table = $('#dataTable').DataTable();
+            const table = $('#dataTable3').DataTable();
 
             function foco() {
                 $('div.dataTables_filter input', table.table().container()).focus();

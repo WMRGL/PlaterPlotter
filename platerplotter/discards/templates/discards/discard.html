@@ -35,7 +35,7 @@
         <div class="container-fluid">
             <form id="discardForm" action="." method="post">
                 {% csrf_token %}
-                <table class="table table-bordered" id="dataTable">
+                <table class="table table-bordered" id="dataTable3">
                     <thead>
                     <tr>
                         <th>Select</th>
@@ -160,4 +160,14 @@
 
     </script>
 
+{% endblock %}
+
+{% block javascript %}
+
+    <script>
+        $(document).ready(function () {
+            $('#dataTable3').DataTable({
+            });
+        });
+    </script>
 {% endblock %}
