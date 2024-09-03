@@ -1,9 +1,14 @@
+import django 
+from django.conf import settings
+
 from datetime import date, datetime
 from django.contrib.auth.models import User
 from django.db import transaction
 from platerplotter.models import Plate, HoldingRack
 from discards.views import is_discard_due
 
+setings.configure()
+django.setup()
 
 user = User.objects.get(username="RGLBIO")
 holding_racks = HoldingRack.objects.filter(discarded=False)
@@ -26,4 +31,3 @@ with transaction.atomic():
         except Exception as e:
             print(f"Error updating record: {e}")
             break
-        
