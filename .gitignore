@@ -8,6 +8,5 @@
 /platerplotter/platerplotter/config/config.txt
 .idea
 g_drive/
-**/migrations/
 .env
 
