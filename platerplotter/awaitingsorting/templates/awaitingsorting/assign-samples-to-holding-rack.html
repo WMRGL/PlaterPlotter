@@ -1,0 +1,539 @@
+{% extends 'platerplotter/base.html' %}
+{% load bootstrap4 %}
+{% load static %}
+{% block title %}
+    Determine wells - {{ block.super }}
+{% endblock title %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+    <div class='container-fluid'>
+        {% if holding_rack %}
+            <div class="row">
+                <div class="col-3">
+                    <h3>Holding rack</h3>
+                    <strong>ID:</strong> {{ holding_rack.holding_rack_id }} &nbsp|&nbsp
+                    <strong>Area:</strong> {{ holding_rack.disease_area }} <br>
+                    <strong>Type:</strong> {{ holding_rack.holding_rack_type }} &nbsp|&nbsp
+                    <strong>Live Sample Counter: </strong> <span id="total_sample"></span>
+                </div>
+                <div class="col-6">
+                    <div align='center'>
+                        <form role='form' action='' method="POST" , class='justify-content-center'>
+                            {% csrf_token %}
+                            <div class="form-group">
+                                {% if rack %}
+                                    <a class="btn btn-primary btn-lg"
+                                       href="{% url 'awaitingsorting:assign_samples_to_holding_rack' gel1004=rack.gel_1004_csv.pk rack=rack.receiving_rack_id %}"
+                                       role="button">Change Holding Rack</a>
+                                {% elif problem_holding_rack %}
+                                    <a class="btn btn-primary btn-lg"
+                                       href="{% url 'awaitingsorting:assign_samples_to_holding_rack' problem_holding_rack.holding_rack_id %}"
+                                       role="button">Change Holding Rack</a>
+                                {% endif %}
+                                {% if holding_rack.ready_to_plate %}
+                                    <button type="submit" name='reopen-rack' value='{{ holding_rack.pk }}'
+                                            class="btn btn-success btn-lg">Reopen Rack
+                                    </button>
+                                {% else %}
+                                    <button type="submit" name='rack-scanner' value='{{ holding_rack.pk }}'
+                                            class="btn btn-success btn-lg">Rack Scanner
+                                    </button>
+                                    {% if problem_samples_in_holding_rack %}
+                                        <button type="submit" name='ready' value='{{ holding_rack.pk }}'
+                                                class="btn btn-success btn-lg" disabled
+                                                title="Holding rack contains unresolved problem samples">Ready to Plate
+                                        </button>
+                                    {% else %}
+                                        <button type="submit" name='ready' value='{{ holding_rack.pk }}'
+                                                class="btn btn-success btn-lg">Ready to Plate
+                                        </button>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div align='right'>
+                        <h4>Scan or type sample ID</h4>
+                    </div>
+                    <form role='form' action='' method="POST" , class='form-inline float-right'>
+                        {% csrf_token %}
+                        <input type="hidden" id="well" name="well">
+                        {{ sample_select_form|crispy }}
+                        <div class="form-group">
+                            <div class="col-lg-5 col-sm-offset-5">
+                                <button type="submit" name='sample' class="btn btn-primary">Go</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% if holding_rack.ready_to_plate %}
+                <p>Holding rack ready to plate.</p>
+            {% else %}
+                <div class="row">
+                    <div class="col-4">
+                        <div class="tab-pane active">
+                            <table class="plate">
+                                <tbody>
+                                <tr>
+                                    <th></th>
+                                    {% for column in holding_rack_columns %}
+                                        <th>{{ column }}</th>
+                                    {% endfor %}
+                                </tr>
+                                {% for row in holding_rack_rows %}
+                                    <tr>
+                                        <th>{{ row }}</th>
+                                        {% for column in holding_rack_columns %}
+                                            {% if row|add:column in assigned_well_list %}
+                                                {% for sample in holding_rack_samples %}
+                                                    {% if row|add:column == sample.holding_rack_well.well_id %}
+                                                        {% if latest_well == sample.holding_rack_well.well_id %}
+                                                            <td title='Position:{{ row|add:column }}
+                                                                Laboratory ID: {{ sample.laboratory_sample_id }}
+                                                                Participant ID: {{ sample.participant_id }}
+                                                                Group ID: {{ sample.group_id }}'
+                                                                class="assigned" id="current-sample"
+                                                                style="background-color: green">
+                                                                <div class=" tooltip hidden"></div>
+                                                            </td>
+                                                        {% else %}
+                                                            <td title='Position:{{ row|add:column }}
+                                                                Laboratory ID: {{ sample.laboratory_sample_id }}
+                                                                Participant ID: {{ sample.participant_id }}
+                                                                Group ID: {{ sample.group_id }}'
+                                                                class="assigned" id="current-sample"
+                                                                style="background-color: blue">
+                                                                <div class=" tooltip hidden"></div>
+                                                            </td>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% else %}
+                                                <td class='unassigned' id="{{ row|add:column }}"
+                                                    onclick="myFunction('{{ row|add:column }}')"></td>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class='col-8' style="height: 350px; overflow-y:scroll;">
+                        <div class="tab-pane active">
+                            <table class="table table-bordered" id="dataTable">
+                                <thead>
+                                <tr>
+                                    <th>Holding Rack Well</th>
+                                    <th>Lab Sample ID</th>
+                                    <th>Participant ID</th>
+                                    <th>Group ID</th>
+                                    <th>Issue Status</th>
+                                    <th>Log Issue</th>
+                                    <th>Return to GLH Rack</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for sample, form in holding_rack_samples_form_dict.items %}
+                                    <tr>
+                                        <td>{{ sample.holding_rack_well.well_id }}</td>
+                                        <td>{{ sample.laboratory_sample_id }}</td>
+                                        <td>{{ sample.participant_id }}</td>
+                                        <td>{{ sample.group_id }}</td>
+                                        <td>{{ sample.issue_outcome }}</td>
+                                        <td>
+                                            {% if sample.issue_outcome %}
+                                                <a class='btn btn-warning' href=# data-toggle="modal"
+                                                   data-target="#editIssueModal-{{ sample.pk }}">Edit Issue</a>
+                                            {% else %}
+                                                <a class='btn btn-primary' href=# data-toggle="modal"
+                                                   data-target="#editIssueModal-{{ sample.pk }}">Log Issue</a>
+                                            {% endif %}
+                                        </td>
+                                        {% comment %}
+                                        <td><a class="btn btn-primary"
+                                               href="{% url 'awaitingsorting:delete_sample' rack.gel_1004_csv.pk rack.receiving_rack_id holding_rack.holding_rack_id sample.laboratory_sample_id %}">Return</a>
+                                        </td>
+                                        {% endcomment %}
+                                        <td>
+
+                                                <button type="button" class="btn btn-primary"
+                                                        value="{{ sample.laboratory_sample_id }}"
+                                                        data-toggle="modal"
+                                                        data-target="#returnSampleModal-{{ sample.pk }}"
+                                                        onclick="modalAutofocus({{ sample.pk }})" data-autofocus
+                                                >Return Sample </button>
+
+                                            <!-- Modal -->
+                                            <div class="modal fade" id="returnSampleModal-{{ sample.pk }}" tabindex="-1"
+                                                 role="dialog"
+                                                 aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="exampleModalLabel">Return
+                                                                Sample</h5>
+                                                            <button type="button" class="close" data-dismiss="modal"
+                                                                    aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <form action="" method="post" id="form-{{ sample.pk }}">
+                                                                {% csrf_token %}
+                                                                <div class="form-group">
+                                                                    <label for="returnForm-{{ sample.pk }}">Lab Sample
+                                                                        ID:</label>
+                                                                    <input type="text" id="returnForm-{{ sample.pk }}"
+                                                                           class="form-control" name="return_sample"
+                                                                    >
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="returnRack-{{ sample.pk }}">Problem Rack
+                                                                        ID:</label>
+                                                                    <input type="text" id="returnRack-{{ sample.pk }}"
+                                                                           class="form-control"
+                                                                           name="return_holding_rack" required>
+                                                                </div>
+
+                                                                <div role="alert" class="mt-3"
+                                                                     id="returnResult-{{ sample.pk }}">
+                                                                </div>
+                                                            </form>
+                                                            <button class="btn btn-primary mx-3"
+                                                                    id="confirmSample-{{ sample.pk }}"
+                                                                    onclick="confirmReturnSample('{{ sample.laboratory_sample_id }}','{{ sample.pk }}')">
+                                                                Confirm
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button form="form-{{ sample.pk }}" type="submit"
+                                                                    class="btn btn-success d-none"
+                                                                    name="return_rack"
+                                                                    id="returnSampleButton-{{ sample.pk }}"
+                                                            >Submit
+                                                            </button>
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Problem Modal -->
+                                        </td>
+
+                                        <div id='editIssueModal-{{ sample.pk }}' class="modal fade" role="dialog">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h4 class="modal-title">Log issue
+                                                            for {{ sample.laboratory_sample_id }}</h4>
+                                                        <button type="button" class="close" data-dismiss="modal"> X
+                                                        </button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <strong>Participant ID:</strong> {{ sample.participant_id }}
+                                                        <form role='form' action='' method="POST" class='form'>
+                                                            {% csrf_token %}
+                                                            {{ form|crispy }}
+                                                            <br>
+                                                            <div class="form-group">
+                                                                <div class="float-right">
+                                                                    <button type="submit" name='log-issue'
+                                                                            value='{{ sample.pk }}'
+                                                                            class="btn btn-primary">Edit
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="row">
+                <div class="col-6">
+                    <h3>Determine plate well locations for samples</h3>
+                    <p>Scan or select holding rack ID and then scan sample to determine well</p>
+                </div>
+                <div class="col-6">
+                    <div align='right'>
+                        <h4>Scan or type Holding Rack</h4>
+                    </div>
+                    <form role='form' action='' method="POST" class='form-inline float-right'>
+                        {% csrf_token %}
+                        {{ holding_rack_form|crispy }}
+                        <div class="form-group">
+                            <div class="col-lg-5 col-sm-offset-5">
+                                <button type="submit" name='holding' class="btn btn-primary">Go</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    {% if current_holding_racks_dict %}
+                        <h5>Current available holding racks</h5>
+                        <div class="tab-pane active">
+                            <table class="table table-bordered" id="dataTable">
+                                <thead>
+                                <tr>
+                                    <th>Rack ID</th>
+                                    <th>Disease Area</th>
+                                    <th>Sample Type</th>
+                                    <th>Number of Samples</th>
+                                    <th>Half Plate</th>
+                                    <th>Full Plate</th>
+                                    <th>Ready to Plate</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for holding_rack, count in current_holding_racks_dict.items %}
+                                    <tr>
+                                        {% if rack %}
+
+                                            <td><a class="result-link"
+                                                   href="{% url 'awaitingsorting:assign_samples_to_holding_rack' gel1004=rack.gel_1004_csv.pk rack=rack.receiving_rack_id holding_rack_id=holding_rack.holding_rack_id %}">{{ holding_rack.holding_rack_id }}</a>
+                                            </td>
+                                        {% elif problem_holding_rack %}
+                                            <td>
+                                                <a href="{% url 'awaitingsorting:assign_problem_samples_to_holding_rack' rack=problem_holding_rack.holding_rack_id holding_rack_id=holding_rack.holding_rack_id %}"> {{ holding_rack.holding_rack_id }}</a>
+                                            </td>
+                                        {% endif %}
+                                        <td>{{ holding_rack.disease_area }}</td>
+                                        <td>{{ holding_rack.holding_rack_type }}</td>
+                                        <td>{{ count }}</td>
+                                        <td>
+                                            {% if holding_rack.half_full %}
+                                                <i class="fas fa-check-circle" style="color:green"></i>
+                                            {% else %}
+                                                <i class="fas fa-times-circle" style="color:red"></i>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if holding_rack.full %}
+                                                <i class="fas fa-check-circle" style="color:green"></i>
+                                            {% else %}
+                                                <i class="fas fa-times-circle" style="color:red"></i>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if holding_rack.ready_to_plate %}
+                                                <i class="fas fa-check-circle" style="color:green"></i>
+                                            {% else %}
+                                                <i class="fas fa-times-circle" style="color:red"></i>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p>No current holding racks, please scan a new rack to start</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+        <hr>
+        <div class="row">
+            <div class="col-4">
+                <h3>Samples awaiting well assignment</h3>
+                {% if problem_holding_rack %}
+                    <strong>Problem Rack ID:</strong> {{ problem_holding_rack.holding_rack_id }}
+                {% else %}
+                    <strong>GLH Rack ID:</strong> {{ rack.receiving_rack_id }}
+                {% endif %}
+            </div>
+            <div class="col-4">
+                <div align='center'>
+                    <a class="btn btn-primary btn-lg"
+                       href="{% url 'awaitingsorting:awaiting_holding_rack_assignment' %}" role="button">Change Rack</a>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="tab-pane active">
+                    <table class="table table-bordered" id="dataTable2">
+                        <thead>
+                        <tr>
+                            <th>Rack Well</th>
+                            <th>Participant ID</th>
+                            <th>Group ID</th>
+                            <th>Priority</th>
+                            <th>Disease Area</th>
+                            <th>Sample Type</th>
+                            <th>Tissue Type</th>
+                            <th>Lab Sample ID</th>
+                            <th>Sample Volume</th>
+                            <th>Log Issue</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for sample, form in sample_form_dict.items %}
+                            <tr>
+                                {% if problem_holding_rack %}
+                                    <td>{{ sample.holding_rack_well.well_id }}</td>
+                                {% else %}
+                                    <td>{{ sample.receiving_rack_well }}</td>
+                                {% endif %}
+                                <td>{{ sample.participant_id }}</td>
+                                <td>{{ sample.group_id }}</td>
+                                <td>{{ sample.priority }}</td>
+                                <td>{{ sample.disease_area }}</td>
+                                <td>{{ sample.sample_type }}</td>
+                                <td>{{ sample.clin_sample_type }}</td>
+                                <td>{{ sample.laboratory_sample_id }}</td>
+                                <td>{{ sample.laboratory_sample_volume }}</td>
+                                {% if sample.issue_identified %}
+                                    <td>
+                                        <a class='btn btn-warning' href=# data-toggle="modal"
+                                           data-target="#editIssueModal-{{ sample.pk }}">Edit Issue</a>
+                                    </td>
+                                    <div id='editIssueModal-{{ sample.pk }}' class="modal fade" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h4 class="modal-title">Log issue
+                                                        for {{ sample.laboratory_sample_id }}</h4>
+                                                    <button type="button" class="close" data-dismiss="modal"> X</button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <strong>Participant ID:</strong> {{ sample.participant_id }}
+                                                    <form role='form' action='' method="POST" class='form'>
+                                                        {% csrf_token %}
+                                                        {{ form|crispy }}
+                                                        <br>
+                                                        <div class="form-group">
+                                                            <div class="float-right">
+                                                                <button type="submit" name='log-issue'
+                                                                        value='{{ sample.pk }}' class="btn btn-primary">
+                                                                    Edit
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <td>
+                                        <a class='btn btn-primary' href=# data-toggle="modal"
+                                           data-target="#logIssueModal-{{ sample.pk }}">Log Issue</a>
+                                    </td>
+                                    <div id='logIssueModal-{{ sample.pk }}' class="modal fade" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h4 class="modal-title">Log issue
+                                                        for {{ sample.laboratory_sample_id }}</h4>
+                                                    <button type="button" class="close" data-dismiss="modal"> X</button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <strong>Participant ID:</strong> {{ sample.participant_id }}
+                                                    <form role='form' action='' method="POST" , class='form'>
+                                                        {% csrf_token %}
+                                                        {{ form|crispy }}
+                                                        <br>
+                                                        <div class="form-group">
+                                                            <div class="float-right">
+                                                                <button type="submit" name='log-issue'
+                                                                        value='{{ sample.pk }}' class="btn btn-primary">
+                                                                    Submit
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let form = document.getElementById('well');
+        form.value = '';
+
+        const all_samples = document.getElementsByClassName('assigned');
+        const total_current_samples = document.getElementById('total_sample');
+        total_current_samples.textContent = all_samples.length;
+
+        function myFunction(position) {
+            const unassignedWells = document.getElementsByClassName('unassigned')
+            let form = document.getElementById('well');
+
+            for (let i = 0; i < unassignedWells.length; i++) {
+                unassignedWells[i].style.backgroundColor = '#e9ecef'
+            }
+            if (position === form.value) {
+                form.value = '';
+            } else {
+                form.value = position;
+                document.getElementById(position).style.backgroundColor = "red";
+                console.log(position);
+            }
+        }
+
+        function confirmReturnSample(currentSample, modalId) {
+            let formSample = document.querySelector(`#returnForm-${modalId}`);
+            const sampleResult = document.querySelector(`#returnResult-${modalId}`);
+            const returnSampleBtn = document.querySelector(`#returnSampleButton-${modalId}`);
+            const confirmSampleBtn = document.querySelector(`#confirmSample-${modalId}`);
+
+            if (formSample.value === currentSample) {
+                if (sampleResult.classList.contains('alert-danger')) {
+                    sampleResult.classList.remove('alert-danger');
+                }
+                if (returnSampleBtn.classList.contains('d-none')) {
+                    returnSampleBtn.classList.remove('d-none');
+                }
+
+                sampleResult.classList.add("alert", "alert-success");
+                sampleResult.innerHTML = "Samples Confirmed, kindly click on the submit button";
+                confirmSampleBtn.classList.add('d-none');
+
+            } else {
+                if (sampleResult.classList.contains('alert-success')) {
+                    sampleResult.classList.remove('alert-success');
+                }
+                if (!returnSampleBtn.classList.contains('d-none')) {
+                    returnSampleBtn.classList.add('d-none');
+                }
+                sampleResult.classList.add("alert", "alert-danger");
+                sampleResult.innerHTML = "Samples not confirm, kindly try again";
+            }
+        }
+
+        function modalAutofocus(modalId) {
+            $('#returnSampleModal-' + modalId).on('shown.bs.modal', function () {
+                $(this).find('#returnForm-' + modalId).focus();
+            });
+        }
+    </script>
+{% endblock content %}
+
+
+

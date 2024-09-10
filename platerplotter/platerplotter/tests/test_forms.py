@@ -3,8 +3,10 @@ from django.test import TestCase
 from django.utils import timezone
 from datetime import datetime
 from platerplotter.models import Plate
-from platerplotter.forms import (HoldingRackForm, SampleSelectForm, PlatingForm, 
+from platerplotter.forms import (HoldingRackForm, PlatingForm,
 	Gel1008Form, LogIssueForm, ResolveIssueForm, PlateSelectForm)
+from problemsamples.forms import SampleSelectForm
+
 
 class FormTestCase(TestCase):
 	def setUp(self):

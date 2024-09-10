@@ -1,0 +1,69 @@
+{% extends 'platerplotter/base.html' %}
+{% block title %}
+    Acknowledge Samples - {{ block.super }}
+{% endblock title %}
+
+
+{% block content %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <h3>Samples ready for plating</h3>
+        <p>Click on holding rack ID to plate samples and assign plate ID</p>
+      </div>
+    <div class="col-12">
+      <div class="tab-pane active">
+        <br>
+          <table class="table table-bordered" id="dataTableReadyForPlating">
+            <thead>
+              <tr>
+                <th>Holding Rack ID</th>
+                <th>Sample Type</th>
+                <th>Half Plate</th>
+                <th>Full Plate</th>
+                <th>Number of Samples</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for rack in ready_to_plate %}
+            <tr>
+              <td><a href="{% url 'holdingracks:plate_holding_rack' holding_rack_pk=rack.pk %}">{{ rack.holding_rack_id }}</a></td>
+              <td>{{ rack.holding_rack_type }}</td>
+              <td>
+                {% if rack.half_full %}
+                  <i class="fas fa-check-circle" style="color:green"></i>
+                {% else %}
+                  <i class="fas fa-times-circle" style="color:red"></i>
+                {% endif %}
+              </td>
+              <td>
+                {% if rack.full %}
+                  <i class="fas fa-check-circle" style="color:green"></i>
+                {% else %}
+                  <i class="fas fa-times-circle" style="color:red"></i>
+                {% endif %}
+              </td>
+              <td>{{ rack.sample_count }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  </div>
+{% endblock content %}
+
+
+{% block javascript %}
+  <script>
+    $(document).ready( function () {
+        var table = $('#dataTable').DataTable();
+        function foco(){
+        $('div.dataTables_filter input', table.table().container()).focus();
+        }
+        setTimeout(foco, 1)
+        });
+  </script>
+
+{% endblock %}

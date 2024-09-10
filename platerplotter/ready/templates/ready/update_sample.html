@@ -1,0 +1,20 @@
+{% extends 'platerplotter/base.html' %}
+
+
+{% block content %}
+   <div class="container">
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="exampleFormControlTextarea1">Add Comment</label>
+            {% if sample.comment %}
+            <textarea class="form-control" id="exampleFormControlTextarea1" name="non_issue_comment" rows="3">{{ sample.non_issue_comment }}</textarea>
+            {% else %}
+            <textarea class="form-control" id="exampleFormControlTextarea1" name="non_issue_comment" rows="3"></textarea>
+            {% endif %}
+        </div>
+        <button class="btn btn-primary" type="submit">Update</button>
+    </form>
+</div>
+
+{% endblock %}

@@ -1,9 +1,12 @@
 /platerplotter/db.sqlite3
 *.pyc
 *.pyo
-/platerplotter/platerplotter/migrations/*
 /platerplotter/webapp/local_settings.py
 /GEL1004/*
 /GEL1005/*
 /GEL1008/*
 /platerplotter/platerplotter/config/config.txt
+.idea
+g_drive/
+.env
+

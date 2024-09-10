@@ -3,9 +3,12 @@ import pytz
 from django import forms
 from django.forms import ModelForm
 from datetime import datetime
-from platerplotter.models import Plate, Sample, Gel1008Csv
+from platerplotter.models import Sample
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+
+from platerplotter.models import Plate, Gel1008Csv
+
 
 class HoldingRackForm(forms.Form):
 	holding_rack_id = forms.CharField(label='', widget=forms.TextInput(attrs={'autofocus': 'autofocus'}))
@@ -17,15 +20,6 @@ class HoldingRackForm(forms.Form):
 		else:
 			return holding_rack_id.upper()
 
-class SampleSelectForm(forms.Form):
-	lab_sample_id = forms.CharField(label='', widget=forms.TextInput(attrs={'autofocus': 'autofocus'}))
-
-	def clean_lab_sample_id(self):
-		lab_sample_id = self.cleaned_data['lab_sample_id']
-		if not re.match(r'^\d{10}$', lab_sample_id):
-			raise ValidationError("Invalid Laboratory Sample ID")
-		else:
-			return lab_sample_id
 
 class PlateSelectForm(forms.Form):
 	plate_id = forms.CharField(label='', widget=forms.TextInput(attrs={'autofocus': 'autofocus'}))
@@ -37,21 +31,24 @@ class PlateSelectForm(forms.Form):
 		else:
 			return plate_id.upper()
 
+
 class LogIssueForm(forms.ModelForm):
 	class Meta:
 		model = Sample
 		fields = ('comment',)
-		labels = {'comment': "",}
-		widgets = {'comment': forms.Textarea(attrs={'rows':4, 'cols':50}),}
+		labels = {'comment': "", }
+		widgets = {'comment': forms.Textarea(attrs={'rows': 4, 'cols': 50}), }
+
 
 class ResolveIssueForm(forms.ModelForm):
 	class Meta:
 		model = Sample
-		fields = ('comment', 
-				'issue_outcome',)
-		labels = {'comment': "", 
-				'issue_outcome' : "Outcome",}
-		widgets = {'comment': forms.Textarea(attrs={'rows':4, 'cols':50}),}
+		fields = ('comment',
+				  'issue_outcome',)
+		labels = {'comment': "",
+				  'issue_outcome': "Outcome", }
+		widgets = {'comment': forms.Textarea(attrs={'rows': 4, 'cols': 50}), }
+
 
 class PlatingForm(ModelForm):
 	class Meta:
@@ -72,12 +69,13 @@ class PlatingForm(ModelForm):
 		else:
 			raise ValidationError("Required field.")
 
+
 class Gel1008Form(ModelForm):
 	class Meta:
 		model = Gel1008Csv
 		fields = ('consignment_number', 'date_of_dispatch')
 		widgets = {
-			'date_of_dispatch': forms.DateInput(attrs={'type': 'date','data-provide': 'datepicker'}),
+			'date_of_dispatch': forms.DateInput(attrs={'type': 'date', 'data-provide': 'datepicker'}),
 		}
 		labels = {
 			'consignment_number': "Consignment Number",

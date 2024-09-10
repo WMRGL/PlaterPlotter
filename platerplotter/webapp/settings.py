@@ -27,6 +27,7 @@ STATIC_DIR = os.path.join(BASE_DIR, 'webapp/static')
 STATIC_ROOT = os.path.join(BASE_DIR, 'webapp/static_files')
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'webapp/static'),
+    os.path.join(BASE_DIR, 'charts/static')
 )
 
 # Application definition
@@ -40,8 +41,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'notifications',
+    'problemsamples',
+    'awaitingsorting',
+    'holdingracks',
+    'ready',
+    'discards',
     'bootstrap4',
     'easyaudit',
+    'crispy_bootstrap4',
+    'charts',
+    'users'
     
 ]
 
@@ -118,6 +128,8 @@ STATIC_URL = '/static/'
 LOGIN_REDIRECT_URL = 'index'
 LOGIN_URL = '/login/'
 LOGOUT_REDIRECT_URL = 'index'
+
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 CSRF_COOKIE_NAME = 'platerplotter_token'
 SESSION_COOKIE_NAME = 'platerplotter_session'

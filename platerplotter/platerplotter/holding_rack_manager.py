@@ -1,5 +1,5 @@
-from platerplotter.models import HoldingRack, HoldingRackWell, Plate, Sample
 from django.contrib import messages
+from platerplotter.models import Sample, HoldingRackWell, Plate
 
 class HoldingRackManager():
 

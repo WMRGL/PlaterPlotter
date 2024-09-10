@@ -1,0 +1,88 @@
+{% extends 'charts/base.html' %}
+{% load static %}
+{% block title %} Manage Admins {% endblock %}
+{% block breadcrumb %} manage charts viewers {% endblock %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-body">
+            <div id="datatables-responsive_wrapper" class="dataTables_wrapper dt-bootstrap5 no-footer">
+                <div class="row dt-row">
+                    <div class="col-sm-12">
+                        <table id="datatables-responsive" class="table table-striped dataTable no-footer dtr-inline"
+                               style="width: 100%;" aria-describedby="datatables-responsive_info">
+                            <thead>
+                            <tr>
+                                <th class="sorting sorting_asc" tabindex="0" aria-controls="datatables-responsive"
+                                    aria-sort="ascending"
+                                    aria-label="Name: activate to sort column descending">Name
+                                </th>
+                                <th class="sorting" tabindex="0" aria-controls="datatables-responsive"
+                                    aria-label="Position: activate to sort column ascending">Email
+                                </th>
+                                <th class="sorting" tabindex="0" aria-controls="datatables-responsive"
+                                    aria-label="Office: activate to sort column ascending">Remove Charts Privileges
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for admin in admins %}
+                                <tr>
+                                    <td class="sorting_1 dtr-control">{{ admin.get_full_name }}</td>
+                                    <td>{{ admin.email }}</td>
+                                    <td>
+                                        <a href="{% url 'users:remove_admin' admin.pk %}" class="admin-minus"
+                                           style="color: red">
+                                            <i data-feather="user-minus"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <h4>Add a Chart Viewer</h4>
+                <div class="container-admin">
+                    <form action="" method="post" id="admin_form">
+                        {% csrf_token %}
+                        <div class="custom-select">
+                            <div class="select-box">
+                                <input type="text" name="admins" class="tags_input" id="" hidden required>
+                                <div class="selected-options">
+
+                                </div>
+                                <div class="arrow">
+                                    <i class="fa fa-angle-down"></i>
+                                </div>
+                            </div>
+                            <div class="options">
+                                <div class="option-search-tags">
+                                    <input type="text" class="search-tags" placeholder="search user">
+                                    <button type="button" class="clear"><i class="fa fa-close"></i></button>
+                                </div>
+                                {% for user in eligible_users %}
+                                    <div class="option " data-value="{{ user.id }}">{{ user }}</div>
+                                {% endfor %}
+                                <div class="no-result-message" style="display: none">No user found</div>
+                            </div>
+                            <span class="tag_error_message error"></span>
+                        </div>
+                    </form>
+                    <button form="admin_form" class="btn-submit" type="submit">Submit</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block js %}
+    <script>
+        $(document).ready(function () {
+            $('#datatables-responsive').DataTable();
+        });
+    </script>
+    <script src="{% static 'js/custom.js' %}"></script>
+{% endblock %}
