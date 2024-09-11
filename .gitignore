@@ -9,4 +9,4 @@
 .idea
 g_drive/
 .env
-
+__pycache__/
