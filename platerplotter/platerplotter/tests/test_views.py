@@ -136,7 +136,7 @@ class ImportAcksTestCase(TestCase):
 		self.login = self.client.login(username=self.username, password=self.password)
 
 	def test_import_acks(self):
-		response = self.client.get(reverse(import_acks))
+		response = self.client.get(reverse(import_acks, kwargs= {'test_status': True}))
 		self.assertEqual(response.status_code, 200)
 		self.assertTemplateUsed(response, 'platerplotter/import-acks.html')
 		self.assertContains(response, 'Unacknowledged Racks')

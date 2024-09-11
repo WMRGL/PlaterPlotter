@@ -2,7 +2,7 @@ import json
 from datetime import datetime, timedelta
 
 import pytz
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.db.models import Q
 from django.test import TestCase, Client
 from django.urls import reverse
@@ -24,8 +24,12 @@ class Chart(TestCase):
         self.username = 'testuser'
         self.password = 'testing12345'
         self.user = User.objects.create_user(username=self.username, password=self.password)
+        charts_group, created = Group.objects.get_or_create(name='Charts')
+        self.user.groups.add(charts_group)
         self.user.save()
         self.client.login(username=self.username, password=self.password)
+
+
 
         gel_1005_csv = Gel1005Csv.objects.create(filename='test1005.csv',
                                                  report_generated_datetime=datetime.now(pytz.timezone('UTC')))
