@@ -91,6 +91,12 @@ python platerplotter/manage.py runserver 0.0.0.0:8000
 ```
 The application can be accessed by navigating to 127.0.0.1:8000 in a browser on the same machine. The super user credentials can be used to log in. Please note, the application functions best when using the Google Chrome browser. 
 
+**Data Visualizations Group**
+
+Only users in the Charts group can view the data visualization, you will need to create a new user group called Charts using this link:
+http://127.0.0.1:8000/admin/auth/group/add/
+
+Note: Only users with staff status can add users to the Charts group.
 ## Branching strategy
 
 - A new development branch must be created for each development
