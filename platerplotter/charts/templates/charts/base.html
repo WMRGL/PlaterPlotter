@@ -33,7 +33,7 @@
 
     <div class="main">
         <nav class="navbar navbar-expand navbar-light navbar-bg">
-            <a class="sidebar-toggle js-sidebar-toggle">
+            <a href="{% url 'index' %}" class="sidebar-toggle js-sidebar-toggle">
                 <i class="hamburger align-self-center"></i>
             </a>
 
@@ -82,7 +82,7 @@
                         <a class="dropdown-item" href="{% url 'discards:all_discards_view' %}">Discarded</a>
                     </div>
                 </li>
-                {% if user|has_group:"Charts" or user.is_staff %}
+
                     <li class="nav-item dropdown ">
                         <a class="nav-link dropdown-toggle" href="#" id="chartsDropdown" role="button"
                            data-bs-toggle="dropdown" aria-haspopup="true"
@@ -91,15 +91,17 @@
                         </a>
                         <div class="dropdown-menu" aria-labelledby="chartsDropdown">
                             <a class="dropdown-item" href="{% url 'charts:week_total' %}">Weekly KPI</a>
-                            <a class="dropdown-item" href="{% url 'charts:kpi' %}">Monthly KPI</a>
-                            <a class="dropdown-item" href="{% url 'charts:month_total' %}">Monthly Total KPI</a>
-                            <a class="dropdown-item" href="{% url 'charts:cancer_rd' %}">Cancer and Rare Disease</a>
+                            {% if user|has_group:"Charts" or user.is_staff %}
+                                <a class="dropdown-item" href="{% url 'charts:kpi' %}">Monthly KPI</a>
+                                <a class="dropdown-item" href="{% url 'charts:month_total' %}">Monthly Total KPI</a>
+                                <a class="dropdown-item" href="{% url 'charts:cancer_rd' %}">Cancer and Rare Disease</a>
+                            {% endif %}
                         </div>
                     </li>
-                {% endif %}
-                {% if user.is_staff %}
+
+                {% if user|has_group:"Charts" or user.is_staff %}
                     <li class="nav-item px-2">
-                        <a class="nav-link " href="{% url 'users:add_admin' %}">Charts Viewers</a>
+                        <a class="nav-link " href="{% url 'users:add_admin' %}">KPI Viewers</a>
                     </li>
                 {% endif %}
             </ul>

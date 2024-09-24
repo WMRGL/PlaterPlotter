@@ -179,18 +179,10 @@ class MonthTotalView(LoginRequiredMixin, UserPassesTestMixin, FormView):
         return glhs_list
 
 
-class WeekTotalView(LoginRequiredMixin, UserPassesTestMixin, FormView):
+class WeekTotalView(LoginRequiredMixin, FormView):
     template_name = 'charts/week_total.html'
     form_class = forms.WeekForm
     context = {}
-
-    def test_func(self):
-        # Check if the user belongs to the 'Charts' group.
-        return self.request.user.groups.filter(name='Charts').exists()
-
-    def handle_no_permission(self):
-        # Custom handling when user doesn't have permission
-        return HttpResponseForbidden("You do not have permission to access this page.")
 
     def form_valid(self, form):
         monday = form.cleaned_data['week']
