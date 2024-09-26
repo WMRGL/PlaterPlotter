@@ -5,10 +5,10 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import Q
 from django.db.transaction import atomic
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 from .forms import DiscardForm
 from platerplotter.models import HoldingRack, HoldingRackWell, Sample
@@ -101,6 +101,36 @@ def discards_index(request):
 
 @login_required()
 def all_discards_view(request):
-    discards = HoldingRack.objects.filter(discarded=True)
+    data = HoldingRack.objects.filter(discarded=True)
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        start = int(request.GET.get('start', 0))
+        length = int(request.GET.get('length', 10))
+        search = request.GET.get('search[value]', '')
 
-    return render(request, 'discards/all_discards.html', context={'discards': discards})
+        if search:
+            data = HoldingRack.objects.filter(discarded=True, holding_rack_id__icontains=search)
+
+        # Apply pagination to the queryset
+        total_records = data.count()
+        filtered_records = total_records
+        data = data[start:start + length]
+
+        response = {
+            'draw': int(request.GET.get('draw', 0)),
+            'recordsTotal': total_records,
+            'recordsFiltered': filtered_records,
+            'data': [
+                [
+                    item.holding_rack_id,
+                    item.plate.gel_1008_csv.date_of_dispatch.strftime('%Y-%m-%d'),
+                    item.discarded,
+                    item.discarded_by.first_name + ' ' + item.discarded_by.last_name
+                    if item.discarded_by.first_name or item.discarded_by.last_name else item.discarded_by.username,
+                    item.checked_by,
+                    item.discard_date.strftime('%Y-%m-%d'),
+                ] for item in data
+            ]
+        }
+
+        return JsonResponse(response)
+    return render(request, 'discards/all_discards.html', {'data': data})

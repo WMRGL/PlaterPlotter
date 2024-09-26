@@ -115,7 +115,7 @@ class TestViews(TestCase):
     def test_discarded(self):
         self._discard_holding_rack('tt12345673')
         response = self.client.get(reverse('discards:all_discards_view'))
-        self.assertContains(response, 'tt12345673')
+        self.assertEqual(response.context['data'][0].holding_rack_id, 'tt12345673')
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'discards/all_discards.html')
 
