@@ -208,7 +208,7 @@ class WeekTotalView(LoginRequiredMixin, FormView):
     def week_total(self, start, end):
         glhs = ["yne", "now", "eme", "lnn", "lns", "wwm", "sow"]
         glhs_list = []
-        samples = Sample.objects.filter(sample_received_datetime__range=(start, end))
+        samples = Sample.objects.filter(sample_received_datetime__date__range=(start, end))
         for glh in glhs:
             rd_proband = samples.filter(sample_type="Proband", receiving_rack__laboratory_id=glh).count()
             rd_family = samples.filter(sample_type="Family", receiving_rack__laboratory_id=glh).count()
