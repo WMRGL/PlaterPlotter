@@ -62,9 +62,12 @@
                                     <button type="button" class="clear"><i class="fa fa-close"></i></button>
                                 </div>
                                 {% for user in eligible_users %}
-                                    <div class="option " data-value="{{ user.id }}">{{ user }}</div>
+                                    {% if user.first_name %}
+                                        <div class="option " data-value="{{ user.id }}">{{ user.get_full_name }}</div>
+                                    {% else %}
+                                        <div class="option " data-value="{{ user.id }}">{{ user }}</div>
+                                    {% endif %}
                                 {% endfor %}
-                                <div class="no-result-message" style="display: none">No user found</div>
                             </div>
                             <span class="tag_error_message error"></span>
                         </div>

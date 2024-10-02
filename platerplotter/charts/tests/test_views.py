@@ -131,12 +131,6 @@ class Chart(TestCase):
             Q(disease_area='Rare Disease') & Q(sample_received_datetime__range=(start_datetime, end_datetime))
         ).count()
 
-        print(f"Expected Cancer Count: {expected_cancer_count}")
-        print(f"Expected Rare Disease Count: {expected_rare_disease_count}")
-
-        print(f"Response Cancer Count: {response.context['cancer']}")
-        print(f"Response Rare Disease Count: {response.context['rare_disease']}")
-
         self.assertEqual(response.context['cancer'], expected_cancer_count)
         self.assertEqual(response.context['rare_disease'], expected_rare_disease_count)
 

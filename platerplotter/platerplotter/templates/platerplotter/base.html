@@ -26,7 +26,7 @@
     <nav class="navbar navbar-expand-lg navbar-light" style="background-color: #e9ecef;">
         <div class="container-fluid">
             <div class="navbar-header">
-                <a class="navbar-brand" href=""><strong>PlaterPlotter</strong></a>
+                <a class="navbar-brand" href="{% url 'index' %}"><strong>PlaterPlotter</strong></a>
             </div>
             {% if user.is_authenticated %}
                 <ul class="nav">
@@ -72,27 +72,31 @@
                                 <a class="dropdown-item {% if url_name == 'all_discards_view' %}active{% endif %}"
                                    href="{% url 'discards:all_discards_view' %}">Discarded</a>
 
+                            </div>
                         </li>
-                        {% if user|has_group:"Charts" or user.is_staff %}
+
                             <li class="nav nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button"
                                    aria-haspopup="true" aria-expanded="false">Charts</a>
                                 <div class="dropdown-menu">
                                     <a class="dropdown-item {% if url_name == 'week_total' %}active{% endif %}"
                                        href="{% url 'charts:week_total' %}">Weekly KPI</a>
-                                    <a class="dropdown-item {% if url_name == 'all_discards_view' %}active{% endif %}"
-                                       href="{% url 'charts:kpi' %}">Monthly KPI</a>
-                                    <a class="dropdown-item {% if url_name == 'all_discards_view' %}active{% endif %}"
-                                       href="{% url 'charts:month_total' %}">Monthly Total KPI</a>
-                                    <a class="dropdown-item {% if url_name == 'all_discards_view' %}active{% endif %}"
-                                       href="{% url 'charts:cancer_rd' %}">Cancer and Rare Disease</a>
+                                    {% if user|has_group:"Charts" or user.is_staff %}
+                                        <a class="dropdown-item {% if url_name == 'all_discards_view' %}active{% endif %}"
+                                           href="{% url 'charts:kpi' %}">Monthly KPI</a>
+                                        <a class="dropdown-item {% if url_name == 'all_discards_view' %}active{% endif %}"
+                                           href="{% url 'charts:month_total' %}">Monthly Total KPI</a>
+                                        <a class="dropdown-item {% if url_name == 'all_discards_view' %}active{% endif %}"
+                                           href="{% url 'charts:cancer_rd' %}">Cancer and Rare Disease</a>
+                                    {% endif %}
+                                </div>
                             </li>
-                        {% endif %}
 
-                        {% if user.is_staff %}
+
+                        {% if user|has_group:"Charts" or user.is_staff %}
                             <li class="nav nav-item">
-                                <a class="nav-link {% if url_name == 'samples' %}active{% endif %}"
-                                   href="{% url 'users:add_admin' %}">Charts Viewers</a>
+                                <a class="nav-link {% if url_name == 'add_admin' %}active{% endif %}"
+                                   href="{% url 'users:add_admin' %}">KPI Viewers</a>
                             </li>
                         {% endif %}
 

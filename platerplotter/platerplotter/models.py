@@ -189,6 +189,10 @@ class Sample(models.Model):
                                                              ("Sample destroyed", "Sample destroyed")), blank=True,
                                      null=True)
     bypass_plating_rules = models.BooleanField(default=False)
+    discarded = models.BooleanField(default=False)
+    discarded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    checked_by = models.CharField(max_length=120, null=True, blank=True)
+    discard_date = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return self.laboratory_sample_id
